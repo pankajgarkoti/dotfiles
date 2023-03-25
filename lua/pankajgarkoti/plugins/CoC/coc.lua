@@ -11,6 +11,7 @@ vim.opt.updatetime = 300
 vim.opt.signcolumn = "yes"
 
 local keyset = vim.keymap.set
+
 -- Auto complete
 function _G.check_back_space()
     local col = vim.fn.col('.') - 1
@@ -24,7 +25,7 @@ end
 -- other plugin before putting this into your config.
 local opts = {silent = true, noremap = true, expr = true, replace_keycodes = false}
 keyset("i", "<TAB>", 'coc#pum#visible() ? coc#pum#next(1) : v:lua.check_back_space() ? "<TAB>" : coc#refresh()', opts)
-keyset("i", "<S-TAB>", [[coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"]], opts)
+keyset("i", "<S-TAB>", [[coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"]], opts
 
 -- Make <CR> to accept selected completion item or notify coc.nvim to format
 -- <C-g>u breaks current undo, please make your own choice.
@@ -73,10 +74,8 @@ vim.api.nvim_create_autocmd("CursorHold", {
 -- Symbol renaming.
 keyset("n", "<leader>rn", "<Plug>(coc-rename)", {silent = true})
 
-
 -- Formatting selected code.
 keyset("x", "<leader>fr", "<Plug>(coc-format-selected)", {silent = true})
-keyset("n", "<leader>fr", "<Plug>(coc-format-selected)", {silent = true})
 
 
 -- Setup formatexpr specified filetype(s).
@@ -96,22 +95,26 @@ vim.api.nvim_create_autocmd("User", {
 })
 
 
--- Applying codeAction to the selected region.
--- Example: `<leader>aap` for current paragraph
+-- Codeactions
 local opts = {silent = true, nowait = true}
 keyset("x", "<leader>a", "<Plug>(coc-codeaction-selected)", opts)
 keyset("n", "<leader>a", "<Plug>(coc-codeaction-selected)", opts)
 
--- Remap keys for applying codeAction to the current buffer.
-keyset("n", "<leader>ac", "<Plug>(coc-codeaction)", opts)
-
-
--- Apply AutoFix to problem on the current line.
+-- Remap keys for apply code actions at the cursor position.
+keyset("n", "<leader>ac", "<Plug>(coc-codeaction-cursor)", opts)
+-- Remap keys for apply code actions affect whole buffer.
+keyset("n", "<leader>as", "<Plug>(coc-codeaction-source)", opts)
+-- Apply the most preferred quickfix action on the current line.
 keyset("n", "<leader>qf", "<Plug>(coc-fix-current)", opts)
 
+-- refactors
+keyset("n", "<leader>re", "<Plug>(coc-codeaction-refactor)", { silent = true })
+keyset("x", "<leader>r", "<Plug>(coc-codeaction-refactor-selected)", { silent = true })
+keyset("n", "<leader>r", "<Plug>(coc-codeaction-refactor-selected)", { silent = true })
 
 -- Run the Code Lens action on the current line.
 keyset("n", "<leader>cl", "<Plug>(coc-codelens-action)", opts)
+
 
 
 -- Map function and class text objects

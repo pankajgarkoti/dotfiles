@@ -28,6 +28,7 @@ lualine_nightfly.command = {
 
 lualine.setup({
     options = {
-        theme = lualine_nightfly
-    }
+        theme = 'material'
+    },
+    sections = {lualine_c = {'lsp_progress'}}
 })

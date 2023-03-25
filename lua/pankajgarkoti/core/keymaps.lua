@@ -55,3 +55,15 @@ keymap.set("n", "<leader>gs", "<cmd>Telescope git_status<cr>") -- list current c
 
 -- restart lsp server
 keymap.set("n", "<leader>rs", ":LspRestart<CR>") -- mapping to restart lsp if necessary
+
+
+-- harpoon
+keymap.set("n", "<leader>hm", ":lua require('harpoon.mark').add_file()<cr>") -- mapping to restart lsp if necessary
+keymap.set("n", "<leader>hn", ":lua require('harpoon.ui').nav_next()<cr>") -- mapping to restart lsp if necessary
+keymap.set("n", "<leader>hp", ":lua require('harpoon.ui').nav_prev()<cr>") -- mapping to restart lsp if necessary
+keymap.set("n", "<leader>hh", ":lua require('harpoon.ui').toggle_quick_menu()<cr>") -- mapping to restart lsp if necessary
+keymap.set("n", "<leader>1", ":lua require('harpoon.ui').nav_file(1)<cr>")
+keymap.set("n", "<leader>2", ":lua require('harpoon.ui').nav_file(2)<cr>")
+keymap.set("n", "<leader>3", ":lua require('harpoon.ui').nav_file(3)<cr>")
+keymap.set("n", "<leader>4", ":lua require('harpoon.ui').nav_file(4)<cr>")
+keymap.set("n", "<leader>5", ":lua require('harpoon.ui').nav_file(5)<cr>")
