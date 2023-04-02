@@ -30,9 +30,9 @@ return require("packer").startup(function(use)
 	use("nvim-lua/plenary.nvim")
 
   -- theme
-  -- use('folke/tokyonight.nvim')
+  use { "ellisonleao/gruvbox.nvim" }
   use {"catppuccin/nvim", as = "catppuccin" }
-	-- use({ "romgrk/barbar.nvim", wants = "nvim-web-devicons" })
+	use({ "romgrk/barbar.nvim", wants = "nvim-web-devicons" })
   
 	-- tmux + split window nav
 	use("christoomey/vim-tmux-navigator")

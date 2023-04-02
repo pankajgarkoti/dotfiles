@@ -84,6 +84,12 @@ _G.packer_plugins = {
     path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/ReplaceWithRegister",
     url = "https://github.com/vim-scripts/ReplaceWithRegister"
   },
+  ["barbar.nvim"] = {
+    loaded = true,
+    path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/barbar.nvim",
+    url = "https://github.com/romgrk/barbar.nvim",
+    wants = { "nvim-web-devicons" }
+  },
   catppuccin = {
     loaded = true,
     path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/catppuccin",
@@ -113,6 +119,11 @@ _G.packer_plugins = {
     loaded = true,
     path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/gitsigns.nvim",
     url = "https://github.com/lewis6991/gitsigns.nvim"
+  },
+  ["gruvbox.nvim"] = {
+    loaded = true,
+    path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/gruvbox.nvim",
+    url = "https://github.com/ellisonleao/gruvbox.nvim"
   },
   harpoon = {
     loaded = true,
