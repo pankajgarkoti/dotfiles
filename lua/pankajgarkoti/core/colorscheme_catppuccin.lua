@@ -1,20 +1,19 @@
 local exists, _ = pcall(require, "catppuccin")
 
 if not exists then
-	print("Theme not found")
+	print("Catpuccin theme not found")
 	return
 end
-
--- vim.cmd.colorscheme "catppuccin-latte"
 
 require("catppuccin").setup({
     flavour = "mocha", -- latte, frappe, macchiato, mocha
     background = { -- :h background
-        light = "latte",
+        light = "mocha",
         dark = "mocha",
     },
-    transparent_background = false,
-    show_end_of_buffer = false, -- show the '~' characters after the end of buffers
+    transparent_background = true,
+    -- transparent_background = false,
+    show_end_of_buffer = true, -- show the '~' characters after the end of buffers
     term_colors = true,
     dim_inactive = {
         enabled = false,
@@ -49,8 +48,6 @@ require("catppuccin").setup({
     },
 })
 
-
-print("Catppuccin theme exists.")
 
 -- setup must be called before loading
 vim.cmd.colorscheme "catppuccin"

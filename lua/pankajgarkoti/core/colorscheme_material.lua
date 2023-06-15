@@ -2,7 +2,7 @@ require('material').setup({
     contrast = {
         terminal = false, -- Enable contrast for the built-in terminal
         sidebars = true, -- Enable contrast for sidebar-like windows ( for example Nvim-Tree )
-        floating_windows = false, -- Enable contrast for floating windows
+        floating_windows = true, -- Enable contrast for floating windows
         cursor_line = true, -- Enable darker background for the cursor line
         non_current_windows = false, -- Enable darker background for non-current windows
         filetypes = {}, -- Specify which filetypes get the contrasted (darker) background
@@ -30,7 +30,7 @@ require('material').setup({
     disable = {
         colored_cursor = false, -- Disable the colored cursor
         borders = false, -- Disable borders between verticaly split windows
-        background = false, -- Prevent the theme from setting the background (NeoVim then uses your terminal background)
+        background = true, -- Prevent the theme from setting the background (NeoVim then uses your terminal background)
         -- background = true, -- Prevent the theme from setting the background (NeoVim then uses your terminal background)
         term_colors = true, -- Prevent the theme from setting terminal colors
         eob_lines = false -- Hide the end-of-buffer lines
