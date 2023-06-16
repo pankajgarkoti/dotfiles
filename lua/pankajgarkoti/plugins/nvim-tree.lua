@@ -1,7 +1,7 @@
-local setup, nvimtree = pcall(require, 'nvim-tree')
+local setup, nvimtree = pcall(require, "nvim-tree")
 
 if not setup then
-    return
+	return
 end
 
 -- recommended settings from nvimtree docs
@@ -10,25 +10,26 @@ vim.g.loaded_netrwPlugin = 1
 vim.cmd([[ highlight NvimTreeIndentMarker guifg=#3FC5FF ]])
 
 nvimtree.setup({
-    renderer = {
-        icons = {
-            glyphs = {
-                folder = {
-                    arrow_closed = "", -- arrow when folder is closed
-                    arrow_open = "", -- arrow when folder is open
-                },
-            },
-        },
-    },  
-    actions = {
-        open_file = {
-            window_picker = {
-                enable = true,
-            },
-        },
-    },
-  view = {
-    side = "left",
-    preserve_window_proportions = true,
-  }
+	renderer = {
+		icons = {
+			glyphs = {
+				folder = {
+					arrow_closed = "", -- arrow when folder is closed
+					arrow_open = "", -- arrow when folder is open
+				},
+			},
+		},
+	},
+	actions = {
+		open_file = {
+			window_picker = {
+				enable = true,
+			},
+		},
+	},
+	view = {
+		side = "left",
+		width = 40,
+		preserve_window_proportions = true,
+	},
 })
