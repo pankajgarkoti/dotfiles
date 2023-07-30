@@ -11,7 +11,6 @@ require("catppuccin").setup({
 		light = "mocha",
 		dark = "mocha",
 	},
-	-- transparent_background = false,
 	transparent_background = true,
 	show_end_of_buffer = true, -- show the '~' characters after the end of buffers
 	term_colors = true,
@@ -45,6 +44,14 @@ require("catppuccin").setup({
 		telescope = true,
 		notify = false,
 		mini = false,
+	},
+	telescope = {
+		enabled = true,
+		border = true,
+	},
+	cmp = {
+		enabled = true,
+		border = true,
 	},
 })
 

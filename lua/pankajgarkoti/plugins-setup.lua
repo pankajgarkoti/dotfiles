@@ -24,7 +24,7 @@ return require("packer").startup(function(use)
 
 	-- user plugins
 	-- copilot
-	use("github/copilot.vim")
+	-- use("github/copilot.vim")
 
 	-- comments
 	use("nvim-lua/plenary.nvim")
