@@ -11,7 +11,7 @@ require("catppuccin").setup({
 		light = "mocha",
 		dark = "mocha",
 	},
-	transparent_background = false,
+	transparent_background = true,
 	show_end_of_buffer = true, -- show the '~' characters after the end of buffers
 	term_colors = true,
 	dim_inactive = {
