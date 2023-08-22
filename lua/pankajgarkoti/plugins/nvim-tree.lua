@@ -29,7 +29,7 @@ nvimtree.setup({
 	},
 	view = {
 		side = "left",
-		width = 33,
+		width = 32,
 		preserve_window_proportions = true,
 	},
 })

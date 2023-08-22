@@ -125,6 +125,22 @@ return require("packer").startup(function(use)
 	-- harpoon
 	use("ThePrimeagen/harpoon") -- vim git plugin
 
+	use("numToStr/FTerm.nvim")
+
+	-- Which Key?
+	use({
+		"folke/which-key.nvim",
+		config = function()
+			vim.o.timeout = true
+			vim.o.timeoutlen = 300
+			require("which-key").setup({
+				-- your configuration comes here
+				-- or leave it empty to use the default settings
+				-- refer to the configuration section below
+			})
+		end,
+	})
+
 	-- Put this at the end after all plugins
 	if packer_bootstrap then
 		require("packer").sync()
