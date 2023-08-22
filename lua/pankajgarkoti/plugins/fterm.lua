@@ -3,9 +3,12 @@ local map = vim.keymap.set
 
 fterm.setup({
 	dimensions = {
-		height = 0.84,
-		width = 0.7,
+		height = 0.9,
+		width = 0.9,
 	},
+	blend = 0,
+	-- border = "double",
+	border = "rounded",
 })
 
 map("n", "<C-g>", fterm.toggle)
