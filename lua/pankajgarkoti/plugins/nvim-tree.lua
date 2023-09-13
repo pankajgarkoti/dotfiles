@@ -29,7 +29,13 @@ nvimtree.setup({
 	},
 	view = {
 		side = "left",
-		width = 32,
+		width = 36,
 		preserve_window_proportions = true,
 	},
 })
+
+-- Enable line numbers
+local map = vim.keymap.set
+
+-- Key mappings
+map("n", "<Leader>nn", ":NoNeckPain<CR>")

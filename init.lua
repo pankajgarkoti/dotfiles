@@ -20,3 +20,15 @@ require("pankajgarkoti.plugins.lsp.mason")
 -- require("pankajgarkoti.plugins.lsp.lspconfig")
 require("pankajgarkoti.plugins.lsp.null-ls")
 require("pankajgarkoti.plugins.fterm")
+require("pankajgarkoti.plugins.yode")
+require("pankajgarkoti.plugins.no-neck-pain")
+
+require("packer").startup(function()
+	use({
+		"lukas-reineke/headlines.nvim",
+		after = "nvim-treesitter",
+		config = function()
+			require("headlines").setup()
+		end,
+	})
+end)

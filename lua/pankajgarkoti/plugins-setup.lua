@@ -29,6 +29,9 @@ return require("packer").startup(function(use)
 	-- comments
 	use("nvim-lua/plenary.nvim")
 
+	-- center the buffer
+	use({ "shortcuts/no-neck-pain.nvim", tag = "*" })
+
 	-- theme
 	use({ "ellisonleao/gruvbox.nvim" })
 	use({ "catppuccin/nvim", as = "catppuccin" })
@@ -64,6 +67,8 @@ return require("packer").startup(function(use)
 
 	-- code completion
 	use({ "neoclide/coc.nvim", branch = "release" })
+
+	use({ "hoschi/yode-nvim" })
 
 	-- autocompletion
 	use("hrsh7th/nvim-cmp") -- completion plugin
@@ -137,6 +142,45 @@ return require("packer").startup(function(use)
 				-- your configuration comes here
 				-- or leave it empty to use the default settings
 				-- refer to the configuration section below
+			})
+		end,
+	})
+
+	use({
+		"nvim-neorg/neorg",
+		config = function()
+			require("neorg").setup({
+				load = {
+					["core.defaults"] = {}, -- Loads default behaviour
+					["core.concealer"] = {}, -- Adds pretty icons to your documents
+					["core.dirman"] = { -- Manages Neorg workspaces
+						config = {
+							workspaces = {
+								Work = "~/Desktop/notes/work",
+								Life = "~/Desktop/notes/life",
+							},
+						},
+					},
+				},
+			})
+		end,
+		run = ":Neorg sync-parsers",
+		requires = "nvim-lua/plenary.nvim",
+	})
+
+	use({
+		"epwalsh/obsidian.nvim",
+		requires = {
+			-- Required.
+			"nvim-lua/plenary.nvim",
+
+			-- see below for full list of optional dependencies 👇
+		},
+		config = function()
+			require("obsidian").setup({
+				dir = "~/Desktop/notes/life",
+
+				-- see below for full list of options 👇
 			})
 		end,
 	})
