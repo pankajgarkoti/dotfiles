@@ -9,26 +9,11 @@ require("pankajgarkoti.plugins.CoC.coc")
 require("pankajgarkoti.plugins.autopairs")
 require("pankajgarkoti.plugins.treesitter")
 require("pankajgarkoti.plugins.gitsigns")
--- require("pankajgarkoti.core.colorscheme_gruvbox")
 require("pankajgarkoti.core.colorscheme_catppuccin")
--- require("pankajgarkoti.plugins.copilot")
--- require("pankajgarkoti.core.colorscheme_material")
--- require("pankajgarkoti.core.colorscheme_catppuccin")
--- require("pankajgarkoti.plugins.nvim-cmp")
 require("pankajgarkoti.plugins.lsp.mason")
--- require("pankajgarkoti.plugins.lsp.lspsaga")
--- require("pankajgarkoti.plugins.lsp.lspconfig")
 require("pankajgarkoti.plugins.lsp.null-ls")
 require("pankajgarkoti.plugins.fterm")
 require("pankajgarkoti.plugins.yode")
 require("pankajgarkoti.plugins.no-neck-pain")
-
-require("packer").startup(function()
-	use({
-		"lukas-reineke/headlines.nvim",
-		after = "nvim-treesitter",
-		config = function()
-			require("headlines").setup()
-		end,
-	})
-end)
+require("pankajgarkoti.plugins.no-neck-pain")
+require("pankajgarkoti.plugins.noice")

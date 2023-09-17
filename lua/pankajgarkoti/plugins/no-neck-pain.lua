@@ -1,9 +1,10 @@
-local setup, nnp = pcall(require, "telescope")
+local setup, nnp = pcall(require, "no-neck-pain")
 if not setup then
 	return
 end
 
 nnp.setup({
+	width = 120,
 	buffers = {
 		scratchPad = {
 			-- set to `false` to
@@ -17,8 +18,13 @@ nnp.setup({
 			filetype = "md",
 		},
 		wo = {
-			backgroundColor = "tokyonight-moon",
 			fillchars = "eob: ",
 		},
 	},
 })
+
+-- Enable line numbers
+local map = vim.keymap.set
+
+-- Key mappings
+map("n", "<Leader>nn", ":NoNeckPain<CR>")
