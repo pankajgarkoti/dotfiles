@@ -69,7 +69,7 @@ return require("packer").startup(function(use)
 	-- code completion
 	use({ "neoclide/coc.nvim", branch = "release" })
 
-	use({ "hoschi/yode-nvim" })
+	-- use({ "hoschi/yode-nvim" })
 
 	-- autocompletion
 	use("hrsh7th/nvim-cmp") -- completion plugin
@@ -106,7 +106,7 @@ return require("packer").startup(function(use)
 	use("jose-elias-alvarez/null-ls.nvim") -- configure formatters & linters
 	use("jayp0521/mason-null-ls.nvim") -- bridges gap b/w mason & null-ls
 
-	-- use { 'codota/tabnine-nvim', run = "./dl_binaries.sh" } -- tabnine
+	use({ "codota/tabnine-nvim", run = "./dl_binaries.sh" }) -- tabnine
 
 	-- treesitter configuration
 	use({
@@ -129,7 +129,7 @@ return require("packer").startup(function(use)
 	use("marko-cerovac/material.nvim")
 
 	-- harpoon
-	use("ThePrimeagen/harpoon") -- vim git plugin
+	use("ThePrimeagen/harpoon")
 
 	use("numToStr/FTerm.nvim")
 
@@ -147,6 +147,8 @@ return require("packer").startup(function(use)
 		end,
 	})
 
+	use({ "MunifTanjim/nui.nvim" })
+	use({ "rcarriga/nvim-notify" })
 	-- Put this at the end after all plugins
 	if packer_bootstrap then
 		require("packer").sync()

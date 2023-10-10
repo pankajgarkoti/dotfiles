@@ -6,13 +6,15 @@ if not exists then
 end
 
 require("catppuccin").setup({
+	-- flavor = "macchiato",
 	flavour = "mocha",
+	-- flavour = "latte",
 	background = {
 		light = "mocha",
 		dark = "mocha",
 	},
-	transparent_background = true,
-	show_end_of_buffer = true, -- show the '~' characters after the end of buffers
+	transparent_background = false,
+	show_end_of_buffer = false, -- show the '~' characters after the end of buffers
 	term_colors = true,
 	dim_inactive = {
 		enabled = false,
@@ -42,7 +44,7 @@ require("catppuccin").setup({
 		gitsigns = true,
 		nvimtree = true,
 		telescope = true,
-		notify = false,
+		notify = true,
 		mini = false,
 	},
 	telescope = {

@@ -23,7 +23,7 @@
   },
 
   "diagnostic.virtualText": true,
-  "diagnostic.virtualTextCurrentLineOnly": true,
+  "diagnostic.virtualTextCurrentLineOnly": false,
 
   "inlayHint.enable": true,
   "inlayHint.enableParameter": true

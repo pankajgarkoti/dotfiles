@@ -6,14 +6,14 @@ end
 nnp.setup({
 	width = 120,
 	buffers = {
-		scratchPad = {
-			-- set to `false` to
-			-- disable auto-saving
-			enabled = true,
-			-- set to `nil` to default
-			-- to current working directory
-			location = "~/Desktop/notes/life/scratchpads",
-		},
+		-- scratchPad = {
+		-- 	-- set to `false` to
+		-- 	-- disable auto-saving
+		-- 	enabled = false,
+		-- 	-- set to `nil` to default
+		-- 	-- to current working directory
+		-- 	location = "~/Desktop/notes/life/scratchpads",
+		-- },
 		bo = {
 			filetype = "md",
 		},
