@@ -221,11 +221,6 @@ _G.packer_plugins = {
     path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/plenary.nvim",
     url = "https://github.com/nvim-lua/plenary.nvim"
   },
-  ["tabnine-nvim"] = {
-    loaded = true,
-    path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/tabnine-nvim",
-    url = "https://github.com/codota/tabnine-nvim"
-  },
   ["telescope-fzf-native.nvim"] = {
     loaded = true,
     path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/telescope-fzf-native.nvim",

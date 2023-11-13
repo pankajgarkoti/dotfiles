@@ -41,9 +41,6 @@ return require("packer").startup(function(use)
 	-- tmux + split window nav
 	use("christoomey/vim-tmux-navigator")
 
-	-- maximze and restore current window
-	-- use("szw/vim-maximizer")
-
 	-- surround text with quotes and other stuff
 	use("tpope/vim-surround")
 
@@ -106,7 +103,7 @@ return require("packer").startup(function(use)
 	use("jose-elias-alvarez/null-ls.nvim") -- configure formatters & linters
 	use("jayp0521/mason-null-ls.nvim") -- bridges gap b/w mason & null-ls
 
-	use({ "codota/tabnine-nvim", run = "./dl_binaries.sh" }) -- tabnine
+	-- use({ "codota/tabnine-nvim", run = "./dl_binaries.sh" }) -- tabnine
 
 	-- treesitter configuration
 	use({
