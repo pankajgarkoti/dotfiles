@@ -130,6 +130,8 @@ return require("packer").startup(function(use)
 
 	use("numToStr/FTerm.nvim")
 
+	use("APZelos/blamer.nvim")
+
 	-- Which Key?
 	use({
 		"folke/which-key.nvim",
