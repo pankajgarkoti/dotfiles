@@ -35,7 +35,15 @@ return require("packer").startup(function(use)
 	-- theme
 	use({ "ellisonleao/gruvbox.nvim" })
 	use({ "catppuccin/nvim", as = "catppuccin" })
-	-- use({ "romgrk/barbar.nvim", wants = "nvim-web-devicons" })
+	use({
+		"romgrk/barbar.nvim",
+		wants = "nvim-web-devicons",
+		config = function()
+			require("barbar").setup({
+				highlight_visible = false,
+			})
+		end,
+	})
 	use({ "folke/noice.nvim" })
 
 	-- tmux + split window nav
@@ -66,25 +74,23 @@ return require("packer").startup(function(use)
 	-- code completion
 	use({ "neoclide/coc.nvim", branch = "release" })
 
-	-- use({ "hoschi/yode-nvim" })
-
 	-- autocompletion
 	use("hrsh7th/nvim-cmp") -- completion plugin
 	use("hrsh7th/cmp-buffer") -- source for text in buffer
 	use("hrsh7th/cmp-path") -- source for file system paths
 
-	use({
-		"akinsho/toggleterm.nvim",
-		tag = "*",
-		config = function()
-			require("toggleterm").setup()
-		end,
-	})
+	-- use({
+	-- 	"akinsho/toggleterm.nvim",
+	-- 	tag = "*",
+	-- 	config = function()
+	-- 		require("toggleterm").setup()
+	-- 	end,
+	-- })
 
 	-- snippets
-	-- use("L3MON4D3/LuaSnip") -- snippet engine
-	-- use("saadparwaiz1/cmp_luasnip") -- for autocompletion
-	-- use("rafamadriz/friendly-snippets") -- useful snippets
+	use("L3MON4D3/LuaSnip") -- snippet engine
+	use("saadparwaiz1/cmp_luasnip") -- for autocompletion
+	use("rafamadriz/friendly-snippets") -- useful snippets
 
 	-- managing & installing lsp servers, linters & formatters
 	use("williamboman/mason.nvim") -- in charge of managing lsp servers, linters & formatters
@@ -143,6 +149,28 @@ return require("packer").startup(function(use)
 				-- or leave it empty to use the default settings
 				-- refer to the configuration section below
 			})
+		end,
+	})
+
+	use({
+		"Exafunction/codeium.vim",
+		options = {
+			language_server = "~/codeium_ls_v1",
+		},
+		config = function()
+			-- Change '<C-g>' here to any keycode you like.
+			vim.keymap.set("i", "<C-a>", function()
+				return vim.fn["codeium#Accept"]()
+			end, { expr = true })
+			vim.keymap.set("i", "<c-;>", function()
+				return vim.fn["codeium#CycleCompletions"](1)
+			end, { expr = true })
+			vim.keymap.set("i", "<c-,>", function()
+				return vim.fn["codeium#CycleCompletions"](-1)
+			end, { expr = true })
+			vim.keymap.set("i", "<c-x>", function()
+				return vim.fn["codeium#Clear"]()
+			end, { expr = true })
 		end,
 	})
 

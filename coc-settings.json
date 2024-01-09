@@ -16,6 +16,8 @@
   "python.linting.pylintPath": "pylint",
   "python.linting.pylintArgs": ["--max-line-length", "79"],
 
+  "pyright.organizeimports.provider": "isort",
+
   "python.analysis.diagnosticSeverityOverrides": {
     "reportGeneralTypeIssues": "warning",
     "reportOptionalMemberAccess": "warning",
