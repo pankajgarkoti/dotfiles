@@ -10,7 +10,6 @@ local ensure_packer = function()
 end
 
 local packer_bootstrap = ensure_packer()
-
 -- Autocommand that reloads nvim whenever this is saved
 vim.cmd([[
     augroup packer_user_config
@@ -173,6 +172,9 @@ return require("packer").startup(function(use)
 			end, { expr = true })
 		end,
 	})
+
+	-- packer.nvim
+	use({ "robitx/gp.nvim" })
 
 	use({ "MunifTanjim/nui.nvim" })
 	use({ "rcarriga/nvim-notify" })
