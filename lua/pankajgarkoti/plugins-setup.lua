@@ -34,6 +34,7 @@ return require("packer").startup(function(use)
 	-- theme
 	use({ "ellisonleao/gruvbox.nvim" })
 	use({ "catppuccin/nvim", as = "catppuccin" })
+	use("navarasu/onedark.nvim")
 	use({
 		"romgrk/barbar.nvim",
 		wants = "nvim-web-devicons",
@@ -173,8 +174,7 @@ return require("packer").startup(function(use)
 		end,
 	})
 
-	-- packer.nvim
-	use({ "robitx/gp.nvim" })
+	-- use({ "robitx/gp.nvim" })
 
 	use({ "MunifTanjim/nui.nvim" })
 	use({ "rcarriga/nvim-notify" })
