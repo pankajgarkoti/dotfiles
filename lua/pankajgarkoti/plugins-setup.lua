@@ -21,10 +21,6 @@ vim.cmd([[
 return require("packer").startup(function(use)
 	use("wbthomason/packer.nvim")
 
-	-- user plugins
-	-- copilot
-	-- use("github/copilot.vim")
-
 	-- comments
 	use("nvim-lua/plenary.nvim")
 
@@ -35,15 +31,17 @@ return require("packer").startup(function(use)
 	use({ "ellisonleao/gruvbox.nvim" })
 	use({ "catppuccin/nvim", as = "catppuccin" })
 	use("navarasu/onedark.nvim")
-	use({
-		"romgrk/barbar.nvim",
-		wants = "nvim-web-devicons",
-		config = function()
-			require("barbar").setup({
-				highlight_visible = false,
-			})
-		end,
-	})
+
+	-- tabs
+	-- use({
+	-- 	"romgrk/barbar.nvim",
+	-- 	wants = "nvim-web-devicons",
+	-- 	config = function()
+	-- 		require("barbar").setup({
+	-- 			highlight_visible = false,
+	-- 		})
+	-- 	end,
+	-- })
 	use({ "folke/noice.nvim" })
 
 	-- tmux + split window nav
@@ -79,14 +77,6 @@ return require("packer").startup(function(use)
 	use("hrsh7th/cmp-buffer") -- source for text in buffer
 	use("hrsh7th/cmp-path") -- source for file system paths
 
-	-- use({
-	-- 	"akinsho/toggleterm.nvim",
-	-- 	tag = "*",
-	-- 	config = function()
-	-- 		require("toggleterm").setup()
-	-- 	end,
-	-- })
-
 	-- snippets
 	use("L3MON4D3/LuaSnip") -- snippet engine
 	use("saadparwaiz1/cmp_luasnip") -- for autocompletion
@@ -98,18 +88,11 @@ return require("packer").startup(function(use)
 	use("lukas-reineke/indent-blankline.nvim") --indentation lines
 
 	-- configuring lsp servers
-	-- use("neovim/nvim-lspconfig") -- easily configure language servers
-	-- use("hrsh7th/cmp-nvim-lsp") -- for autocompletion
-	-- use({ "glepnir/lspsaga.nvim", branch = "main" }) -- enhanced lsp uis
-	-- use("kkharji/lspsaga.nvim")
 	use("jose-elias-alvarez/typescript.nvim") -- additional functionality for typescript server (e.g. rename file & update imports)
-	-- use("onsails/lspkind.nvim") -- vs-code like icons for autocompletion
 
 	-- formatting & linting
 	use("jose-elias-alvarez/null-ls.nvim") -- configure formatters & linters
 	use("jayp0521/mason-null-ls.nvim") -- bridges gap b/w mason & null-ls
-
-	-- use({ "codota/tabnine-nvim", run = "./dl_binaries.sh" }) -- tabnine
 
 	-- treesitter configuration
 	use({
@@ -128,14 +111,10 @@ return require("packer").startup(function(use)
 	use("lewis6991/gitsigns.nvim") -- show line modifications on left hand side
 	use("tpope/vim-fugitive") -- vim git plugin
 
-	-- If you are using Packer
 	use("marko-cerovac/material.nvim")
 
-	-- harpoon
 	use("ThePrimeagen/harpoon")
-
 	use("numToStr/FTerm.nvim")
-
 	use("APZelos/blamer.nvim")
 
 	-- Which Key?
@@ -174,11 +153,17 @@ return require("packer").startup(function(use)
 		end,
 	})
 
-	-- use({ "robitx/gp.nvim" })
-
 	use({ "MunifTanjim/nui.nvim" })
 	use({ "rcarriga/nvim-notify" })
-	-- Put this at the end after all plugins
+
+	use({
+		"ThePrimeagen/refactoring.nvim",
+		requires = {
+			{ "nvim-lua/plenary.nvim" },
+			{ "nvim-treesitter/nvim-treesitter" },
+		},
+	})
+
 	if packer_bootstrap then
 		require("packer").sync()
 	end
