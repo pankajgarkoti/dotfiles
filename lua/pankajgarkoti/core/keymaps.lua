@@ -19,9 +19,9 @@ keymap.set("n", "<leader>sx", ":close<CR>")
 
 -- tab navigation
 keymap.set("n", "<leader>to", "<Cmd>tabnew<CR>")
-keymap.set("n", "<leader>tx", "<Cmd>BufferClose<CR>")
-keymap.set("n", "<leader>tn", "<Cmd>BufferNext<CR>")
-keymap.set("n", "<leader>tp", "<Cmd>BufferPrevious<CR>")
+keymap.set("n", "<leader>tx", "<Cmd>bdelete<CR>")
+keymap.set("n", "<leader>tn", "<Cmd>bnext<CR>")
+keymap.set("n", "<leader>tp", "<Cmd>bprevious<CR>")
 
 -- select block
 keymap.set("n", "<leader>bss", "md")

@@ -130,6 +130,11 @@ _G.packer_plugins = {
     path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/codeium.vim",
     url = "https://github.com/Exafunction/codeium.vim"
   },
+  ["diffview.nvim"] = {
+    loaded = true,
+    path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/diffview.nvim",
+    url = "https://github.com/sindrets/diffview.nvim"
+  },
   ["friendly-snippets"] = {
     loaded = true,
     path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/friendly-snippets",

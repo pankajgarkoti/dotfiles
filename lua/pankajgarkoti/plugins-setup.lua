@@ -155,6 +155,7 @@ return require("packer").startup(function(use)
 
 	use({ "MunifTanjim/nui.nvim" })
 	use({ "rcarriga/nvim-notify" })
+	use({ "sindrets/diffview.nvim" })
 
 	use({
 		"ThePrimeagen/refactoring.nvim",
