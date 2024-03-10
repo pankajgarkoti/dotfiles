@@ -60,6 +60,7 @@ function _G.show_docs()
 		vim.api.nvim_command("!" .. vim.o.keywordprg .. " " .. cw)
 	end
 end
+
 keyset("n", "K", "<CMD>lua _G.show_docs()<CR>", { silent = true })
 
 -- Highlight the symbol and its references when holding the cursor.
@@ -172,3 +173,5 @@ keyset("n", "<space>j", ":<C-u>CocNext<cr>", opts)
 keyset("n", "<space>k", ":<C-u>CocPrev<cr>", opts)
 -- Resume latest coc list.
 keyset("n", "<space>p", ":<C-u>CocListResume<cr>", opts)
+
+vim.api.nvim_command('inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\\<CR>"')

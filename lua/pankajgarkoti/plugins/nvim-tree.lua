@@ -9,8 +9,10 @@ vim.g.loaded = 1
 vim.g.loaded_netrwPlugin = 1
 vim.cmd([[ highlight NvimTreeIndentMarker guifg=#3FC5FF ]])
 
-local HEIGHT_RATIO = 0.7 -- You can change this
-local WIDTH_RATIO = 0.5 -- You can change this too
+local gwidth = vim.api.nvim_list_uis()[1].width
+local gheight = vim.api.nvim_list_uis()[1].height
+local width = 80
+local height = 40
 
 nvimtree.setup({
 	renderer = {
@@ -31,8 +33,16 @@ nvimtree.setup({
 		},
 	},
 	view = {
-		side = "left",
-		width = 30,
 		preserve_window_proportions = true,
+		float = {
+			enable = true,
+			open_win_config = {
+				relative = "editor",
+				width = width,
+				height = height,
+				row = (gheight - height) * 0.4,
+				col = (gwidth - width) * 0.5,
+			},
+		},
 	},
 })

@@ -33,15 +33,6 @@ return require("packer").startup(function(use)
 	use("navarasu/onedark.nvim")
 
 	-- tabs
-	-- use({
-	-- 	"romgrk/barbar.nvim",
-	-- 	wants = "nvim-web-devicons",
-	-- 	config = function()
-	-- 		require("barbar").setup({
-	-- 			highlight_visible = false,
-	-- 		})
-	-- 	end,
-	-- })
 	use({ "folke/noice.nvim" })
 
 	-- tmux + split window nav
@@ -123,35 +114,31 @@ return require("packer").startup(function(use)
 		config = function()
 			vim.o.timeout = true
 			vim.o.timeoutlen = 300
-			require("which-key").setup({
-				-- your configuration comes here
-				-- or leave it empty to use the default settings
-				-- refer to the configuration section below
-			})
+			require("which-key").setup({})
 		end,
 	})
 
-	use({
-		"Exafunction/codeium.vim",
-		options = {
-			language_server = "~/codeium_ls_v1",
-		},
-		config = function()
-			-- Change '<C-g>' here to any keycode you like.
-			vim.keymap.set("i", "<C-a>", function()
-				return vim.fn["codeium#Accept"]()
-			end, { expr = true })
-			vim.keymap.set("i", "<c-;>", function()
-				return vim.fn["codeium#CycleCompletions"](1)
-			end, { expr = true })
-			vim.keymap.set("i", "<c-,>", function()
-				return vim.fn["codeium#CycleCompletions"](-1)
-			end, { expr = true })
-			vim.keymap.set("i", "<c-x>", function()
-				return vim.fn["codeium#Clear"]()
-			end, { expr = true })
-		end,
-	})
+	-- use({
+	-- 	"Exafunction/codeium.vim",
+	-- 	options = {
+	-- 		language_server = "~/codeium_ls_v1",
+	-- 	},
+	-- 	config = function()
+	-- 		-- Change '<C-g>' here to any keycode you like.
+	-- 		vim.keymap.set("i", "<C-a>", function()
+	-- 			return vim.fn["codeium#Accept"]()
+	-- 		end, { expr = true })
+	-- 		vim.keymap.set("i", "<c-;>", function()
+	-- 			return vim.fn["codeium#CycleCompletions"](1)
+	-- 		end, { expr = true })
+	-- 		vim.keymap.set("i", "<c-,>", function()
+	-- 			return vim.fn["codeium#CycleCompletions"](-1)
+	-- 		end, { expr = true })
+	-- 		vim.keymap.set("i", "<c-x>", function()
+	-- 			return vim.fn["codeium#Clear"]()
+	-- 		end, { expr = true })
+	-- 	end,
+	-- })
 
 	use({ "MunifTanjim/nui.nvim" })
 	use({ "rcarriga/nvim-notify" })

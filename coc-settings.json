@@ -27,6 +27,14 @@
   "diagnostic.virtualText": true,
   "diagnostic.virtualTextCurrentLineOnly": false,
 
-  "inlayHint.enable": true,
-  "inlayHint.enableParameter": true
+  "inlayHint.enable": false,
+  "inlayHint.enableParameter": false,
+
+  "suggest.noselect": false,
+  "suggest.enablePreselect": true,
+  "suggest.selection": "first",
+  "suggest.autoTrigger": "always",
+  "suggest.removeDuplicateItems": true,
+  "suggest.triggerAfterInsertEnter": true,
+  "suggest.detailField": "preview"
 }
