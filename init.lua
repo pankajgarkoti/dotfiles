@@ -24,3 +24,7 @@ require("pankajgarkoti.plugins.noice")
 require("pankajgarkoti.plugins.notify")
 require("pankajgarkoti.plugins.blamer")
 require("pankajgarkoti.plugins.refactoring")
+
+-- Patches
+-- Patch for codeium interfering with autocomplete popup behaviour
+vim.g.codeium_no_map_tab = 1
