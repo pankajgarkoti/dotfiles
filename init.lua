@@ -23,8 +23,12 @@ require("pankajgarkoti.plugins.no-neck-pain")
 require("pankajgarkoti.plugins.noice")
 require("pankajgarkoti.plugins.notify")
 require("pankajgarkoti.plugins.blamer")
-require("pankajgarkoti.plugins.refactoring")
+-- require("pankajgarkoti.plugins.indent")
 
 -- Patches
 -- Patch for codeium interfering with autocomplete popup behaviour
 vim.g.codeium_no_map_tab = 1
+vim.api.nvim_create_autocmd("BufEnter", {
+	pattern = "*",
+	command = "set wrap",
+})

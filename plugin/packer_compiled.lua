@@ -94,6 +94,12 @@ _G.packer_plugins = {
     path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/ReplaceWithRegister",
     url = "https://github.com/vim-scripts/ReplaceWithRegister"
   },
+  ["alpha-nvim"] = {
+    config = { "\27LJ\2\nã\2\0\0\t\0\22\1(6\0\0\0'\2\1\0B\0\2\0026\1\0\0'\3\2\0B\1\2\0029\2\3\0019\2\4\0024\3\3\0009\4\6\1'\6\a\0'\a\b\0'\b\t\0B\4\4\2>\4\1\0039\4\6\1'\6\n\0'\a\v\0'\b\f\0B\4\4\0?\4\0\0=\3\5\0026\2\r\0009\2\14\2'\4\15\0B\2\2\2\18\5\2\0009\3\16\2'\6\17\0B\3\3\2\18\6\2\0009\4\18\2B\4\2\0019\4\3\0019\4\19\4=\3\5\0049\4\20\0009\6\21\1B\4\2\1K\0\1\0\topts\nsetup\vfooter\nclose\a*a\tread\ffortune\npopen\aio\f:qa<CR>\19ï™™  Quit NVIM\6q :ene <BAR> startinsert <CR>\18ï…›  New file\6e\vbutton\bval\fbuttons\fsection\27alpha.themes.dashboard\nalpha\frequire\5€€À™\4\0" },
+    loaded = true,
+    path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/alpha-nvim",
+    url = "https://github.com/goolord/alpha-nvim"
+  },
   ["blamer.nvim"] = {
     loaded = true,
     path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/blamer.nvim",
@@ -257,11 +263,6 @@ _G.packer_plugins = {
     path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/plenary.nvim",
     url = "https://github.com/nvim-lua/plenary.nvim"
   },
-  ["refactoring.nvim"] = {
-    loaded = true,
-    path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/refactoring.nvim",
-    url = "https://github.com/ThePrimeagen/refactoring.nvim"
-  },
   ["telescope-fzf-native.nvim"] = {
     loaded = true,
     path = "/Users/pankajgarkoti/.local/share/nvim/site/pack/packer/start/telescope-fzf-native.nvim",
@@ -309,6 +310,10 @@ time([[Config for codeium.vim]], false)
 time([[Config for which-key.nvim]], true)
 try_loadstring("\27LJ\2\nt\0\0\3\0\a\0\0156\0\0\0009\0\1\0+\1\2\0=\1\2\0006\0\0\0009\0\1\0)\1,\1=\1\3\0006\0\4\0'\2\5\0B\0\2\0029\0\6\0004\2\0\0B\0\2\1K\0\1\0\nsetup\14which-key\frequire\15timeoutlen\ftimeout\6o\bvim\0", "config", "which-key.nvim")
 time([[Config for which-key.nvim]], false)
+-- Config for: alpha-nvim
+time([[Config for alpha-nvim]], true)
+try_loadstring("\27LJ\2\nã\2\0\0\t\0\22\1(6\0\0\0'\2\1\0B\0\2\0026\1\0\0'\3\2\0B\1\2\0029\2\3\0019\2\4\0024\3\3\0009\4\6\1'\6\a\0'\a\b\0'\b\t\0B\4\4\2>\4\1\0039\4\6\1'\6\n\0'\a\v\0'\b\f\0B\4\4\0?\4\0\0=\3\5\0026\2\r\0009\2\14\2'\4\15\0B\2\2\2\18\5\2\0009\3\16\2'\6\17\0B\3\3\2\18\6\2\0009\4\18\2B\4\2\0019\4\3\0019\4\19\4=\3\5\0049\4\20\0009\6\21\1B\4\2\1K\0\1\0\topts\nsetup\vfooter\nclose\a*a\tread\ffortune\npopen\aio\f:qa<CR>\19ï™™  Quit NVIM\6q :ene <BAR> startinsert <CR>\18ï…›  New file\6e\vbutton\bval\fbuttons\fsection\27alpha.themes.dashboard\nalpha\frequire\5€€À™\4\0", "config", "alpha-nvim")
+time([[Config for alpha-nvim]], false)
 -- Load plugins in order defined by `after`
 time([[Sequenced loading]], true)
 vim.cmd [[ packadd nvim-treesitter ]]

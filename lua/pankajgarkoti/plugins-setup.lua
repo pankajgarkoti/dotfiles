@@ -76,7 +76,6 @@ return require("packer").startup(function(use)
 	-- managing & installing lsp servers, linters & formatters
 	use("williamboman/mason.nvim") -- in charge of managing lsp servers, linters & formatters
 	use("williamboman/mason-lspconfig.nvim") -- bridges gap b/w mason & lspconfig
-	use("lukas-reineke/indent-blankline.nvim") --indentation lines
 
 	-- configuring lsp servers
 	use("jose-elias-alvarez/typescript.nvim") -- additional functionality for typescript server (e.g. rename file & update imports)
@@ -145,11 +144,24 @@ return require("packer").startup(function(use)
 	use({ "sindrets/diffview.nvim" })
 
 	use({
-		"ThePrimeagen/refactoring.nvim",
-		requires = {
-			{ "nvim-lua/plenary.nvim" },
-			{ "nvim-treesitter/nvim-treesitter" },
-		},
+		"lukas-reineke/indent-blankline.nvim",
+	})
+
+	use({
+		"goolord/alpha-nvim",
+		config = function()
+			local alpha = require("alpha")
+			local dashboard = require("alpha.themes.dashboard")
+			dashboard.section.buttons.val = {
+				dashboard.button("e", "  New file", ":ene <BAR> startinsert <CR>"),
+				dashboard.button("q", "  Quit NVIM", ":qa<CR>"),
+			}
+			local handle = io.popen("fortune")
+			local fortune = handle:read("*a")
+			handle:close()
+			dashboard.section.footer.val = fortune
+			alpha.setup(dashboard.opts)
+		end,
 	})
 
 	if packer_bootstrap then

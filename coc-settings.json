@@ -1,7 +1,7 @@
 {
   "diagnostic.checkCurrentLine": true,
   "snippets.ultisnips.enable": true,
-  "snippets.ultisnips.pythonPrompt": false,
+  "snippets.ultisnips.pythonPrompt": true,
   "coc.preferences.formatOnSave": true,
   "coc.preferences.formatOnType": true,
 
@@ -31,10 +31,13 @@
   "inlayHint.enableParameter": false,
 
   "suggest.noselect": false,
-  "suggest.enablePreselect": true,
-  "suggest.selection": "first",
+  "suggest.enablePreselect": false,
   "suggest.autoTrigger": "always",
   "suggest.removeDuplicateItems": true,
-  "suggest.triggerAfterInsertEnter": true,
-  "suggest.detailField": "preview"
+  "suggest.triggerAfterInsertEnter": false,
+  "suggest.detailField": "preview",
+  "suggest.languageSourcePriority": 99,
+  "suggest.lowPrioritySourceLimit": 5,
+  "suggest.removeCurrentWord": true,
+  "suggest.enableFloat": true
 }
