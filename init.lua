@@ -23,7 +23,6 @@ require("pankajgarkoti.plugins.no-neck-pain")
 require("pankajgarkoti.plugins.noice")
 require("pankajgarkoti.plugins.notify")
 require("pankajgarkoti.plugins.blamer")
--- require("pankajgarkoti.plugins.indent")
 
 -- Patches
 -- Patch for codeium interfering with autocomplete popup behaviour
