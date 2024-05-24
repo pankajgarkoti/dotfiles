@@ -49,8 +49,8 @@ local function save_profiles(threshold)
 end
 
 time([[Luarocks path setup]], true)
-local package_path_str = "/Users/pankajgarkoti/.cache/nvim/packer_hererocks/2.1.1700008891/share/lua/5.1/?.lua;/Users/pankajgarkoti/.cache/nvim/packer_hererocks/2.1.1700008891/share/lua/5.1/?/init.lua;/Users/pankajgarkoti/.cache/nvim/packer_hererocks/2.1.1700008891/lib/luarocks/rocks-5.1/?.lua;/Users/pankajgarkoti/.cache/nvim/packer_hererocks/2.1.1700008891/lib/luarocks/rocks-5.1/?/init.lua"
-local install_cpath_pattern = "/Users/pankajgarkoti/.cache/nvim/packer_hererocks/2.1.1700008891/lib/lua/5.1/?.so"
+local package_path_str = "/Users/pankajgarkoti/.cache/nvim/packer_hererocks/2.1.1713773202/share/lua/5.1/?.lua;/Users/pankajgarkoti/.cache/nvim/packer_hererocks/2.1.1713773202/share/lua/5.1/?/init.lua;/Users/pankajgarkoti/.cache/nvim/packer_hererocks/2.1.1713773202/lib/luarocks/rocks-5.1/?.lua;/Users/pankajgarkoti/.cache/nvim/packer_hererocks/2.1.1713773202/lib/luarocks/rocks-5.1/?/init.lua"
+local install_cpath_pattern = "/Users/pankajgarkoti/.cache/nvim/packer_hererocks/2.1.1713773202/lib/lua/5.1/?.so"
 if not string.find(package.path, package_path_str, 1, true) then
   package.path = package.path .. ';' .. package_path_str
 end
@@ -302,14 +302,14 @@ _G.packer_plugins = {
 }
 
 time([[Defining packer_plugins]], false)
--- Config for: alpha-nvim
-time([[Config for alpha-nvim]], true)
-try_loadstring("\27LJ\2\nã\2\0\0\t\0\22\1(6\0\0\0'\2\1\0B\0\2\0026\1\0\0'\3\2\0B\1\2\0029\2\3\0019\2\4\0024\3\3\0009\4\6\1'\6\a\0'\a\b\0'\b\t\0B\4\4\2>\4\1\0039\4\6\1'\6\n\0'\a\v\0'\b\f\0B\4\4\0?\4\0\0=\3\5\0026\2\r\0009\2\14\2'\4\15\0B\2\2\2\18\5\2\0009\3\16\2'\6\17\0B\3\3\2\18\6\2\0009\4\18\2B\4\2\0019\4\3\0019\4\19\4=\3\5\0049\4\20\0009\6\21\1B\4\2\1K\0\1\0\topts\nsetup\vfooter\nclose\a*a\tread\ffortune\npopen\aio\f:qa<CR>\19ï™™  Quit NVIM\6q :ene <BAR> startinsert <CR>\18ï…›  New file\6e\vbutton\bval\fbuttons\fsection\27alpha.themes.dashboard\nalpha\frequire\5€€À™\4\0", "config", "alpha-nvim")
-time([[Config for alpha-nvim]], false)
 -- Config for: which-key.nvim
 time([[Config for which-key.nvim]], true)
 try_loadstring("\27LJ\2\nt\0\0\3\0\a\0\0156\0\0\0009\0\1\0+\1\2\0=\1\2\0006\0\0\0009\0\1\0)\1,\1=\1\3\0006\0\4\0'\2\5\0B\0\2\0029\0\6\0004\2\0\0B\0\2\1K\0\1\0\nsetup\14which-key\frequire\15timeoutlen\ftimeout\6o\bvim\0", "config", "which-key.nvim")
 time([[Config for which-key.nvim]], false)
+-- Config for: alpha-nvim
+time([[Config for alpha-nvim]], true)
+try_loadstring("\27LJ\2\nã\2\0\0\t\0\22\1(6\0\0\0'\2\1\0B\0\2\0026\1\0\0'\3\2\0B\1\2\0029\2\3\0019\2\4\0024\3\3\0009\4\6\1'\6\a\0'\a\b\0'\b\t\0B\4\4\2>\4\1\0039\4\6\1'\6\n\0'\a\v\0'\b\f\0B\4\4\0?\4\0\0=\3\5\0026\2\r\0009\2\14\2'\4\15\0B\2\2\2\18\5\2\0009\3\16\2'\6\17\0B\3\3\2\18\6\2\0009\4\18\2B\4\2\0019\4\3\0019\4\19\4=\3\5\0049\4\20\0009\6\21\1B\4\2\1K\0\1\0\topts\nsetup\vfooter\nclose\a*a\tread\ffortune\npopen\aio\f:qa<CR>\19ï™™  Quit NVIM\6q :ene <BAR> startinsert <CR>\18ï…›  New file\6e\vbutton\bval\fbuttons\fsection\27alpha.themes.dashboard\nalpha\frequire\5€€À™\4\0", "config", "alpha-nvim")
+time([[Config for alpha-nvim]], false)
 -- Config for: codeium.vim
 time([[Config for codeium.vim]], true)
 try_loadstring("\27LJ\2\n-\0\0\2\0\3\0\0046\0\0\0009\0\1\0009\0\2\0D\0\1\0\19codeium#Accept\afn\bvim;\0\0\3\0\3\0\0056\0\0\0009\0\1\0009\0\2\0)\2\1\0D\0\2\0\29codeium#CycleCompletions\afn\bvim;\0\0\3\0\3\0\0056\0\0\0009\0\1\0009\0\2\0)\2ÿÿD\0\2\0\29codeium#CycleCompletions\afn\bvim,\0\0\2\0\3\0\0046\0\0\0009\0\1\0009\0\2\0D\0\1\0\18codeium#Clear\afn\bvimÜ\1\1\0\6\0\16\0!6\0\0\0009\0\1\0009\0\2\0'\2\3\0'\3\4\0003\4\5\0005\5\6\0B\0\5\0016\0\0\0009\0\1\0009\0\2\0'\2\3\0'\3\a\0003\4\b\0005\5\t\0B\0\5\0016\0\0\0009\0\1\0009\0\2\0'\2\3\0'\3\n\0003\4\v\0005\5\f\0B\0\5\0016\0\0\0009\0\1\0009\0\2\0'\2\3\0'\3\r\0003\4\14\0005\5\15\0B\0\5\1K\0\1\0\1\0\1\texpr\2\0\n<c-x>\1\0\1\texpr\2\0\n<c-,>\1\0\1\texpr\2\0\n<c-;>\1\0\1\texpr\2\0\n<C-a>\6i\bset\vkeymap\bvim\0", "config", "codeium.vim")

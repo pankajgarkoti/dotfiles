@@ -13,8 +13,12 @@ require("catppuccin").setup({
 		light = "mocha",
 		dark = "mocha",
 	},
+	-- background = {
+	-- 	light = "macchiato",
+	-- 	dark = "macchiato",
+	-- },
 	transparent_background = false,
-	show_end_of_buffer = false, -- show the '~' characters after the end of buffers
+	show_end_of_buffer = true, -- show the '~' characters after the end of buffers
 	term_colors = true,
 	dim_inactive = {
 		enabled = false,
