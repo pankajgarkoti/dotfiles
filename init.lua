@@ -5,8 +5,8 @@ require("pankajgarkoti.core.keymaps")
 -- require("pankajgarkoti.core.neovide")
 -- require("pankajgarkoti.core.colorscheme_material")
 -- require("pankajgarkoti.core.colorscheme_catppuccin")
-require("pankajgarkoti.core.colorscheme_gruvbox")
--- require("pankajgarkoti.core.colorscheme_onedark")
+-- require("pankajgarkoti.core.colorscheme_gruvbox")
+require("pankajgarkoti.core.colorscheme_onedark")
 
 -- Plugins
 require("pankajgarkoti.plugins.comment")
