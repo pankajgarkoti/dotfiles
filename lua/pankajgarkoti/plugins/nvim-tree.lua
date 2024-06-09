@@ -56,41 +56,7 @@ nvimtree.setup({
 	sync_root_with_cwd = true,
 	view = {
 		adaptive_size = false,
-		-- mappings = {
-		-- 	list = {
-		-- 		{ key = { "<2-RightMouse>", "<C-]>" }, action = "" }, -- cd
-		-- 		{ key = "<C-v>", action = "" }, -- vsplit
-		-- 		{ key = "<C-x>", action = "" }, -- split
-		-- 		{ key = "<C-t>", action = "" }, -- tabnew
-		-- 		{ key = "<BS>", action = "" }, -- close_node
-		-- 		{ key = "<Tab>", action = "" }, -- preview
-		-- 		{ key = "D", action = "" }, -- trash
-		-- 		{ key = "[e", action = "" }, -- prev_diag_item
-		-- 		{ key = "]e", action = "" }, -- next_diag_item
-		-- 		{ key = "[c", action = "" }, -- prev_git_item
-		-- 		{ key = "]c", action = "" }, -- next_git_item
-		-- 		{ key = "-", action = "" }, -- dir_up
-		-- 		{ key = "s", action = "" }, -- system_open
-		-- 		{ key = "W", action = "" }, -- collapse_all
-		-- 		{ key = "g?", action = "" }, -- toggle_help
-		--
-		-- 		{ key = "d", action = "cd" }, -- remove
-		-- 		{ key = "x", action = "remove" }, -- cut
-		--
-		-- 		{ key = "t", action = "cut" },
-		-- 		{ key = "<Space>p", action = "prev_diag_item" },
-		-- 		{ key = "<Space>.", action = "next_diag_item" },
-		-- 		{ key = "<Space>k", action = "prev_git_item" },
-		-- 		{ key = "<Space>j", action = "next_git_item" },
-		-- 		{ key = "u", action = "dir_up" },
-		-- 		{ key = "'", action = "close_node" },
-		-- 		{ key = '"', action = "collapse_all" },
-		-- 		{ key = "?", action = "toggle_help" },
-		-- 	},
-		-- },
-		--
 		preserve_window_proportions = true,
-		-- width = 34,
 		float = {
 			enable = true,
 			open_win_config = {

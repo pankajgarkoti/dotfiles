@@ -14,20 +14,20 @@ vim.opt.rtp:prepend(lazypath)
 vim.g.mapleader = " " -- Make sure to set `mapleader` before lazy so your mappings are correct
 vim.g.maplocalleader = "\\" -- Same for `maplocalleader`
 
--- Autocommand that reloads nvim whenever this is saved
-vim.cmd([[
-    augroup lazy_reload
-        autocmd!
-        autocmd BufWritePost plugins-setup.lua source <afile> | Lazy sync
-    augroup end
-]])
-
 return require("lazy").setup({
+	{ --* so fucking beautiful *--
+		"rose-pine/neovim",
+		enabled = true,
+		lazy = false,
+		priority = 1000,
+		config = function()
+			vim.cmd([[colorscheme rose-pine]])
+		end,
+	},
+	{ "navarasu/onedark.nvim", lazy = false },
 	"nvim-lua/plenary.nvim",
 	"shortcuts/no-neck-pain.nvim",
 	"ellisonleao/gruvbox.nvim",
-	"catppuccin/nvim",
-	"navarasu/onedark.nvim",
 	"folke/noice.nvim",
 	"christoomey/vim-tmux-navigator",
 	"tpope/vim-surround",
@@ -44,15 +44,7 @@ return require("lazy").setup({
 		"nvim-telescope/telescope.nvim",
 		branch = "0.1.x",
 	},
-	{ "neoclide/coc.nvim", branch = "release" },
-	"hrsh7th/nvim-cmp", -- completion plugin
-	"hrsh7th/cmp-buffer", -- source for text in buffer
-	"hrsh7th/cmp-path", -- source for file system paths
-	"L3MON4D3/LuaSnip", -- snippet engine
-	"saadparwaiz1/cmp_luasnip", -- for autocompletion
 	"rafamadriz/friendly-snippets", -- useful snippets
-	"williamboman/mason.nvim", -- in charge of managing lsp servers, linters & formatters
-	"williamboman/mason-lspconfig.nvim", -- bridges gap b/w mason & lspconfig
 	"jose-elias-alvarez/typescript.nvim", -- additional functionality for typescript server (e.g. rename file & update imports)
 	"jose-elias-alvarez/null-ls.nvim", -- configure formatters & linters
 	"jayp0521/mason-null-ls.nvim", -- bridges gap b/w mason & null-ls
@@ -86,7 +78,7 @@ return require("lazy").setup({
 	{
 		"Exafunction/codeium.vim",
 		options = {
-			language_server = "~/codeium_ls_v1",
+			language_server = "~/codeium_ls_v1.1",
 		},
 		config = function()
 			-- Change '<C-g>' here to any keycode you like.
@@ -122,6 +114,285 @@ return require("lazy").setup({
 			handle:close()
 			dashboard.section.footer.val = fortune
 			alpha.setup(dashboard.opts)
+		end,
+	},
+	{
+		"wojciech-kulik/xcodebuild.nvim",
+		dependencies = {
+			"nvim-telescope/telescope.nvim",
+			"MunifTanjim/nui.nvim",
+			"nvim-tree/nvim-tree.lua", -- (optional) to manage project files
+			"stevearc/oil.nvim", -- (optional) to manage project files
+			"nvim-treesitter/nvim-treesitter", -- (optional) for Quick tests support (required Swift parser)
+		},
+		config = function()
+			require("xcodebuild").setup({})
+		end,
+	},
+	"mfussenegger/nvim-dap",
+	{
+		"mfussenegger/nvim-lint",
+		event = { "BufReadPre", "BufNewFile" },
+		config = function()
+			local lint = require("lint")
+
+			lint.linters_by_ft = {
+				swift = { "swiftlint" },
+			}
+
+			local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
+
+			vim.api.nvim_create_autocmd({ "BufWritePost", "BufReadPost", "InsertLeave", "TextChanged" }, {
+				group = lint_augroup,
+				callback = function()
+					require("lint").try_lint()
+				end,
+			})
+
+			vim.keymap.set("n", "<leader>ml", function()
+				require("lint").try_lint()
+			end, { desc = "Lint file" })
+		end,
+	},
+	{
+		"stevearc/conform.nvim",
+		event = { "BufReadPre", "BufNewFile" },
+		config = function()
+			local conform = require("conform")
+
+			conform.setup({
+				formatters_by_ft = {
+					swift = { "swiftformat" },
+				},
+				format_on_save = function(bufnr)
+					return { timeout_ms = 500, lsp_fallback = true }
+				end,
+				log_level = vim.log.levels.ERROR,
+			})
+
+			vim.keymap.set({ "n", "v" }, "<leader>mp", function()
+				conform.format({
+					lsp_fallback = true,
+					async = false,
+					timeout_ms = 500,
+				})
+			end, { desc = "Format file or range (in visual mode)" })
+		end,
+	},
+	{
+		"neovim/nvim-lspconfig",
+		event = { "BufReadPre", "BufNewFile" },
+		dependencies = {
+			"hrsh7th/cmp-nvim-lsp",
+			{ "antosha417/nvim-lsp-file-operations", config = true },
+			{ "nvim-treesitter/nvim-treesitter" },
+
+			--* LSP Support *--
+			{ "williamboman/mason.nvim" }, -- Lsp installer
+			{ "williamboman/mason-lspconfig.nvim" }, -- Makes Mason easier to use with lspconfig
+
+			--* Autocompletion + Snippets *--
+			{ "hrsh7th/nvim-cmp" }, -- Completion engine
+			{ "hrsh7th/cmp-nvim-lsp" }, -- Show autocompletions
+			{ "hrsh7th/cmp-buffer" }, -- source for text in buffer
+			{ "hrsh7th/cmp-path" }, -- source for file system paths
+			{ "hrsh7th/cmp-cmdline" }, -- Autocompletions for the cmdline
+			{
+				"L3MON4D3/LuaSnip",
+				-- follow latest release.
+				version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
+				-- install jsregexp (optional!).
+				build = "make install_jsregexp",
+			},
+			{ "saadparwaiz1/cmp_luasnip" }, -- for autocompletion
+			{ "onsails/lspkind.nvim" }, -- Optional  -> Icons in autocompletion
+		},
+		config = function()
+			local lspconfig = require("lspconfig")
+			local cmp_nvim_lsp = require("cmp_nvim_lsp")
+			local capabilities = cmp_nvim_lsp.default_capabilities()
+			local opts = { noremap = true, silent = true }
+			local on_attach = function(client, bufnr)
+				-- Print LSP started message
+				print("LSP attached.")
+
+				local map = function(mode, lhs, rhs, desc)
+					opts.buffer = bufnr
+					opts.desc = desc
+					vim.keymap.set(mode, lhs, rhs, opts)
+				end
+
+				-- LSP-based mappings
+				map("n", "<leader>d", vim.diagnostic.open_float, "Show line diagnostics")
+				map("n", "K", vim.lsp.buf.hover, "Show documentation for what is under cursor")
+				map("n", "gD", vim.lsp.buf.declaration, "Go to declaration")
+				map("n", "gd", vim.lsp.buf.definition, "Go to definition")
+				map("n", "gi", vim.lsp.buf.implementation, "Go to implementation")
+				map("n", "gr", vim.lsp.buf.references, "Show references")
+				map("n", "gs", vim.lsp.buf.signature_help, "Show signature help")
+				map("n", "gt", vim.lsp.buf.type_definition, "Go to type definition")
+				map("n", "<leader>gw", vim.lsp.buf.document_symbol, "Show document symbols")
+				map("n", "<leader>gW", vim.lsp.buf.workspace_symbol, "Show workspace symbols")
+				map("n", "<leader>af", vim.lsp.buf.code_action, "Show code actions")
+				map("n", "<leader>ar", vim.lsp.buf.rename, "Rename symbol")
+				map("n", "<leader>=", vim.lsp.buf.format, "Format document")
+				map("n", "<leader>ai", vim.lsp.buf.incoming_calls, "Show incoming calls")
+				map("n", "<leader>ao", vim.lsp.buf.outgoing_calls, "Show outgoing calls")
+				map("n", "<leader>ld", vim.diagnostic.open_float, "Show line diagnostics")
+			end
+
+			lspconfig["sourcekit"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+			})
+
+			-- configure html server
+			lspconfig["html"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+			})
+
+			-- configure typescript server with plugin
+			local exists, typescript = pcall(require, "typescript")
+
+			if exists then
+				typescript.setup({
+					server = {
+						capabilities = capabilities,
+						on_attach = on_attach,
+					},
+				})
+			end
+
+			-- configure css server
+			lspconfig["cssls"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+			})
+
+			-- configure tailwindcss server
+			lspconfig["tailwindcss"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+			})
+
+			-- configure emmet language server
+			lspconfig["emmet_ls"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+				filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
+			})
+
+			lspconfig["pyright"].setup({
+				on_attach = on_attach,
+				filetypes = { "py" },
+			})
+
+			-- configure lua server (with special settings)
+			lspconfig["lua_ls"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+				settings = { -- custom settings for lua
+					Lua = {
+						-- make the language server recognize "vim" global
+						diagnostics = {
+							globals = { "vim" },
+						},
+						workspace = {
+							-- make language server aware of runtime files
+							library = {
+								[vim.fn.expand("$VIMRUNTIME/lua")] = true,
+								[vim.fn.stdpath("config") .. "/lua"] = true,
+							},
+						},
+					},
+				},
+			})
+
+			-- nvim-cmp related config
+
+			-- import nvim-cmp plugin safely
+			local cmp_status, cmp = pcall(require, "cmp")
+			if not cmp_status then
+				return
+			end
+
+			-- import luasnip plugin safely
+			local luasnip_status, luasnip = pcall(require, "luasnip")
+			if not luasnip_status then
+				return
+			end
+
+			-- import lspkind plugin safely
+			local lspkind_status, lspkind = pcall(require, "lspkind")
+			if not lspkind_status then
+				return
+			end
+
+			-- load vs-code like snippets from plugins (e.g. friendly-snippets)
+			require("luasnip/loaders/from_vscode").lazy_load()
+
+			vim.opt.completeopt = "menu,menuone,noselect"
+			cmp.setup({
+				snippet = {
+					expand = function(args)
+						luasnip.lsp_expand(args.body)
+					end,
+				},
+
+				mapping = {
+					["<CR>"] = cmp.mapping(function(fallback)
+						if cmp.visible() then
+							if luasnip.expandable() then
+								luasnip.expand()
+							else
+								cmp.confirm({
+									select = true,
+								})
+							end
+						else
+							fallback()
+						end
+					end),
+					["<Tab>"] = cmp.mapping(function(fallback)
+						if cmp.visible() then
+							cmp.select_next_item()
+						elseif luasnip.locally_jumpable(1) then
+							luasnip.jump(1)
+						else
+							fallback()
+						end
+					end, { "i", "s" }),
+					["<S-Tab>"] = cmp.mapping(function(fallback)
+						if cmp.visible() then
+							cmp.select_prev_item()
+						elseif luasnip.locally_jumpable(-1) then
+							luasnip.jump(-1)
+						else
+							fallback()
+						end
+					end, { "i", "s" }),
+				},
+				-- sources for autocompletion
+				sources = cmp.config.sources({
+					{ name = "nvim_lsp" }, -- lsp
+					{ name = "luasnip" }, -- snippets
+					{ name = "codeium" },
+					{ name = "buffer" }, -- text within current buffer
+					{ name = "path" }, -- file system paths
+				}),
+				-- configure lspkind for vs-code like icons
+				formatting = {
+					format = lspkind.cmp_format({
+						mode = "symbol",
+						maxwidth = 50,
+						ellipsis_char = "...",
+						symbol_map = {
+							Codeium = "",
+						},
+					}),
+				},
+			})
 		end,
 	},
 })
