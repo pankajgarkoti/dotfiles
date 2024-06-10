@@ -11,7 +11,7 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-vim.g.mapleader = " " -- Make sure to set `mapleader` before lazy so your mappings are correct
+vim.g.mapleader = " "       -- Make sure to set `mapleader` before lazy so your mappings are correct
 vim.g.maplocalleader = "\\" -- Same for `maplocalleader`
 
 return require("lazy").setup({
@@ -45,9 +45,6 @@ return require("lazy").setup({
 		branch = "0.1.x",
 	},
 	"rafamadriz/friendly-snippets", -- useful snippets
-	"jose-elias-alvarez/typescript.nvim", -- additional functionality for typescript server (e.g. rename file & update imports)
-	"jose-elias-alvarez/null-ls.nvim", -- configure formatters & linters
-	"jayp0521/mason-null-ls.nvim", -- bridges gap b/w mason & null-ls
 	{
 		"nvim-treesitter/nvim-treesitter",
 		build = function()
@@ -60,9 +57,9 @@ return require("lazy").setup({
 			"windwp/nvim-ts-autotag",
 		},
 	},
-	"windwp/nvim-autopairs", -- autoclose parens, brackets, quotes, etc...
+	"windwp/nvim-autopairs",  -- autoclose parens, brackets, quotes, etc...
 	"lewis6991/gitsigns.nvim", -- show line modifications on left hand side
-	"tpope/vim-fugitive", -- vim git plugin
+	"tpope/vim-fugitive",     -- vim git plugin
 	"marko-cerovac/material.nvim",
 	"ThePrimeagen/harpoon",
 	"numToStr/FTerm.nvim",
@@ -121,8 +118,8 @@ return require("lazy").setup({
 		dependencies = {
 			"nvim-telescope/telescope.nvim",
 			"MunifTanjim/nui.nvim",
-			"nvim-tree/nvim-tree.lua", -- (optional) to manage project files
-			"stevearc/oil.nvim", -- (optional) to manage project files
+			"nvim-tree/nvim-tree.lua",      -- (optional) to manage project files
+			"stevearc/oil.nvim",            -- (optional) to manage project files
 			"nvim-treesitter/nvim-treesitter", -- (optional) for Quick tests support (required Swift parser)
 		},
 		config = function()
@@ -187,15 +184,11 @@ return require("lazy").setup({
 			{ "antosha417/nvim-lsp-file-operations", config = true },
 			{ "nvim-treesitter/nvim-treesitter" },
 
-			--* LSP Support *--
-			{ "williamboman/mason.nvim" }, -- Lsp installer
-			{ "williamboman/mason-lspconfig.nvim" }, -- Makes Mason easier to use with lspconfig
-
 			--* Autocompletion + Snippets *--
-			{ "hrsh7th/nvim-cmp" }, -- Completion engine
+			{ "hrsh7th/nvim-cmp" },  -- Completion engine
 			{ "hrsh7th/cmp-nvim-lsp" }, -- Show autocompletions
 			{ "hrsh7th/cmp-buffer" }, -- source for text in buffer
-			{ "hrsh7th/cmp-path" }, -- source for file system paths
+			{ "hrsh7th/cmp-path" },  -- source for file system paths
 			{ "hrsh7th/cmp-cmdline" }, -- Autocompletions for the cmdline
 			{
 				"L3MON4D3/LuaSnip",
@@ -204,8 +197,8 @@ return require("lazy").setup({
 				-- install jsregexp (optional!).
 				build = "make install_jsregexp",
 			},
-			{ "saadparwaiz1/cmp_luasnip" }, -- for autocompletion
-			{ "onsails/lspkind.nvim" }, -- Optional  -> Icons in autocompletion
+			{ "saadparwaiz1/cmp_luasnip" }, -- for autocompletion,
+			{ "onsails/lspkind.nvim" },  -- Optional  -> Icons in autocompletion
 		},
 		config = function()
 			local lspconfig = require("lspconfig")
@@ -394,5 +387,69 @@ return require("lazy").setup({
 				},
 			})
 		end,
+	},
+	{
+		"nvimtools/none-ls.nvim",
+		dependencies = {
+			"nvimtools/none-ls-extras.nvim",
+		},
+		config = function()
+			require("pankajgarkoti.plugins.lsp.null-ls")
+		end
+	},
+	{
+		"williamboman/mason.nvim",
+		config = function()
+			require("pankajgarkoti.plugins.lsp.mason")
+		end
+	},
+	{
+		"williamboman/mason-lspconfig.nvim",
+		config = function()
+			local mason_lspconfig_status, mason_lspconfig = pcall(require, "mason-lspconfig")
+			if not mason_lspconfig_status then
+				print("mason_lspconfig not installed")
+				return
+			end
+
+			mason_lspconfig.setup({
+				ensure_installed = {
+					"tsserver",
+					"html",
+					"cssls",
+					"tailwindcss",
+					"emmet_ls",
+					"pyright",
+				},
+				automatic_installation = true,
+			})
+		end
+	},
+	{
+		"jay-babu/mason-null-ls.nvim",
+		event = { "BufReadPre", "BufNewFile" },
+		dependencies = {
+			"nvimtools/none-ls.nvim",
+			"williamboman/mason.nvim",
+		},
+		config = function()
+			local mason_null_ls_status, mason_null_ls = pcall(require, "mason-null-ls")
+			if not mason_null_ls_status then
+				print("mason_null_ls not installed")
+				return
+			end
+
+			mason_null_ls.setup({
+				-- list of formatters & linters for mason to install
+				ensure_installed = {
+					"prettier",
+					"stylua",
+					"eslint_d",
+					"autopep8",
+				},
+				-- auto-install configured formatters & linters (with null-ls)
+				automatic_installation = true,
+			})
+		end
 	},
 })
