@@ -98,20 +98,14 @@ return require("lazy").setup({
 	"sindrets/diffview.nvim",
 	"lukas-reineke/indent-blankline.nvim",
 	{
-		"goolord/alpha-nvim",
+		'nvimdev/dashboard-nvim',
+		event = 'VimEnter',
 		config = function()
-			local alpha = require("alpha")
-			local dashboard = require("alpha.themes.dashboard")
-			dashboard.section.buttons.val = {
-				dashboard.button("e", "  New file", ":ene <BAR> startinsert <CR>"),
-				dashboard.button("q", "  Quit NVIM", ":qa<CR>"),
+			require('dashboard').setup {
+				disable_move = true
 			}
-			local handle = io.popen("fortune")
-			local fortune = handle:read("*a")
-			handle:close()
-			dashboard.section.footer.val = fortune
-			alpha.setup(dashboard.opts)
 		end,
+		dependencies = { { 'nvim-tree/nvim-web-devicons' } }
 	},
 	{
 		"wojciech-kulik/xcodebuild.nvim",

@@ -13,7 +13,7 @@ null_ls.setup({
 	sources = {
 		formatting.prettier,
 		formatting.autopep8,
-		formatting.swiftlint,
+		diagnostics.swiftlint,
 		diagnostics.stylua,
 		require("none-ls.diagnostics.eslint_d").with({
 			condition = function(utils)
