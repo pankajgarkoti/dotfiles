@@ -25,16 +25,20 @@ return require("lazy").setup({
 		dependencies = { "luarocks.nvim" },
 		lazy = false, -- Disable lazy loading as some `lazy.nvim` distributions set `lazy = true` by default
 		version = "*", -- Pin Neorg to the latest stable release
-		config = true,
+		config = function()
+			require("neorg").setup({
+				load = {
+					["core.defaults"] = {},
+					["core.concealer"] = {},
+				}
+			})
+		end,
 	},
 	{ --* so fucking beautiful *--
 		"rose-pine/neovim",
 		enabled = true,
 		lazy = false,
-		priority = 1000,
-		styles = {
-			transparency = true,
-		},
+		priority = 999,
 		config = function()
 			vim.cmd([[colorscheme rose-pine]])
 		end,
