@@ -12,7 +12,7 @@ local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
 null_ls.setup({
 	sources = {
 		formatting.prettier,
-		formatting.autopep8,
+		formatting.black,
 		diagnostics.swiftlint,
 		diagnostics.stylua,
 		require("none-ls.diagnostics.eslint_d").with({

@@ -15,19 +15,32 @@ vim.g.mapleader = " "       -- Make sure to set `mapleader` before lazy so your 
 vim.g.maplocalleader = "\\" -- Same for `maplocalleader`
 
 return require("lazy").setup({
+	{
+		"vhyrro/luarocks.nvim",
+		priority = 1000, -- Very high priority is required, luarocks.nvim should run as the first plugin in your config.
+		config = true,
+	},
+	{
+		"nvim-neorg/neorg",
+		dependencies = { "luarocks.nvim" },
+		lazy = false, -- Disable lazy loading as some `lazy.nvim` distributions set `lazy = true` by default
+		version = "*", -- Pin Neorg to the latest stable release
+		config = true,
+	},
 	{ --* so fucking beautiful *--
 		"rose-pine/neovim",
 		enabled = true,
 		lazy = false,
 		priority = 1000,
+		styles = {
+			transparency = true,
+		},
 		config = function()
 			vim.cmd([[colorscheme rose-pine]])
 		end,
 	},
-	{ "navarasu/onedark.nvim", lazy = false },
 	"nvim-lua/plenary.nvim",
 	"shortcuts/no-neck-pain.nvim",
-	"ellisonleao/gruvbox.nvim",
 	"folke/noice.nvim",
 	"christoomey/vim-tmux-navigator",
 	"tpope/vim-surround",
@@ -36,6 +49,15 @@ return require("lazy").setup({
 	"nvim-tree/nvim-tree.lua",
 	"kyazdani42/nvim-web-devicons",
 	"nvim-lualine/lualine.nvim",
+	{
+		"lukas-reineke/indent-blankline.nvim",
+		main = "ibl",
+		opts = {
+			indent = {
+				char = { "│" },
+			},
+		}
+	},
 	{
 		"nvim-telescope/telescope-fzf-native.nvim",
 		build = "make",
@@ -56,6 +78,9 @@ return require("lazy").setup({
 			"nvim-treesitter/nvim-treesitter-textobjects",
 			"windwp/nvim-ts-autotag",
 		},
+		config = function()
+			require("pankajgarkoti.plugins.treesitter")
+		end
 	},
 	"windwp/nvim-autopairs",  -- autoclose parens, brackets, quotes, etc...
 	"lewis6991/gitsigns.nvim", -- show line modifications on left hand side
@@ -74,7 +99,7 @@ return require("lazy").setup({
 	},
 	{
 		"Exafunction/codeium.vim",
-		options = {
+		opts = {
 			language_server = "~/codeium_ls_v1.1",
 		},
 		config = function()
@@ -96,17 +121,6 @@ return require("lazy").setup({
 	"MunifTanjim/nui.nvim",
 	"rcarriga/nvim-notify",
 	"sindrets/diffview.nvim",
-	"lukas-reineke/indent-blankline.nvim",
-	{
-		'nvimdev/dashboard-nvim',
-		event = 'VimEnter',
-		config = function()
-			require('dashboard').setup {
-				disable_move = true
-			}
-		end,
-		dependencies = { { 'nvim-tree/nvim-web-devicons' } }
-	},
 	{
 		"wojciech-kulik/xcodebuild.nvim",
 		dependencies = {
@@ -121,6 +135,13 @@ return require("lazy").setup({
 		end,
 	},
 	"mfussenegger/nvim-dap",
+	{
+		"rcarriga/nvim-dap-ui",
+		dependencies = {
+			"mfussenegger/nvim-dap",
+			"nvim-neotest/nvim-nio"
+		}
+	},
 	{
 		"mfussenegger/nvim-lint",
 		event = { "BufReadPre", "BufNewFile" },
@@ -199,7 +220,21 @@ return require("lazy").setup({
 			local cmp_nvim_lsp = require("cmp_nvim_lsp")
 			local capabilities = cmp_nvim_lsp.default_capabilities()
 			local opts = { noremap = true, silent = true }
-			local on_attach = function(client, bufnr)
+
+			vim.o.updatetime = 300
+			vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+				group = vim.api.nvim_create_augroup("float_diagnostic", { clear = true }),
+				callback = function()
+					vim.diagnostic.open_float(nil, { focus = false })
+				end
+			})
+
+			vim.diagnostic.config({
+				virtual_text = false,
+				underline = true,
+			})
+
+			local on_attach = function(_, bufnr)
 				-- Print LSP started message
 				print("LSP attached.")
 
@@ -272,7 +307,13 @@ return require("lazy").setup({
 
 			lspconfig["pyright"].setup({
 				on_attach = on_attach,
-				filetypes = { "py" },
+				filetypes = { "python" },
+			})
+
+			lspconfig["eslint_d"].setup({
+				on_attach = on_attach,
+				capabilities = capabilities,
+				filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
 			})
 
 			-- configure lua server (with special settings)
@@ -439,7 +480,7 @@ return require("lazy").setup({
 					"prettier",
 					"stylua",
 					"eslint_d",
-					"autopep8",
+					"black"
 				},
 				-- auto-install configured formatters & linters (with null-ls)
 				automatic_installation = true,

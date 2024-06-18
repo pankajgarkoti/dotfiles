@@ -17,6 +17,10 @@ require("pankajgarkoti.plugins.notify")
 require("pankajgarkoti.plugins.blamer")
 require("pankajgarkoti.plugins.xcodebuild")
 require("pankajgarkoti.plugins.harpoon")
+require("pankajgarkoti.plugins.autopairs")
+
+-- LSP ad-hoc config
+require("pankajgarkoti.plugins.lsp.eslint-lspconfig")
 
 -- Patches
 -- Patch for codeium interfering with autocomplete popup behaviour
@@ -24,4 +28,9 @@ vim.g.codeium_no_map_tab = 1
 vim.api.nvim_create_autocmd("BufEnter", {
 	pattern = "*",
 	command = "set wrap",
+})
+vim.api.nvim_create_autocmd("VimEnter", {
+	callback = function()
+		require('telescope.builtin').find_files()
+	end
 })

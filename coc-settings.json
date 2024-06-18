@@ -24,7 +24,7 @@
     "reportOptionalSubscript": "warning"
   },
 
-  "diagnostic.virtualText": true,
+  "diagnostic.virtualText": false,
   "diagnostic.virtualTextCurrentLineOnly": false,
 
   "inlayHint.enable": false,
