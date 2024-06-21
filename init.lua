@@ -23,8 +23,9 @@ require("pankajgarkoti.plugins.autopairs")
 require("pankajgarkoti.plugins.lsp.eslint-lspconfig")
 
 -- Patches
+local opts = { noremap = true, silent = true }
 -- Patch for codeium interfering with autocomplete popup behaviour
-vim.g.codeium_no_map_tab = 1
+-- vim.g.codeium_no_map_tab = 1
 vim.api.nvim_create_autocmd("BufEnter", {
 	pattern = "*",
 	command = "set wrap",
@@ -34,3 +35,13 @@ vim.api.nvim_create_autocmd("VimEnter", {
 		require('telescope.builtin').find_files()
 	end
 })
+
+
+local function quickfix()
+	vim.lsp.buf.code_action({
+		filter = function(a) return a ~= nil end,
+		apply = true
+	})
+end
+
+vim.keymap.set('n', '<leader>qf', quickfix, opts)

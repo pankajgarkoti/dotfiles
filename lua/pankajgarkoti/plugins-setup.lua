@@ -23,25 +23,37 @@ return require("lazy").setup({
 	{
 		"nvim-neorg/neorg",
 		dependencies = { "luarocks.nvim" },
-		lazy = false, -- Disable lazy loading as some `lazy.nvim` distributions set `lazy = true` by default
-		version = "*", -- Pin Neorg to the latest stable release
+		lazy = false, -- Disable lazy loading as some `lazy.nvim` distributions set `lazy = true` by default.
+		version = "*", -- Pin Neorg to the latest stable release.
 		config = function()
 			require("neorg").setup({
 				load = {
 					["core.defaults"] = {},
 					["core.concealer"] = {},
+					["core.ui.calendar"] = {}
 				}
 			})
 		end,
 	},
-	{ --* so fucking beautiful *--
-		"rose-pine/neovim",
-		enabled = true,
-		lazy = false,
-		priority = 999,
+	{
+		"navarasu/onedark.nvim",
 		config = function()
-			vim.cmd([[colorscheme rose-pine]])
-		end,
+			require("pankajgarkoti.core.colorscheme_onedark")
+		end
+	},
+	{
+		"hedyhli/outline.nvim",
+		lazy = true,
+		cmd = { "Outline", "OutlineOpen" },
+		keys = {
+			{ "<leader>o", "<cmd>Outline<CR>", desc = "Toggle outline" },
+		},
+		opts = {
+			keymaps = {
+				up_and_jump = '<up>',
+				down_and_jump = '<down>',
+			}
+		},
 	},
 	"nvim-lua/plenary.nvim",
 	"shortcuts/no-neck-pain.nvim",
@@ -101,27 +113,43 @@ return require("lazy").setup({
 			require("which-key").setup({})
 		end,
 	},
+	-- Remove the `use` here if you're using folke/lazy.nvim.
 	{
-		"Exafunction/codeium.vim",
-		opts = {
-			language_server = "~/codeium_ls_v1.1",
-		},
+		'Exafunction/codeium.vim',
 		config = function()
 			-- Change '<C-g>' here to any keycode you like.
-			vim.keymap.set("i", "<C-a>", function()
-				return vim.fn["codeium#Accept"]()
-			end, { expr = true })
-			vim.keymap.set("i", "<c-;>", function()
-				return vim.fn["codeium#CycleCompletions"](1)
-			end, { expr = true })
-			vim.keymap.set("i", "<c-,>", function()
-				return vim.fn["codeium#CycleCompletions"](-1)
-			end, { expr = true })
-			vim.keymap.set("i", "<c-x>", function()
-				return vim.fn["codeium#Clear"]()
-			end, { expr = true })
-		end,
+			vim.keymap.set('i', '<C-a>', function() return vim.fn['codeium#Accept']() end, { expr = true, silent = true })
+			vim.keymap.set('i', '<c-;>', function() return vim.fn['codeium#CycleCompletions'](1) end,
+				{ expr = true, silent = true })
+			vim.keymap.set('i', '<c-,>', function() return vim.fn['codeium#CycleCompletions'](-1) end,
+				{ expr = true, silent = true })
+			vim.keymap.set('i', '<c-x>', function() return vim.fn['codeium#Clear']() end, { expr = true, silent = true })
+		end
 	},
+	-- {
+	-- 	"Exafunction/codeium.nvim",
+	-- 	dependencies = {
+	-- 		"nvim-lua/plenary.nvim",
+	-- 		"hrsh7th/nvim-cmp",
+	-- 	},
+	-- 	config = function()
+	-- 		require("codeium").setup({
+	-- 			enable_chat = true
+	-- 		})
+	-- 		vim.keymap.set("i", "<c-a>", function()
+	-- 			return vim.fn["codeium#Accept"]()
+	-- 		end, { expr = true })
+	-- 		vim.keymap.set("i", "<c-;>", function()
+	-- 			return vim.fn["codeium#CycleCompletions"](1)
+	-- 		end, { expr = true })
+	-- 		vim.keymap.set("i", "<c-,>", function()
+	-- 			return vim.fn["codeium#CycleCompletions"](-1)
+	-- 		end, { expr = true })
+	-- 		vim.keymap.set("i", "<c-x>", function()
+	-- 			return vim.fn["codeium#Clear"]()
+	-- 		end, { expr = true })
+	-- 	end
+	-- },
 	"MunifTanjim/nui.nvim",
 	"rcarriga/nvim-notify",
 	"sindrets/diffview.nvim",
