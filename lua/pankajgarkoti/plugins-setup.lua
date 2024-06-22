@@ -30,9 +30,40 @@ return require("lazy").setup({
 				load = {
 					["core.defaults"] = {},
 					["core.concealer"] = {},
-					["core.ui.calendar"] = {}
+					["core.ui"] = {},
+					["core.ui.calendar"] = {},
+					["core.dirman"] = {
+						config = {
+							workspaces = {
+								ws = "~/Desktop/notes/work/",
+							},
+							index = "index.norg", -- The name of the main (root) .norg file
+							autodetect = true,
+							autochdir = true,
+						}
+					},
+					["core.completion"] = {
+						config = {
+							engine = "nvim-cmp",
+						}
+					}
 				}
 			})
+
+			-- keymaps
+			local opts = { noremap = true, silent = true }
+
+			local function quickfix()
+				vim.lsp.buf.code_action({
+					filter = function(a) return a ~= nil end,
+					apply = true
+				})
+			end
+
+			vim.keymap.set('n', '<leader>njj', ":Neorg journal today<CR>", opts)
+			vim.keymap.set('n', '<leader>njy', ":Neorg journal yesterday<CR>", opts)
+			vim.keymap.set('n', '<leader>njt', ":Neorg journal tomorrow<CR>", opts)
+			vim.keymap.set('n', '<leader>ntc', ":Neorg toc<CR>", opts)
 		end,
 	},
 	{
@@ -118,12 +149,14 @@ return require("lazy").setup({
 		'Exafunction/codeium.vim',
 		config = function()
 			-- Change '<C-g>' here to any keycode you like.
-			vim.keymap.set('i', '<C-a>', function() return vim.fn['codeium#Accept']() end, { expr = true, silent = true })
+			vim.keymap.set('i', '<C-a>', function() return vim.fn['codeium#Accept']() end,
+				{ expr = true, silent = true })
 			vim.keymap.set('i', '<c-;>', function() return vim.fn['codeium#CycleCompletions'](1) end,
 				{ expr = true, silent = true })
 			vim.keymap.set('i', '<c-,>', function() return vim.fn['codeium#CycleCompletions'](-1) end,
 				{ expr = true, silent = true })
-			vim.keymap.set('i', '<c-x>', function() return vim.fn['codeium#Clear']() end, { expr = true, silent = true })
+			vim.keymap.set('i', '<c-x>', function() return vim.fn['codeium#Clear']() end,
+				{ expr = true, silent = true })
 		end
 	},
 	-- {
