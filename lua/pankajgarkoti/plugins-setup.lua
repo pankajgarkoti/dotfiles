@@ -20,6 +20,15 @@ return require("lazy").setup({
 		priority = 1000, -- Very high priority is required, luarocks.nvim should run as the first plugin in your config.
 		config = true,
 	},
+	{ --* so fucking beautiful *--
+		"rose-pine/neovim",
+		enabled = true,
+		lazy = false,
+		priority = 1000,
+		config = function()
+			vim.cmd([[colorscheme rose-pine]])
+		end,
+	},
 	{
 		"nvim-neorg/neorg",
 		dependencies = { "luarocks.nvim" },
@@ -65,12 +74,6 @@ return require("lazy").setup({
 			vim.keymap.set('n', '<leader>njt', ":Neorg journal tomorrow<CR>", opts)
 			vim.keymap.set('n', '<leader>ntc', ":Neorg toc<CR>", opts)
 		end,
-	},
-	{
-		"navarasu/onedark.nvim",
-		config = function()
-			require("pankajgarkoti.core.colorscheme_onedark")
-		end
 	},
 	{
 		"hedyhli/outline.nvim",
