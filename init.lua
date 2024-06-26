@@ -6,7 +6,7 @@ require("pankajgarkoti.core.keymaps")
 -- Plugins
 require("pankajgarkoti.plugins.comment")
 require("pankajgarkoti.plugins.nvim-tree")
-require("pankajgarkoti.plugins.lualine")
+-- require("pankajgarkoti.plugins.lualine")
 require("pankajgarkoti.plugins.telescope")
 require("pankajgarkoti.plugins.treesitter")
 require("pankajgarkoti.plugins.gitsigns")
