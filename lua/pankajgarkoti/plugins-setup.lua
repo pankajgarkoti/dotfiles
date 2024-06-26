@@ -20,7 +20,7 @@ return require("lazy").setup({
 		priority = 1000, -- Very high priority is required, luarocks.nvim should run as the first plugin in your config.
 		config = true,
 	},
-	{ --* so fucking beautiful *--
+	{
 		"rose-pine/neovim",
 		enabled = true,
 		lazy = false,
@@ -93,8 +93,8 @@ return require("lazy").setup({
 				end,
 			})
 
-			-- vim.cmd("colorscheme rose-pine-main")
 			vim.cmd("colorscheme rose-pine-moon")
+			-- vim.cmd("colorscheme rose-pine-main")
 			-- vim.cmd("colorscheme rose-pine-dawn")
 		end,
 	},
@@ -218,129 +218,92 @@ return require("lazy").setup({
 			vim.opt.laststatus = 0
 		end,
 		opts = function()
-			-- miasma colors
+			local themes = {
+				ocean_breeze = { bg = "#1e3a5f", fg = "#c5d7e5", accent = "#3c9dd0" },
+				forest_glade = { bg = "#2e4a3d", fg = "#d4e6c3", accent = "#5ea24a" },
+				sunset_glow = { bg = "#5a2e2a", fg = "#e5d1c5", accent = "#e57c3d" },
+				solar_flare = { bg = "#3b3b00", fg = "#e5e5c7", accent = "#d4a82d" },
+				berry_crush = { bg = "#4a2a3a", fg = "#e5c5d4", accent = "#c03d7c" },
+				mint_fresh = { bg = "#2a4a4a", fg = "#c5e5e4", accent = "#3db08c" },
+				midnight = { bg = "#0d0d0d", fg = "#cfcfcf", accent = "#4e4e4e" },
+				purple_haze = { bg = "#2a2a4a", fg = "#d4c5e5", accent = "#7c3dc0" },
+				golden_hour = { bg = "#5a4a2a", fg = "#e5d7c5", accent = "#e5b43d" },
+				ice_blue = { bg = "#2a4a5a", fg = "#c5e5e5", accent = "#3dc0e5" },
+				cloudy_sky = { bg = "#3c3f41", fg = "#dcdcdc", accent = "#657b83" },
+				steel_blue = { bg = "#2c3e50", fg = "#bdc3c7", accent = "#2980b9" },
+				pearl_grey = { bg = "#4f4f4f", fg = "#e0e0e0", accent = "#b0b0b0" },
+				misty_lake = { bg = "#3a3f44", fg = "#dfe2e5", accent = "#4b6b82" },
+				shadow_night = { bg = "#2b2b2b", fg = "#e2e2e2", accent = "#5f5f5f" },
+				ash_grey = { bg = "#3f3f3f", fg = "#cccccc", accent = "#707070" },
+				foggy_morning = { bg = "#4a4a4a", fg = "#e5e5e5", accent = "#8a8a8a" },
+				silver_wave = { bg = "#5a5a5a", fg = "#f0f0f0", accent = "#b0b0b0" },
+				blue_mist = { bg = "#1e3a4a", fg = "#c5d7e5", accent = "#2a82b5" },
+				light_slate = { bg = "#2c2e3e", fg = "#c6c8d1", accent = "#4c5a69" },
+				stone_blue = { bg = "#283845", fg = "#b4c2cc", accent = "#3d566e" },
+				azure_dream = { bg = "#223344", fg = "#c8d2dd", accent = "#335577" },
+				winter_sky = { bg = "#2e3d4d", fg = "#d1e0e5", accent = "#4a6070" },
+				shadow_blue = { bg = "#2a3b4a", fg = "#b0c4de", accent = "#3b5a7d" },
+				deep_sea = { bg = "#1f2a36", fg = "#a8b2c2", accent = "#31445e" },
+				navy_pearl = { bg = "#1c2d3c", fg = "#b0bcc7", accent = "#3e5b6d" },
+				ghost_white = { bg = "#f8f8ff", fg = "#696969", accent = "#dcdcdc" },
+				pebble_grey = { bg = "#2c2c2c", fg = "#d3d3d3", accent = "#a9a9a9" },
+				glacier_blue = { bg = "#273c4e", fg = "#c1d9e3", accent = "#3a607e" },
+				marine_dusk = { bg = "#213040", fg = "#b3c6d0", accent = "#324a60" },
+			}
+
+			-- choose a theme
+			local selected_theme = themes.light_slate
+
 			local colors = {
-				bg = "#222222",
-				black = "#1c1c1c",
-				grey = "#666666",
-				red = "#685742",
-				green = "#5f875f",
-				yellow = "#B36D43",
-				blue = "#78824B",
-				magenta = "#bb7744",
-				cyan = "#C9A554",
-				white = "#D7C483",
+				bg = selected_theme.bg,
+				fg = selected_theme.fg,
+				accent = selected_theme.accent,
 			}
 
 			local conditions = {
 				buffer_not_empty = function()
 					return vim.fn.empty(vim.fn.expand("%:t")) ~= 1
 				end,
-				hide_in_width_first = function()
-					return vim.fn.winwidth(0) > 80
-				end,
 				hide_in_width = function()
 					return vim.fn.winwidth(0) > 70
 				end,
-				check_git_workspace = function()
-					local filepath = vim.fn.expand("%:p:h")
-					local gitdir = vim.fn.finddir(".git", filepath .. ";")
-					return gitdir and #gitdir > 0 and #gitdir < #filepath
-				end,
 			}
-			-- auto change color according to neovims mode
-			local mode_color = {
-				n = colors.red,
-				i = colors.green,
-				v = colors.blue,
-				[""] = colors.blue,
-				V = colors.blue,
-				c = colors.magenta,
-				no = colors.red,
-				s = colors.orange,
-				S = colors.orange,
-				[""] = colors.orange,
-				ic = colors.yellow,
-				R = colors.yellow,
-				Rv = colors.yellow,
-				cv = colors.yellow,
-				ce = colors.yellow,
-				r = colors.cyan,
-				rm = colors.cyan,
-				["r?"] = colors.cyan,
-				["!"] = colors.red,
-				t = colors.red,
-			}
+
 			-- config
 			local config = {
 				options = {
-					-- remove default sections and component separators
 					component_separators = "",
 					section_separators = "",
 					theme = {
-						-- setting defaults to statusline
 						normal = { c = { fg = colors.fg, bg = colors.bg } },
 						inactive = { c = { fg = colors.fg, bg = colors.bg } },
 					},
 				},
 				sections = {
-					-- clear defaults
 					lualine_a = {},
 					lualine_b = {},
-					lualine_y = {},
-					lualine_z = {},
-					-- clear for later use
 					lualine_c = {},
 					lualine_x = {},
+					lualine_y = {},
+					lualine_z = {},
 				},
 				inactive_sections = {
-					-- clear defaults
 					lualine_a = {},
 					lualine_b = {},
-					lualine_y = {},
-					lualine_z = {},
-					-- clear for later use
 					lualine_c = {},
 					lualine_x = {},
+					lualine_y = {},
+					lualine_z = {},
 				},
 			}
 
-			-- insert active component in lualine_c at left section
-			local function active_left(component)
-				table.insert(config.sections.lualine_c, component)
-			end
-
-			-- insert inactive component in lualine_c at left section
-			local function inactive_left(component)
-				table.insert(config.inactive_sections.lualine_c, component)
-			end
-
-			-- insert active component in lualine_x at right section
-			local function active_right(component)
-				table.insert(config.sections.lualine_x, component)
-			end
-
-			-- insert inactive component in lualine_x at right section
-			local function inactive_right(component)
-				table.insert(config.inactive_sections.lualine_x, component)
-			end
-
-			-- dump object contents
-			local function dump(o)
-				if type(o) == 'table' then
-					local s = ''
-					for k, v in pairs(o) do
-						if type(k) ~= 'number' then k = '"' .. k .. '"' end
-						s = s .. dump(v) .. ','
-					end
-					return s
-				else
-					return tostring(o)
-				end
+			-- insert component
+			local function insert_component(section, component)
+				table.insert(section, component)
 			end
 
 			-- active left section
-			active_left({
+			insert_component(config.sections.lualine_c, {
 				function()
 					local icon
 					local ok, devicons = pcall(require, 'nvim-web-devicons')
@@ -359,18 +322,14 @@ return require("lazy").setup({
 					end
 					return icon:gsub("%s+", "")
 				end,
-				color = function()
-					return { bg = mode_color[vim.fn.mode()], fg = colors.white }
-				end,
+				color = { fg = colors.fg, bg = colors.accent },
 				padding = { left = 1, right = 1 },
 				separator = { right = "▓▒░" },
 			})
-			active_left({
+			insert_component(config.sections.lualine_c, {
 				"filename",
 				cond = conditions.buffer_not_empty,
-				color = function()
-					return { bg = mode_color[vim.fn.mode()], fg = colors.white }
-				end,
+				color = { fg = colors.fg, bg = colors.accent },
 				padding = { left = 1, right = 1 },
 				separator = { right = "▓▒░" },
 				symbols = {
@@ -380,141 +339,66 @@ return require("lazy").setup({
 					newfile = " ",
 				},
 			})
-			active_left({
+			insert_component(config.sections.lualine_c, {
 				"branch",
 				icon = "",
-				color = { bg = colors.blue, fg = colors.black },
+				color = { fg = colors.bg, bg = colors.accent },
 				padding = { left = 0, right = 1 },
 				separator = { right = "▓▒░", left = "░▒▓" },
 			})
 
-			-- inactive left section
-			inactive_left({
-				function()
-					return ''
-				end,
-				cond = conditions.buffer_not_empty,
-				color = { bg = colors.black, fg = colors.grey },
-				padding = { left = 1, right = 1 },
-			})
-			inactive_left({
-				"filename",
-				cond = conditions.buffer_not_empty,
-				color = { bg = colors.black, fg = colors.grey },
-				padding = { left = 1, right = 1 },
-				separator = { right = "▓▒░" },
-				symbols = {
-					modified = "",
-					readonly = "",
-					unnamed = "",
-					newfile = "",
-				},
-			})
-
 			-- active right section
-			active_right({
-				function()
-					local clients = vim.lsp.get_active_clients()
-					local clients_list = {}
-					for _, client in pairs(clients) do
-						if (not clients_list[client.name]) then
-							table.insert(clients_list, client.name)
-						end
-					end
-					local lsp_lbl = dump(clients_list):gsub("(.*),", "%1")
-					return lsp_lbl:gsub(",", ", ")
-				end,
-				icon = " ",
-				color = { bg = colors.green, fg = colors.black },
-				padding = { left = 1, right = 1 },
-				cond = conditions.hide_in_width_first,
-				separator = { right = "▓▒░", left = "░▒▓" },
-			})
-
-			active_right({
+			insert_component(config.sections.lualine_x, {
 				"diagnostics",
 				sources = { "nvim_diagnostic" },
 				symbols = { error = " ", warn = " ", info = " " },
 				colored = false,
-				color = { bg = colors.magenta, fg = colors.black },
+				color = { fg = colors.bg, bg = colors.accent },
 				padding = { left = 1, right = 1 },
 				separator = { right = "▓▒░", left = "░▒▓" },
 			})
-			active_right({
+			insert_component(config.sections.lualine_x, {
 				"searchcount",
-				color = { bg = colors.cyan, fg = colors.black },
+				color = { fg = colors.bg, bg = colors.accent },
 				padding = { left = 1, right = 1 },
 				separator = { right = "▓▒░", left = "░▒▓" },
 			})
-			active_right({
+			insert_component(config.sections.lualine_x, {
 				"location",
-				color = { bg = colors.red, fg = colors.white },
+				color = { fg = colors.fg, bg = colors.accent },
 				padding = { left = 1, right = 0 },
 				separator = { left = "░▒▓" },
 			})
-			active_right({
+			insert_component(config.sections.lualine_x, {
 				function()
 					local cur = vim.fn.line(".")
 					local total = vim.fn.line("$")
 					return string.format("%2d%%%%", math.floor(cur / total * 100))
 				end,
-				color = { bg = colors.red, fg = colors.white },
+				color = { fg = colors.fg, bg = colors.accent },
 				padding = { left = 1, right = 1 },
 				cond = conditions.hide_in_width,
 				separator = { right = "▓▒░" },
 			})
-			active_right({
+			insert_component(config.sections.lualine_x, {
 				"o:encoding",
 				fmt = string.upper,
 				cond = conditions.hide_in_width,
 				padding = { left = 1, right = 1 },
-				color = { bg = colors.blue, fg = colors.black },
+				color = { fg = colors.bg, bg = colors.accent },
 			})
-			active_right({
+			insert_component(config.sections.lualine_x, {
 				"fileformat",
 				fmt = string.lower,
 				icons_enabled = false,
 				cond = conditions.hide_in_width,
-				color = { bg = colors.blue, fg = colors.black },
+				color = { fg = colors.bg, bg = colors.accent },
 				separator = { right = "▓▒░" },
 				padding = { left = 0, right = 1 },
 			})
 
-			-- inactive right section
-			inactive_right({
-				"location",
-				color = { bg = colors.black, fg = colors.grey },
-				padding = { left = 1, right = 0 },
-				separator = { left = "░▒▓" },
-			})
-			inactive_right({
-				"progress",
-				color = { bg = colors.black, fg = colors.grey },
-				cond = conditions.hide_in_width,
-				padding = { left = 1, right = 1 },
-				separator = { right = "▓▒░" },
-			})
-			inactive_right({
-				"fileformat",
-				fmt = string.lower,
-				icons_enabled = false,
-				cond = conditions.hide_in_width,
-				color = { bg = colors.black, fg = colors.grey },
-				separator = { right = "▓▒░" },
-				padding = { left = 0, right = 1 },
-			})
-			--
 			return config
 		end,
-	},
-	{
-		"lukas-reineke/indent-blankline.nvim",
-		main = "ibl",
-		opts = {
-			indent = {
-				char = { "│" },
-			},
-		}
 	},
 	{
 		"nvim-telescope/telescope-fzf-native.nvim",
@@ -542,7 +426,6 @@ return require("lazy").setup({
 	},
 	"windwp/nvim-autopairs",  -- autoclose parens, brackets, quotes, etc...
 	"lewis6991/gitsigns.nvim", -- show line modifications on left hand side
-	"tpope/vim-fugitive",     -- vim git plugin
 	"marko-cerovac/material.nvim",
 	"ThePrimeagen/harpoon",
 	"numToStr/FTerm.nvim",
@@ -555,7 +438,6 @@ return require("lazy").setup({
 			require("which-key").setup({})
 		end,
 	},
-	-- Remove the `use` here if you're using folke/lazy.nvim.
 	{
 		'Exafunction/codeium.vim',
 		config = function()
@@ -570,32 +452,52 @@ return require("lazy").setup({
 				{ expr = true, silent = true })
 		end
 	},
-	-- {
-	-- 	"Exafunction/codeium.nvim",
-	-- 	dependencies = {
-	-- 		"nvim-lua/plenary.nvim",
-	-- 		"hrsh7th/nvim-cmp",
-	-- 	},
-	-- 	config = function()
-	-- 		require("codeium").setup({
-	-- 			enable_chat = true
-	-- 		})
-	-- 		vim.keymap.set("i", "<c-a>", function()
-	-- 			return vim.fn["codeium#Accept"]()
-	-- 		end, { expr = true })
-	-- 		vim.keymap.set("i", "<c-;>", function()
-	-- 			return vim.fn["codeium#CycleCompletions"](1)
-	-- 		end, { expr = true })
-	-- 		vim.keymap.set("i", "<c-,>", function()
-	-- 			return vim.fn["codeium#CycleCompletions"](-1)
-	-- 		end, { expr = true })
-	-- 		vim.keymap.set("i", "<c-x>", function()
-	-- 			return vim.fn["codeium#Clear"]()
-	-- 		end, { expr = true })
-	-- 	end
-	-- },
-	"MunifTanjim/nui.nvim",
-	"rcarriga/nvim-notify",
+	{
+		'echasnovski/mini.nvim',
+		version = '*',
+		config = function()
+			vim.o.laststatus = 3
+			local exists, notify = pcall(require, 'mini.notify')
+
+			if exists then
+				notify.setup({
+					timeout = 5000,
+					window = {
+						config = {},
+						max_width_share = 0.382,
+						winblend = 25,
+					},
+					lsp_progress = {
+						enable = true,
+						duration_last = 1000,
+					},
+				})
+
+				vim.notify = notify.make_notify({
+
+					ERROR = { duration = 5000 },
+					WARN = { duration = 4000 },
+					INFO = { duration = 3000 },
+					DEBUG = { duration = 2000 },
+					TRACE = { duration = 1000 }
+				}
+				)
+			end
+
+
+			require("mini.diff").setup()
+			require("mini.git").setup()
+			require('mini.starter').setup()
+			-- require("mini.indentscope").setup({
+			-- 	options = {
+			-- 		border = 'both',
+			-- 		indent_at_cursor = true,
+			-- 		try_as_border = false,
+			-- 	},
+			-- 	symbols = ""
+			-- })
+		end
+	},
 	"sindrets/diffview.nvim",
 	{
 		"wojciech-kulik/xcodebuild.nvim",
