@@ -23,7 +23,7 @@ return require("lazy").setup({
 	},
 	{
 		"rose-pine/neovim",
-		enabled = false,
+		enabled = true,
 		lazy = false,
 		priority = 1000,
 		config = function()
@@ -42,7 +42,7 @@ return require("lazy").setup({
 				styles = {
 					bold = true,
 					italic = true,
-					transparency = true,
+					transparency = false,
 				},
 
 				groups = {
@@ -94,7 +94,7 @@ return require("lazy").setup({
 				end,
 			})
 
-			vim.cmd("colorscheme rose-pine-moon")
+			vim.cmd("colorscheme rose-pine")
 			-- vim.cmd("colorscheme rose-pine-main")
 			-- vim.cmd("colorscheme rose-pine-dawn")
 		end,
@@ -204,7 +204,7 @@ return require("lazy").setup({
 	"shortcuts/no-neck-pain.nvim",
 	"folke/noice.nvim",
 	"christoomey/vim-tmux-navigator",
-	"tpope/vim-surround",
+	-- "tpope/vim-surround",
 	"vim-scripts/ReplaceWithRegister",
 	-- "numToStr/Comment.nvim",
 	"nvim-tree/nvim-tree.lua",
@@ -250,8 +250,10 @@ return require("lazy").setup({
 			}
 
 			-- choose a theme
-			local selected_theme = themes.marine_pebble
-			-- local selected_theme = themes.marine_dusk
+			local selected_theme = themes.ice_blue
+			-- local selected_theme = themes.stone_blue
+			-- local selected_theme = themes.pebble_grey
+			-- local selected_theme = themes.silver_wave
 
 			local colors = {
 				bg = selected_theme.bg,
@@ -477,18 +479,18 @@ return require("lazy").setup({
 				}
 			)
 
-			require("mini.indentscope").setup(
-				{
-					draw = {
-						animation = require("mini.indentscope").gen_animation.linear({ duration = 100, unit = 'total' }),
-					},
-					options = {
-						border = 'both',
-						indent_at_cursor = true,
-						try_as_border = true,
-					},
-				}
-			)
+			-- require("mini.indentscope").setup(
+			-- 	{
+			-- 		draw = {
+			-- 			animation = require("mini.indentscope").gen_animation.linear({ duration = 100, unit = 'total' }),
+			-- 		},
+			-- 		options = {
+			-- 			border = 'both',
+			-- 			indent_at_cursor = true,
+			-- 			try_as_border = true,
+			-- 		},
+			-- 	}
+			-- )
 		end
 	},
 	{
@@ -513,9 +515,11 @@ return require("lazy").setup({
 					path = animate.gen_path.walls(),
 				},
 				resize = {
+					enable = false,
 					timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
 				},
 				scroll = {
+					enable = false,
 					timing = animate.gen_timing.linear({ duration = 100, unit = "total" }),
 					subscroll = animate.gen_subscroll.equal({
 						predicate = function(total_scroll)
@@ -632,15 +636,15 @@ return require("lazy").setup({
 			local opts = { noremap = true, silent = true }
 
 			vim.o.updatetime = 300
-			vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-				group = vim.api.nvim_create_augroup("float_diagnostic", { clear = true }),
-				callback = function()
-					vim.diagnostic.open_float(nil, { focus = false })
-				end
-			})
+			-- vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+			-- 	group = vim.api.nvim_create_augroup("float_diagnostic", { clear = true }),
+			-- 	callback = function()
+			-- 		vim.diagnostic.open_float(nil, { focus = false })
+			-- 	end
+			-- })
 
 			vim.diagnostic.config({
-				virtual_text = false,
+				virtual_text = true,
 				underline = true,
 			})
 
@@ -898,21 +902,40 @@ return require("lazy").setup({
 		end
 	},
 	{
-		'Mofiqul/dracula.nvim',
-		enabled = true,
-		lazy = false,
-		priority = 1000,
-		config = function()
-			require('dracula').setup()
-			vim.cmd [[colorscheme dracula]]
-		end
-	},
-	-- {
-	-- 	"olimorris/onedarkpro.nvim",
-	-- 	priority = 1000, -- Ensure it loads first
-	-- 	config = function()
-	-- 		require('onedarkpro').setup()
-	-- 		vim.cmd [[colorscheme onedark_vivid]]
-	-- 	end
-	-- },
+		"folke/trouble.nvim",
+		opts = {}, -- for default options, refer to the configuration section for custom setup.
+		cmd = "Trouble",
+		keys = {
+			{
+				"<leader>tr",
+				"<cmd>Trouble diagnostics toggle<cr>",
+				desc = "Diagnostics (Trouble)",
+			},
+			{
+				"<leader>trb",
+				"<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
+				desc = "Buffer Diagnostics (Trouble)",
+			},
+			{
+				"<leader>ts",
+				"<cmd>Trouble symbols toggle focus=false<cr>",
+				desc = "Symbols (Trouble)",
+			},
+			{
+				"<leader>tcl",
+				"<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
+				desc = "LSP Definitions / references / ... (Trouble)",
+			},
+			{
+				"<leader>xL",
+				"<cmd>Trouble loclist toggle<cr>",
+				desc = "Location List (Trouble)",
+			},
+			{
+				"<leader>xQ",
+				"<cmd>Trouble qflist toggle<cr>",
+				desc = "Quickfix List (Trouble)",
+			},
+		},
+	}
 })
