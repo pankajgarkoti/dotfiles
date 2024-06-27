@@ -16,13 +16,20 @@ vim.g.maplocalleader = "\\" -- Same for `maplocalleader`
 
 return require("lazy").setup({
 	{
+		'Mofiqul/dracula.nvim',
+		enabled = true,
+		config = function()
+			require('dracula').setup()
+		end
+	},
+	{
 		"vhyrro/luarocks.nvim",
 		priority = 1000, -- Very high priority is required, luarocks.nvim should run as the first plugin in your config.
 		config = true,
 	},
 	{
 		"rose-pine/neovim",
-		enabled = true,
+		enabled = false,
 		lazy = false,
 		priority = 1000,
 		config = function()
@@ -232,9 +239,6 @@ return require("lazy").setup({
 				cloudy_sky = { bg = "#3c3f41", fg = "#dcdcdc", accent = "#657b83" },
 				steel_blue = { bg = "#2c3e50", fg = "#bdc3c7", accent = "#2980b9" },
 				pearl_grey = { bg = "#4f4f4f", fg = "#e0e0e0", accent = "#b0b0b0" },
-				misty_lake = { bg = "#3a3f44", fg = "#dfe2e5", accent = "#4b6b82" },
-				shadow_night = { bg = "#2b2b2b", fg = "#e2e2e2", accent = "#5f5f5f" },
-				ash_grey = { bg = "#3f3f3f", fg = "#cccccc", accent = "#707070" },
 				foggy_morning = { bg = "#4a4a4a", fg = "#e5e5e5", accent = "#8a8a8a" },
 				silver_wave = { bg = "#5a5a5a", fg = "#f0f0f0", accent = "#b0b0b0" },
 				blue_mist = { bg = "#1e3a4a", fg = "#c5d7e5", accent = "#2a82b5" },
@@ -252,7 +256,7 @@ return require("lazy").setup({
 			}
 
 			-- choose a theme
-			local selected_theme = themes.light_slate
+			local selected_theme = themes.pebble_grey
 
 			local colors = {
 				bg = selected_theme.bg,
