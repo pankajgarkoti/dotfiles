@@ -16,7 +16,7 @@ vim.g.maplocalleader = "\\" -- Same for `maplocalleader`
 
 return require("lazy").setup({
 	{
-		'Mofiqul/dracula.nvim',
+		'maxmx03/dracula.nvim',
 		enabled = true,
 		config = function()
 			require('dracula').setup()
@@ -133,7 +133,6 @@ return require("lazy").setup({
 					},
 					["core.concealer"] = {
 						config = {
-							icon_preset = "varied",
 							icons = {
 								delimiter = {
 									horizontal_line = {
@@ -143,7 +142,7 @@ return require("lazy").setup({
 								code_block = {
 									-- If true will only dim the content of the code block (without the
 									-- `@code` and `@end` lines), not the entirety of the code block itself.
-									content_only = true,
+									content_only = false,
 
 									-- The width to use for code block backgrounds.
 									--
@@ -152,7 +151,7 @@ return require("lazy").setup({
 									--
 									-- When set to `content`, will only span as far as the longest line
 									-- within the code block.
-									width = "content",
+									width = "fullwidth",
 
 									-- Additional padding to apply to either the left or the right. Making
 									-- these values negative is considered undefined behaviour (it is
