@@ -1,3 +1,4 @@
+typeset -g POWERLEVEL9K_INSTANT_PROMPT=off
 fastfetch
 export LANG='en_US.UTF-8'
 
@@ -22,11 +23,10 @@ alias ll='ls -l'
 # ssh shortcuts
 alias gtc='cd ~/Desktop/code'
 alias gtn='cd ~/Desktop/notes/work'
-alias gtcs1='gcloud compute ssh --zone "us-central1-a" "instance-2" --project "mavex-ai"'
-
 alias int="cd ~/Desktop/code/interpreter && source env.sh && poetry run python3 main.py"
 
 # alias gtcs='cd ~/Desktop/code/server-keys'
+alias gtcs1='gcloud compute ssh --zone "us-central1-a" "instance-2" --project "mavex-ai"'
 # alias gtcs1='gtcs; ssh -i hearus-new.pem ubuntu@services.hearus.me'
 # alias gtcs2='gtcs; ssh -i hearus-new.pem ubuntu@hearus.me'
 # alias gtcs3='gtcs; ssh -i hearus-new.pem ubuntu@app.hearus.me'
@@ -131,5 +131,4 @@ export OLLAMA_MODELS="/Volumes/spinny/ollama"
 
 # source rust environment vars
 source ~/.cargo/env
-
 
