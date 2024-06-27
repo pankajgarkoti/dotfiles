@@ -1,3 +1,6 @@
+vim.g.mapleader = " "
+vim.g.maplocalleader = "\\"
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
 	vim.fn.system({
@@ -5,26 +8,17 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 		"clone",
 		"--filter=blob:none",
 		"https://github.com/folke/lazy.nvim.git",
-		"--branch=stable", -- latest stable release
+		"--branch=stable",
 		lazypath,
 	})
 end
 vim.opt.rtp:prepend(lazypath)
 
-vim.g.mapleader = " "       -- Make sure to set `mapleader` before lazy so your mappings are correct
-vim.g.maplocalleader = "\\" -- Same for `maplocalleader`
 
 return require("lazy").setup({
 	{
-		'maxmx03/dracula.nvim',
-		enabled = true,
-		config = function()
-			require('dracula').setup()
-		end
-	},
-	{
 		"vhyrro/luarocks.nvim",
-		priority = 1000, -- Very high priority is required, luarocks.nvim should run as the first plugin in your config.
+		priority = 1000,
 		config = true,
 	},
 	{
@@ -179,12 +173,12 @@ return require("lazy").setup({
 			-- keymaps
 			local opts = { noremap = true, silent = true }
 
-			local function quickfix()
-				vim.lsp.buf.code_action({
-					filter = function(a) return a ~= nil end,
-					apply = true
-				})
-			end
+			-- local function quickfix()
+			-- 	vim.lsp.buf.code_action({
+			-- 		filter = function(a) return a ~= nil end,
+			-- 		apply = true
+			-- 	})
+			-- end
 
 			vim.keymap.set('n', '<leader>njj', ":Neorg journal today<CR>", opts)
 			vim.keymap.set('n', '<leader>njy', ":Neorg journal yesterday<CR>", opts)
@@ -212,7 +206,7 @@ return require("lazy").setup({
 	"christoomey/vim-tmux-navigator",
 	"tpope/vim-surround",
 	"vim-scripts/ReplaceWithRegister",
-	"numToStr/Comment.nvim",
+	-- "numToStr/Comment.nvim",
 	"nvim-tree/nvim-tree.lua",
 	"kyazdani42/nvim-web-devicons",
 	{
@@ -252,10 +246,12 @@ return require("lazy").setup({
 				pebble_grey = { bg = "#2c2c2c", fg = "#d3d3d3", accent = "#a9a9a9" },
 				glacier_blue = { bg = "#273c4e", fg = "#c1d9e3", accent = "#3a607e" },
 				marine_dusk = { bg = "#213040", fg = "#b3c6d0", accent = "#324a60" },
+				marine_pebble = { bg = "#213040", fg = "#d3d3d3", accent = "#a9a9a9" },
 			}
 
 			-- choose a theme
-			local selected_theme = themes.pebble_grey
+			local selected_theme = themes.marine_pebble
+			-- local selected_theme = themes.marine_dusk
 
 			local colors = {
 				bg = selected_theme.bg,
@@ -334,7 +330,7 @@ return require("lazy").setup({
 				cond = conditions.buffer_not_empty,
 				color = { fg = colors.fg, bg = colors.accent },
 				padding = { left = 1, right = 1 },
-				separator = { right = "▓▒░" },
+				separator = { right = "▓▒░", left = "▓▒░" },
 				symbols = {
 					modified = "󰶻 ",
 					readonly = " ",
@@ -346,7 +342,7 @@ return require("lazy").setup({
 				"branch",
 				icon = "",
 				color = { fg = colors.bg, bg = colors.accent },
-				padding = { left = 0, right = 1 },
+				padding = { left = 0, right = 0 },
 				separator = { right = "▓▒░", left = "░▒▓" },
 			})
 
@@ -396,7 +392,7 @@ return require("lazy").setup({
 				icons_enabled = false,
 				cond = conditions.hide_in_width,
 				color = { fg = colors.bg, bg = colors.accent },
-				separator = { right = "▓▒░" },
+				separator = { right = "░" },
 				padding = { left = 0, right = 1 },
 			})
 
@@ -460,46 +456,79 @@ return require("lazy").setup({
 		version = '*',
 		config = function()
 			vim.o.laststatus = 3
-			local exists, notify = pcall(require, 'mini.notify')
 
-			if exists then
-				notify.setup({
+			require("mini.starter").setup()
+			require("mini.comment").setup()
+			require("mini.align").setup()
+			require("mini.diff").setup()
+			require("mini.git").setup()
+			require("mini.notify").setup(
+				{
 					timeout = 5000,
 					window = {
 						config = {},
-						max_width_share = 0.382,
+						max_width_share = 0.333,
 						winblend = 25,
 					},
 					lsp_progress = {
 						enable = true,
 						duration_last = 1000,
 					},
-				})
-
-				vim.notify = notify.make_notify({
-
-					ERROR = { duration = 5000 },
-					WARN = { duration = 4000 },
-					INFO = { duration = 3000 },
-					DEBUG = { duration = 2000 },
-					TRACE = { duration = 1000 }
 				}
-				)
+			)
+
+			require("mini.indentscope").setup(
+				{
+					draw = {
+						animation = require("mini.indentscope").gen_animation.linear({ duration = 100, unit = 'total' }),
+					},
+					options = {
+						border = 'both',
+						indent_at_cursor = true,
+						try_as_border = true,
+					},
+				}
+			)
+		end
+	},
+	{
+		"echasnovski/mini.animate",
+		event = "VeryLazy",
+		opts = function()
+			-- don't use animate when scrolling with the mouse
+			local mouse_scrolled = false
+			for _, scroll in ipairs({ "Up", "Down" }) do
+				local key = "<ScrollWheel" .. scroll .. ">"
+				vim.keymap.set({ "", "i" }, key, function()
+					mouse_scrolled = true
+					return key
+				end, { expr = true })
 			end
 
-
-			require("mini.diff").setup()
-			require("mini.git").setup()
-			require('mini.starter').setup()
-			-- require("mini.indentscope").setup({
-			-- 	options = {
-			-- 		border = 'both',
-			-- 		indent_at_cursor = true,
-			-- 		try_as_border = false,
-			-- 	},
-			-- 	symbols = ""
-			-- })
-		end
+			local animate = require("mini.animate")
+			return {
+				cursor = {
+					enable = true,
+					timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
+					path = animate.gen_path.walls(),
+				},
+				resize = {
+					timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
+				},
+				scroll = {
+					timing = animate.gen_timing.linear({ duration = 100, unit = "total" }),
+					subscroll = animate.gen_subscroll.equal({
+						predicate = function(total_scroll)
+							if mouse_scrolled then
+								mouse_scrolled = false
+								return false
+							end
+							return total_scroll > 1
+						end,
+					}),
+				},
+			}
+		end,
 	},
 	"sindrets/diffview.nvim",
 	{
@@ -868,4 +897,22 @@ return require("lazy").setup({
 			})
 		end
 	},
+	{
+		'Mofiqul/dracula.nvim',
+		enabled = true,
+		lazy = false,
+		priority = 1000,
+		config = function()
+			require('dracula').setup()
+			vim.cmd [[colorscheme dracula]]
+		end
+	},
+	-- {
+	-- 	"olimorris/onedarkpro.nvim",
+	-- 	priority = 1000, -- Ensure it loads first
+	-- 	config = function()
+	-- 		require('onedarkpro').setup()
+	-- 		vim.cmd [[colorscheme onedark_vivid]]
+	-- 	end
+	-- },
 })
