@@ -27,3 +27,6 @@ vim.api.nvim_create_autocmd("BufEnter", {
 	pattern = "*",
 	command = "set wrap",
 })
+
+
+vim.cmd.colorscheme("catppuccin-latte")

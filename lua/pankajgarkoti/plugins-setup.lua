@@ -22,84 +22,6 @@ return require("lazy").setup({
 		config = true,
 	},
 	{
-		"rose-pine/neovim",
-		enabled = true,
-		lazy = false,
-		priority = 1000,
-		config = function()
-			require("rose-pine").setup({
-				variant = "auto",  -- auto, main, moon, or dawn
-				dark_variant = "main", -- main, moon, or dawn
-				dim_inactive_windows = false,
-				extend_background_behind_borders = true,
-
-				enable = {
-					terminal = true,
-					legacy_highlights = true, -- Improve compatibility for previous versions of Neovim
-					migrations = true,   -- Handle deprecated options automatically
-				},
-
-				styles = {
-					bold = true,
-					italic = true,
-					transparency = false,
-				},
-
-				groups = {
-					border = "muted",
-					link = "iris",
-					panel = "surface",
-
-					error = "love",
-					hint = "iris",
-					info = "foam",
-					note = "pine",
-					todo = "rose",
-					warn = "gold",
-
-					git_add = "foam",
-					git_change = "rose",
-					git_delete = "love",
-					git_dirty = "rose",
-					git_ignore = "muted",
-					git_merge = "iris",
-					git_rename = "pine",
-					git_stage = "iris",
-					git_text = "rose",
-					git_untracked = "subtle",
-
-					h1 = "iris",
-					h2 = "foam",
-					h3 = "rose",
-					h4 = "gold",
-					h5 = "pine",
-					h6 = "foam",
-				},
-
-				highlight_groups = {
-					Comment = { fg = "foam" },
-					VertSplit = { fg = "muted", bg = "muted" },
-				},
-
-				before_highlight = function(group, highlight, palette)
-					-- Disable all undercurls
-					if highlight.undercurl then
-						highlight.undercurl = false
-					end
-
-					-- Change palette colour
-					if highlight.fg == palette.pine then
-						highlight.fg = palette.foam
-					end
-				end,
-			})
-
-			vim.cmd("colorscheme rose-pine")
-			-- vim.cmd("colorscheme rose-pine-main")
-			-- vim.cmd("colorscheme rose-pine-dawn")
-		end,
-	},
-	{
 		"nvim-neorg/neorg",
 		dependencies = { "luarocks.nvim" },
 		lazy = false, -- Disable lazy loading as some `lazy.nvim` distributions set `lazy = true` by default.
@@ -250,9 +172,9 @@ return require("lazy").setup({
 			}
 
 			-- choose a theme
-			local selected_theme = themes.ice_blue
+			-- local selected_theme = themes.ice_blue
 			-- local selected_theme = themes.stone_blue
-			-- local selected_theme = themes.pebble_grey
+			local selected_theme = themes.pebble_grey
 			-- local selected_theme = themes.silver_wave
 
 			local colors = {
@@ -325,19 +247,19 @@ return require("lazy").setup({
 				end,
 				color = { fg = colors.fg, bg = colors.accent },
 				padding = { left = 1, right = 1 },
-				separator = { right = "▓▒░" },
+				separator = { left = "░" },
 			})
+
 			insert_component(config.sections.lualine_c, {
 				"filename",
 				cond = conditions.buffer_not_empty,
-				color = { fg = colors.fg, bg = colors.accent },
+				color = { fg = colors.fg, bg = colors.bg },
 				padding = { left = 1, right = 1 },
-				separator = { right = "▓▒░", left = "▓▒░" },
 				symbols = {
-					modified = "󰶻 ",
-					readonly = " ",
-					unnamed = " ",
-					newfile = " ",
+					modified = "•",
+					readonly = "",
+					unnamed = "",
+					newfile = "",
 				},
 			})
 			insert_component(config.sections.lualine_c, {
@@ -937,5 +859,117 @@ return require("lazy").setup({
 				desc = "Quickfix List (Trouble)",
 			},
 		},
+	},
+	{
+		"rose-pine/neovim",
+		enabled = false,
+		lazy = false,
+		priority = 1000,
+		config = function()
+			require("rose-pine").setup({
+				variant = "auto",  -- auto, main, moon, or dawn
+				dark_variant = "main", -- main, moon, or dawn
+				dim_inactive_windows = false,
+				extend_background_behind_borders = true,
+
+				enable = {
+					terminal = true,
+					legacy_highlights = true, -- Improve compatibility for previous versions of Neovim
+					migrations = true,   -- Handle deprecated options automatically
+				},
+
+				styles = {
+					bold = true,
+					italic = true,
+					transparency = false,
+				},
+
+				groups = {
+					border = "muted",
+					link = "iris",
+					panel = "surface",
+
+					error = "love",
+					hint = "iris",
+					info = "foam",
+					note = "pine",
+					todo = "rose",
+					warn = "gold",
+
+					git_add = "foam",
+					git_change = "rose",
+					git_delete = "love",
+					git_dirty = "rose",
+					git_ignore = "muted",
+					git_merge = "iris",
+					git_rename = "pine",
+					git_stage = "iris",
+					git_text = "rose",
+					git_untracked = "subtle",
+
+					h1 = "iris",
+					h2 = "foam",
+					h3 = "rose",
+					h4 = "gold",
+					h5 = "pine",
+					h6 = "foam",
+				},
+
+				highlight_groups = {
+					Comment = { fg = "foam" },
+					VertSplit = { fg = "muted", bg = "muted" },
+				},
+
+				before_highlight = function(group, highlight, palette)
+					-- Disable all undercurls
+					if highlight.undercurl then
+						highlight.undercurl = false
+					end
+
+					-- Change palette colour
+					if highlight.fg == palette.pine then
+						highlight.fg = palette.foam
+					end
+				end,
+			})
+
+			vim.cmd("colorscheme rose-pine")
+			-- vim.cmd("colorscheme rose-pine-main")
+			-- vim.cmd("colorscheme rose-pine-dawn")
+		end,
+	},
+	{
+		'navarasu/onedark.nvim',
+		enabled = false,
+		lazy = false,
+		priority = 1000,
+		config = function()
+			require('onedark').setup {
+				style = 'darker'
+			}
+			require('onedark').load()
+			vim.cmd("colorscheme onedark")
+		end
+	},
+	{
+		"catppuccin/nvim",
+		name = "catppuccin",
+		enabled = true,
+		priority = 1000,
+		lazy = false,
+		config = function()
+			-- local variants = {
+			-- 	latte = "latte",
+			-- 	frappe = "frappe",
+			-- 	macchiato = "macchiato",
+			-- 	mocha = "mocha"
+			-- }
+
+			-- local flavor = variants.latte
+
+			require("catppuccin").setup({
+				background = { dark = "latte" }
+			})
+		end
 	}
 })
