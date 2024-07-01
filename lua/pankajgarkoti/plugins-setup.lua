@@ -115,13 +115,80 @@ return require("lazy").setup({
 		keys = {
 			{ "<leader>o", "<cmd>Outline<CR>", desc = "Toggle outline" },
 		},
-		opts = {
-			keymaps = {
-				up_and_jump = '<up>',
-				down_and_jump = '<down>',
+		event = "BufReadPost",
+		config = function()
+			local opts = {
+				outline_window = { position = 'left', width = 25 },
+
+				symbols = {
+					-- icon_fetcher = function(kind) return kind:sub(1, 1) end,
+					icon_fetcher = function(_) return "" end,
+				},
+
+				outline_items = {
+					show_symbol_lineno = true,
+				},
+
+				keymaps = {
+					up_and_jump = '<up>',
+					down_and_jump = '<down>',
+				},
+
+				symbol_folding = {
+					autofold_depth = 3,
+					auto_unfold = {
+						hovered = false,
+						only = true,
+					},
+					markers = { '', '' },
+				},
+
+				preview_window = {
+					auto_preview = true,
+					open_hover_on_preview = true,
+					width = 50, -- Percentage or integer of columns
+					min_width = 50, -- This is the number of columns
+					relative_width = true,
+					border = 'single',
+					winhl = 'NormalFloat:',
+					winblend = 0,
+					live = true
+				},
 			}
-		},
+
+			require("outline").setup(opts)
+
+			-- vim.api.nvim_create_autocmd("BufWinEnter", {
+			-- 	group = vim.api.nvim_create_augroup("AutoOpenOutline", { clear = true }),
+			-- 	callback = function()
+			-- 		local bufnr = vim.api.nvim_get_current_buf()
+			-- 		local filetype = vim.bo[bufnr].filetype
+			-- 		local excluded_filetypes = {
+			-- 			"starter", "dashboard", "telescope", "lazy", "mason",
+			-- 			-- Add any other filetypes you want to exclude
+			-- 		}
+			-- 		if not vim.tbl_contains(excluded_filetypes, filetype) then
+			-- 			vim.cmd("Outline")
+			-- 		end
+			-- 	end,
+			-- })
+		end,
 	},
+	-- {
+	-- 	"hedyhli/outline.nvim",
+	-- 	lazy = true,
+	-- 	cmd = { "Outline", "OutlineOpen" },
+	-- 	keys = {
+	-- 		{ "<leader>o", "<cmd>Outline<CR>", desc = "Toggle outline" },
+	-- 	},
+	-- 	opts = {
+	-- 		outline_window = { position = 'left', width = 25 },
+	-- 		keymaps = {
+	-- 			up_and_jump = '<up>',
+	-- 			down_and_jump = '<down>',
+	-- 		}
+	-- 	},
+	-- },
 	"nvim-lua/plenary.nvim",
 	"shortcuts/no-neck-pain.nvim",
 	"folke/noice.nvim",
@@ -133,13 +200,13 @@ return require("lazy").setup({
 	"kyazdani42/nvim-web-devicons",
 	{
 		"nvim-lualine/lualine.nvim",
-		event = "VeryLazy",
+		lazy         = false,
 		dependencies = { 'nvim-tree/nvim-web-devicons' },
-		init = function()
+		init         = function()
 			-- disable until lualine loads
 			vim.opt.laststatus = 0
 		end,
-		opts = function()
+		opts         = function()
 			local themes = {
 				ocean_breeze = { bg = "#1e3a5f", fg = "#c5d7e5", accent = "#3c9dd0" },
 				forest_glade = { bg = "#2e4a3d", fg = "#d4e6c3", accent = "#5ea24a" },
@@ -172,9 +239,9 @@ return require("lazy").setup({
 			}
 
 			-- choose a theme
-			-- local selected_theme = themes.ice_blue
+			local selected_theme = themes.ice_blue
 			-- local selected_theme = themes.stone_blue
-			local selected_theme = themes.pebble_grey
+			-- local selected_theme = themes.pebble_grey
 			-- local selected_theme = themes.silver_wave
 
 			local colors = {
@@ -220,12 +287,10 @@ return require("lazy").setup({
 				},
 			}
 
-			-- insert component
 			local function insert_component(section, component)
 				table.insert(section, component)
 			end
 
-			-- active left section
 			insert_component(config.sections.lualine_c, {
 				function()
 					local icon
@@ -249,19 +314,6 @@ return require("lazy").setup({
 				padding = { left = 1, right = 1 },
 				separator = { left = "░" },
 			})
-
-			insert_component(config.sections.lualine_c, {
-				"filename",
-				cond = conditions.buffer_not_empty,
-				color = { fg = colors.fg, bg = colors.bg },
-				padding = { left = 1, right = 1 },
-				symbols = {
-					modified = "•",
-					readonly = "",
-					unnamed = "",
-					newfile = "",
-				},
-			})
 			insert_component(config.sections.lualine_c, {
 				"branch",
 				icon = "",
@@ -269,8 +321,21 @@ return require("lazy").setup({
 				padding = { left = 0, right = 0 },
 				separator = { right = "▓▒░", left = "░▒▓" },
 			})
-
-			-- active right section
+			insert_component(config.sections.lualine_c, {
+				"filename",
+				cond = conditions.buffer_not_empty,
+				color = { fg = colors.fg, bg = colors.bg },
+				padding = { left = 1, right = 1 },
+				separator = {
+					right = "▓▒░",
+				},
+				symbols = {
+					modified = "•",
+					readonly = "",
+					unnamed = "",
+					newfile = "",
+				},
+			})
 			insert_component(config.sections.lualine_x, {
 				"diagnostics",
 				sources = { "nvim_diagnostic" },
@@ -302,13 +367,6 @@ return require("lazy").setup({
 				padding = { left = 1, right = 1 },
 				cond = conditions.hide_in_width,
 				separator = { right = "▓▒░" },
-			})
-			insert_component(config.sections.lualine_x, {
-				"o:encoding",
-				fmt = string.upper,
-				cond = conditions.hide_in_width,
-				padding = { left = 1, right = 1 },
-				color = { fg = colors.bg, bg = colors.accent },
 			})
 			insert_component(config.sections.lualine_x, {
 				"fileformat",
@@ -395,24 +453,11 @@ return require("lazy").setup({
 						winblend = 25,
 					},
 					lsp_progress = {
-						enable = true,
+						enable = false,
 						duration_last = 1000,
 					},
 				}
 			)
-
-			-- require("mini.indentscope").setup(
-			-- 	{
-			-- 		draw = {
-			-- 			animation = require("mini.indentscope").gen_animation.linear({ duration = 100, unit = 'total' }),
-			-- 		},
-			-- 		options = {
-			-- 			border = 'both',
-			-- 			indent_at_cursor = true,
-			-- 			try_as_border = true,
-			-- 		},
-			-- 	}
-			-- )
 		end
 	},
 	{
@@ -469,14 +514,6 @@ return require("lazy").setup({
 		config = function()
 			require("xcodebuild").setup({})
 		end,
-	},
-	"mfussenegger/nvim-dap",
-	{
-		"rcarriga/nvim-dap-ui",
-		dependencies = {
-			"mfussenegger/nvim-dap",
-			"nvim-neotest/nvim-nio"
-		}
 	},
 	{
 		"mfussenegger/nvim-lint",
@@ -566,8 +603,8 @@ return require("lazy").setup({
 			-- })
 
 			vim.diagnostic.config({
-				virtual_text = true,
-				underline = true,
+				virtual_text = false,
+				underline = false,
 			})
 
 			local on_attach = function(_, bufnr)
@@ -824,43 +861,6 @@ return require("lazy").setup({
 		end
 	},
 	{
-		"folke/trouble.nvim",
-		opts = {}, -- for default options, refer to the configuration section for custom setup.
-		cmd = "Trouble",
-		keys = {
-			{
-				"<leader>tr",
-				"<cmd>Trouble diagnostics toggle<cr>",
-				desc = "Diagnostics (Trouble)",
-			},
-			{
-				"<leader>trb",
-				"<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
-				desc = "Buffer Diagnostics (Trouble)",
-			},
-			{
-				"<leader>ts",
-				"<cmd>Trouble symbols toggle focus=false<cr>",
-				desc = "Symbols (Trouble)",
-			},
-			{
-				"<leader>tcl",
-				"<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
-				desc = "LSP Definitions / references / ... (Trouble)",
-			},
-			{
-				"<leader>xL",
-				"<cmd>Trouble loclist toggle<cr>",
-				desc = "Location List (Trouble)",
-			},
-			{
-				"<leader>xQ",
-				"<cmd>Trouble qflist toggle<cr>",
-				desc = "Quickfix List (Trouble)",
-			},
-		},
-	},
-	{
 		"rose-pine/neovim",
 		enabled = false,
 		lazy = false,
@@ -921,12 +921,10 @@ return require("lazy").setup({
 				},
 
 				before_highlight = function(group, highlight, palette)
-					-- Disable all undercurls
 					if highlight.undercurl then
 						highlight.undercurl = false
 					end
 
-					-- Change palette colour
 					if highlight.fg == palette.pine then
 						highlight.fg = palette.foam
 					end
@@ -934,22 +932,7 @@ return require("lazy").setup({
 			})
 
 			vim.cmd("colorscheme rose-pine")
-			-- vim.cmd("colorscheme rose-pine-main")
-			-- vim.cmd("colorscheme rose-pine-dawn")
 		end,
-	},
-	{
-		'navarasu/onedark.nvim',
-		enabled = false,
-		lazy = false,
-		priority = 1000,
-		config = function()
-			require('onedark').setup {
-				style = 'darker'
-			}
-			require('onedark').load()
-			vim.cmd("colorscheme onedark")
-		end
 	},
 	{
 		"catppuccin/nvim",
@@ -958,18 +941,16 @@ return require("lazy").setup({
 		priority = 1000,
 		lazy = false,
 		config = function()
-			-- local variants = {
-			-- 	latte = "latte",
-			-- 	frappe = "frappe",
-			-- 	macchiato = "macchiato",
-			-- 	mocha = "mocha"
-			-- }
-
-			-- local flavor = variants.latte
-
+			local variants = {
+				latte = "latte",
+				frappe = "frappe",
+				macchiato = "macchiato",
+				mocha = "mocha"
+			}
 			require("catppuccin").setup({
-				background = { dark = "latte" }
+				background = { dark = variants.frappe },
+				transparent_background = false,
 			})
 		end
-	}
+	},
 })
