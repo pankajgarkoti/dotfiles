@@ -146,13 +146,13 @@ return require("lazy").setup({
 				preview_window = {
 					auto_preview = true,
 					open_hover_on_preview = true,
-					width = 50, -- Percentage or integer of columns
-					min_width = 50, -- This is the number of columns
+					width = 30, -- Percentage or integer of columns
+					min_width = 20, -- This is the number of columns
 					relative_width = true,
-					border = 'single',
+					border = 'double',
 					winhl = 'NormalFloat:',
 					winblend = 0,
-					live = true
+					live = false
 				},
 			}
 
@@ -948,8 +948,8 @@ return require("lazy").setup({
 				mocha = "mocha"
 			}
 			require("catppuccin").setup({
-				background = { dark = variants.frappe },
-				transparent_background = false,
+				background = { dark = variants.mocha },
+				transparent_background = true,
 			})
 		end
 	},
