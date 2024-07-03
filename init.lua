@@ -11,7 +11,7 @@ require("pankajgarkoti.plugins.treesitter")
 require("pankajgarkoti.plugins.gitsigns")
 require("pankajgarkoti.plugins.fterm")
 require("pankajgarkoti.plugins.no-neck-pain")
-require("pankajgarkoti.plugins.noice")
+-- require("pankajgarkoti.plugins.noice")
 require("pankajgarkoti.plugins.notify")
 require("pankajgarkoti.plugins.blamer")
 require("pankajgarkoti.plugins.xcodebuild")
@@ -29,4 +29,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 
-vim.cmd.colorscheme("catppuccin-mocha")
+vim.opt.termguicolors = true
+vim.cmd("set background=dark")
+-- vim.cmd.colorscheme("nordbones")
+vim.cmd.colorscheme("zenbones")

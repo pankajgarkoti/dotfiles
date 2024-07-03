@@ -24,11 +24,27 @@ null_ls.setup({
 
 	on_attach = function(current_client, bufnr)
 		if current_client.supports_method("textDocument/formatting") then
+			local ignore = {
+				-- "html",
+				"markdown",
+			}
+
+			local function should_ignore(filetype)
+				for _, ft in ipairs(ignore) do
+					if ft == filetype then
+						return true
+					end
+				end
+			end
+
 			vim.api.nvim_clear_autocmds({ group = augroup, buffer = bufnr })
 			vim.api.nvim_create_autocmd("BufWritePre", {
 				group = augroup,
 				buffer = bufnr,
 				callback = function()
+					if should_ignore(vim.bo.filetype) then
+						return
+					end
 					vim.lsp.buf.format({
 						filter = function(client)
 							return client.name == "null-ls"

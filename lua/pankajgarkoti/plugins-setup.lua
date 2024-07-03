@@ -35,7 +35,7 @@ return require("lazy").setup({
 					["core.dirman"] = {
 						config = {
 							workspaces = {
-								ws = "~/Desktop/notes/work/",
+								ws = "~/Desktop/notes",
 							},
 							index = "index.norg", -- The name of the main (root) .norg file
 							autodetect = true,
@@ -118,7 +118,7 @@ return require("lazy").setup({
 		event = "BufReadPost",
 		config = function()
 			local opts = {
-				outline_window = { position = 'left', width = 25 },
+				outline_window = { position = 'left', width = 15 },
 
 				symbols = {
 					-- icon_fetcher = function(kind) return kind:sub(1, 1) end,
@@ -146,7 +146,7 @@ return require("lazy").setup({
 				preview_window = {
 					auto_preview = true,
 					open_hover_on_preview = true,
-					width = 30, -- Percentage or integer of columns
+					width = 20, -- Percentage or integer of columns
 					min_width = 20, -- This is the number of columns
 					relative_width = true,
 					border = 'double',
@@ -191,19 +191,78 @@ return require("lazy").setup({
 	-- },
 	"nvim-lua/plenary.nvim",
 	"shortcuts/no-neck-pain.nvim",
-	"folke/noice.nvim",
+	{
+		"folke/noice.nvim",
+		event = "VeryLazy",
+		opts = {
+			lsp = {
+				override = {
+					["vim.lsp.util.convert_input_to_markdown_lines"] = true,
+					["vim.lsp.util.stylize_markdown"] = true,
+					["cmp.entry.get_documentation"] = true,
+				},
+				progress = {
+					enabled = false,
+					format = "lsp_progress",
+					format_done = "lsp_progress_done",
+					throttle = 1000 / 30,
+					view = "mini",
+				},
+			},
+			routes = {
+				{
+					filter = {
+						event = "msg_show",
+						any = {
+							{ find = "%d+L, %d+B" },
+							{ find = "; after #%d+" },
+							{ find = "; before #%d+" },
+						},
+					},
+					view = "mini",
+				},
+			},
+			presets = {
+				bottom_search = true,
+				command_palette = true,
+				long_message_to_split = true,
+			},
+		},
+		keys = {
+			{ "<leader>sn",  "",                                                                            desc = "+noice" },
+			{ "<S-Enter>",   function() require("noice").redirect(vim.fn.getcmdline()) end,                 mode = "c",                              desc = "Redirect Cmdline" },
+			{ "<leader>snl", function() require("noice").cmd("last") end,                                   desc = "Noice Last Message" },
+			{ "<leader>snh", function() require("noice").cmd("history") end,                                desc = "Noice History" },
+			{ "<leader>sna", function() require("noice").cmd("all") end,                                    desc = "Noice All" },
+			{ "<leader>snd", function() require("noice").cmd("dismiss") end,                                desc = "Dismiss All" },
+			{ "<leader>snt", function() require("noice").cmd("pick") end,                                   desc = "Noice Picker (Telescope/FzfLua)" },
+			{ "<c-f>",       function() if not require("noice.lsp").scroll(4) then return "<c-f>" end end,  silent = true,                           expr = true,              desc = "Scroll Forward",  mode = { "i", "n", "s" } },
+			{ "<c-b>",       function() if not require("noice.lsp").scroll(-4) then return "<c-b>" end end, silent = true,                           expr = true,              desc = "Scroll Backward", mode = { "i", "n", "s" } },
+		},
+		config = function(_, opts)
+			-- HACK: noice shows messages from before it was enabled,
+			-- but this is not ideal when Lazy is installing plugins,
+			-- so clear the messages in this case.
+			if vim.o.filetype == "lazy" then
+				vim.cmd([[messages clear]])
+			end
+			require("noice").setup(opts)
+		end,
+	},
+	"MunifTanjim/nui.nvim",
 	"christoomey/vim-tmux-navigator",
-	-- "tpope/vim-surround",
 	"vim-scripts/ReplaceWithRegister",
-	-- "numToStr/Comment.nvim",
-	"nvim-tree/nvim-tree.lua",
-	"kyazdani42/nvim-web-devicons",
+	{
+		"nvim-tree/nvim-tree.lua", lazy = true
+	},
+	{
+		"nvim-tree/nvim-web-devicons", lazy = true
+	},
 	{
 		"nvim-lualine/lualine.nvim",
 		lazy         = false,
 		dependencies = { 'nvim-tree/nvim-web-devicons' },
 		init         = function()
-			-- disable until lualine loads
 			vim.opt.laststatus = 0
 		end,
 		opts         = function()
@@ -239,9 +298,9 @@ return require("lazy").setup({
 			}
 
 			-- choose a theme
-			local selected_theme = themes.ice_blue
+			-- local selected_theme = themes.ice_blue
 			-- local selected_theme = themes.stone_blue
-			-- local selected_theme = themes.pebble_grey
+			local selected_theme = themes.pebble_grey
 			-- local selected_theme = themes.silver_wave
 
 			local colors = {
@@ -421,6 +480,7 @@ return require("lazy").setup({
 	},
 	{
 		'Exafunction/codeium.vim',
+		enabled = false,
 		config = function()
 			-- Change '<C-g>' here to any keycode you like.
 			vim.keymap.set('i', '<C-a>', function() return vim.fn['codeium#Accept']() end,
@@ -438,26 +498,31 @@ return require("lazy").setup({
 		version = '*',
 		config = function()
 			vim.o.laststatus = 3
-
 			require("mini.starter").setup()
 			require("mini.comment").setup()
 			require("mini.align").setup()
 			require("mini.diff").setup()
 			require("mini.git").setup()
-			require("mini.notify").setup(
+			require("mini.indentscope").setup(
 				{
-					timeout = 5000,
-					window = {
-						config = {},
-						max_width_share = 0.333,
-						winblend = 25,
+					-- draw = {
+					-- 	delay = 100,
+					-- 	animation = require('mini.indentscope').gen_animation.none(),
+					-- 	priority = 2,
+					-- },
+					mappings = {
+						object_scope = 'ii',
+						object_scope_with_border = 'ai',
+						goto_top = '[i',
+						goto_bottom = ']i',
 					},
-					lsp_progress = {
-						enable = false,
-						duration_last = 1000,
+					options = {
+						border = 'both',
+						indent_at_cursor = true,
+						try_as_border = false,
 					},
-				}
-			)
+					symbol = "│",
+				})
 		end
 	},
 	{
@@ -508,7 +573,6 @@ return require("lazy").setup({
 			"nvim-telescope/telescope.nvim",
 			"MunifTanjim/nui.nvim",
 			"nvim-tree/nvim-tree.lua",      -- (optional) to manage project files
-			"stevearc/oil.nvim",            -- (optional) to manage project files
 			"nvim-treesitter/nvim-treesitter", -- (optional) for Quick tests support (required Swift parser)
 		},
 		config = function()
@@ -539,31 +603,31 @@ return require("lazy").setup({
 			end, { desc = "Lint file" })
 		end,
 	},
-	{
-		"stevearc/conform.nvim",
-		event = { "BufReadPre", "BufNewFile" },
-		config = function()
-			local conform = require("conform")
-
-			conform.setup({
-				formatters_by_ft = {
-					swift = { "swiftformat" },
-				},
-				format_on_save = function(bufnr)
-					return { timeout_ms = 500, lsp_fallback = true }
-				end,
-				log_level = vim.log.levels.ERROR,
-			})
-
-			vim.keymap.set({ "n", "v" }, "<leader>mp", function()
-				conform.format({
-					lsp_fallback = true,
-					async = false,
-					timeout_ms = 500,
-				})
-			end, { desc = "Format file or range (in visual mode)" })
-		end,
-	},
+	-- {
+	-- 	"stevearc/conform.nvim",
+	-- 	event = { "BufReadPre", "BufNewFile" },
+	-- 	config = function()
+	-- 		local conform = require("conform")
+	--
+	-- 		conform.setup({
+	-- 			formatters_by_ft = {
+	-- 				swift = { "swiftformat" },
+	-- 			},
+	-- 			format_on_save = function(bufnr)
+	-- 				return { timeout_ms = 500, lsp_fallback = true }
+	-- 			end,
+	-- 			log_level = vim.log.levels.ERROR,
+	-- 		})
+	--
+	-- 		vim.keymap.set({ "n", "v" }, "<leader>mp", function()
+	-- 			conform.format({
+	-- 				lsp_fallback = true,
+	-- 				async = false,
+	-- 				timeout_ms = 500,
+	-- 			})
+	-- 		end, { desc = "Format file or range (in visual mode)" })
+	-- 	end,
+	-- },
 	{
 		"neovim/nvim-lspconfig",
 		event = { "BufReadPre", "BufNewFile" },
@@ -590,6 +654,8 @@ return require("lazy").setup({
 		},
 		config = function()
 			local lspconfig = require("lspconfig")
+			local configs = require("lspconfig/configs")
+			local util = require("lspconfig/util")
 			local cmp_nvim_lsp = require("cmp_nvim_lsp")
 			local capabilities = cmp_nvim_lsp.default_capabilities()
 			local opts = { noremap = true, silent = true }
@@ -689,6 +755,7 @@ return require("lazy").setup({
 				filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
 			})
 
+
 			-- configure lua server (with special settings)
 			lspconfig["lua_ls"].setup({
 				capabilities = capabilities,
@@ -710,7 +777,55 @@ return require("lazy").setup({
 				},
 			})
 
-			-- nvim-cmp related config
+			-- config for vue-language-server (volar)
+			configs.volar = {
+				default_config = {
+					cmd = { 'vls --stdio' },
+					filetypes = { 'vue' },
+					root_dir = util.root_pattern('package.json', 'vue.config.js'),
+					init_options = {
+						typescript = {
+							serverPath = '/usr/lib/node_modules/typescript/lib/tsserverlibrary.js',
+						},
+						languageFeatures = {
+							references = true,
+							definition = true,
+							typeDefinition = true,
+							callHierarchy = true,
+							hover = true,
+							rename = true,
+							signatureHelp = true,
+							codeAction = true,
+							completion = {
+								defaultTagNameCase = 'both',
+								defaultAttrNameCase = 'kebabCase',
+								getDocumentNameCasesRequest = true,
+								getDocumentSelectionRequest = true,
+							},
+							documentLink = true,
+							codeLens = true,
+							diagnostics = true,
+						},
+						documentFeatures = {
+							selectionRange = true,
+							foldingRange = true,
+							documentSymbol = true,
+							documentColor = true,
+							documentFormatting = {
+								defaultPrintWidth = 100,
+								getDocumentPrintWidthRequest = true,
+							},
+						},
+					},
+				},
+			}
+
+			lspconfig["volar"].setup({
+				on_attach = on_attach,
+				capabilities = capabilities,
+				filetypes = { "vue" },
+			})
+
 
 			-- import nvim-cmp plugin safely
 			local cmp_status, cmp = pcall(require, "cmp")
@@ -777,10 +892,11 @@ return require("lazy").setup({
 				-- sources for autocompletion
 				sources = cmp.config.sources({
 					{ name = "nvim_lsp" }, -- lsp
+					{ name = "supermaven" }, -- supermaven copilot
 					{ name = "luasnip" }, -- snippets
-					{ name = "codeium" },
+					-- { name = "codeium" },
 					{ name = "buffer" }, -- text within current buffer
-					{ name = "path" }, -- file system paths
+					{ name = "path" },  -- file system paths
 				}),
 				-- configure lspkind for vs-code like icons
 				formatting = {
@@ -790,6 +906,7 @@ return require("lazy").setup({
 						ellipsis_char = "...",
 						symbol_map = {
 							Codeium = "",
+							Supermaven = "",
 						},
 					}),
 				},
@@ -937,8 +1054,8 @@ return require("lazy").setup({
 	{
 		"catppuccin/nvim",
 		name = "catppuccin",
-		enabled = true,
-		priority = 1000,
+		enabled = false,
+		priority = 1001,
 		lazy = false,
 		config = function()
 			local variants = {
@@ -953,4 +1070,86 @@ return require("lazy").setup({
 			})
 		end
 	},
+	{
+		"rcarriga/nvim-notify",
+		lazy = true,
+	},
+	{
+		"supermaven-inc/supermaven-nvim",
+		enabed = true,
+		config = function()
+			require("supermaven-nvim").setup({
+				color = {
+					suggestion_color = "#ffffff",
+					cterm = 244,
+				},
+				log_level = "info",            -- set to "off" to disable logging completely
+				disable_inline_completion = false, -- disables inline completion for use with cmp disable_keymaps = false,
+				keymaps = {
+					accept_suggestion = "<C-a>",
+					clear_suggestion = "<C-x>",
+					accept_word = "<C-j>",
+				},
+			})
+		end,
+	},
+	{
+		"zenbones-theme/zenbones.nvim",
+		enabed = true,
+		lazy = false,
+		priority = 1000,
+		dependencies = {
+			"rktjmp/lush.nvim"
+		},
+		config = function()
+			vim.g.nordbones = { transparent_background = true }
+			vim.g.zenbones = { transparent_background = true }
+		end
+	},
+	{
+		"jackMort/ChatGPT.nvim",
+			event = "VeryLazy",
+			config = function()
+				require("chatgpt").setup()
+			end,
+			dependencies = {
+				"MunifTanjim/nui.nvim",
+				"nvim-lua/plenary.nvim",
+				"folke/trouble.nvim",
+				"nvim-telescope/telescope.nvim"
+			}
+	},
+{
+  "jackMort/ChatGPT.nvim",
+  event = "VeryLazy",
+  config = function()
+    require("chatgpt").setup({
+      openai_params = {
+        -- NOTE: model can be a function returning the model name
+        -- this is useful if you want to change the model on the fly
+        -- using commands
+        -- Example:
+        -- model = function()
+        --     if some_condition() then
+        --         return "gpt-4-1106-preview"
+        --     else
+        --         return "gpt-3.5-turbo"
+        --     end
+        -- end,
+        model = "gpt-4o",
+        frequency_penalty = 0,
+        presence_penalty = 0,
+        max_tokens = 4095,
+        temperature = 0.3,
+        top_p = 0.1,
+        n = 1,
+      }
+    })
+  end,
+  dependencies = {
+    "MunifTanjim/nui.nvim",
+    "nvim-lua/plenary.nvim",
+    "nvim-telescope/telescope.nvim"
+  }
+}
 })
