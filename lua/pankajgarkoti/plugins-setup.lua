@@ -149,7 +149,7 @@ return require("lazy").setup({
 					width = 20, -- Percentage or integer of columns
 					min_width = 20, -- This is the number of columns
 					relative_width = true,
-					border = 'double',
+					-- border = 'double',
 					winhl = 'NormalFloat:',
 					winblend = 0,
 					live = false
@@ -298,9 +298,9 @@ return require("lazy").setup({
 			}
 
 			-- choose a theme
-			-- local selected_theme = themes.ice_blue
+			local selected_theme = themes.ice_blue
 			-- local selected_theme = themes.stone_blue
-			local selected_theme = themes.pebble_grey
+			-- local selected_theme = themes.glacier_blue
 			-- local selected_theme = themes.silver_wave
 
 			local colors = {
@@ -505,11 +505,11 @@ return require("lazy").setup({
 			require("mini.git").setup()
 			require("mini.indentscope").setup(
 				{
-					-- draw = {
-					-- 	delay = 100,
-					-- 	animation = require('mini.indentscope').gen_animation.none(),
-					-- 	priority = 2,
-					-- },
+					draw = {
+						delay = 0,
+						animation = require('mini.indentscope').gen_animation.none(),
+						priority = 2,
+					},
 					mappings = {
 						object_scope = 'ii',
 						object_scope_with_border = 'ai',
@@ -1054,7 +1054,7 @@ return require("lazy").setup({
 	{
 		"catppuccin/nvim",
 		name = "catppuccin",
-		enabled = false,
+		enabled = true,
 		priority = 1001,
 		lazy = false,
 		config = function()
@@ -1065,7 +1065,6 @@ return require("lazy").setup({
 				mocha = "mocha"
 			}
 			require("catppuccin").setup({
-				background = { dark = variants.mocha },
 				transparent_background = true,
 			})
 		end
@@ -1095,7 +1094,7 @@ return require("lazy").setup({
 	},
 	{
 		"zenbones-theme/zenbones.nvim",
-		enabed = true,
+		enabed = false,
 		lazy = false,
 		priority = 1000,
 		dependencies = {
@@ -1119,37 +1118,26 @@ return require("lazy").setup({
 				"nvim-telescope/telescope.nvim"
 			}
 	},
-{
-  "jackMort/ChatGPT.nvim",
-  event = "VeryLazy",
-  config = function()
-    require("chatgpt").setup({
-      openai_params = {
-        -- NOTE: model can be a function returning the model name
-        -- this is useful if you want to change the model on the fly
-        -- using commands
-        -- Example:
-        -- model = function()
-        --     if some_condition() then
-        --         return "gpt-4-1106-preview"
-        --     else
-        --         return "gpt-3.5-turbo"
-        --     end
-        -- end,
-        model = "gpt-4o",
-        frequency_penalty = 0,
-        presence_penalty = 0,
-        max_tokens = 4095,
-        temperature = 0.3,
-        top_p = 0.1,
-        n = 1,
-      }
-    })
-  end,
-  dependencies = {
-    "MunifTanjim/nui.nvim",
-    "nvim-lua/plenary.nvim",
-    "nvim-telescope/telescope.nvim"
-  }
-}
+	{
+		"jackMort/ChatGPT.nvim",
+		event = "VeryLazy",
+		config = function()
+			require("chatgpt").setup({
+				openai_params = {
+					model = "gpt-4o",
+					frequency_penalty = 0.1,
+					presence_penalty = 0.1,
+					max_tokens = 4095,
+					temperature = 0.3,
+					top_p = 0.1,
+					n = 1,
+				}
+			})
+		end,
+		dependencies = {
+			"MunifTanjim/nui.nvim",
+			"nvim-lua/plenary.nvim",
+			"nvim-telescope/telescope.nvim"
+		}
+	}
 })
