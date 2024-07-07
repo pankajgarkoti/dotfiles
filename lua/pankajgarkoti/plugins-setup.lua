@@ -658,19 +658,25 @@ return require("lazy").setup({
 			local util = require("lspconfig/util")
 			local cmp_nvim_lsp = require("cmp_nvim_lsp")
 			local capabilities = cmp_nvim_lsp.default_capabilities()
+
+			capabilities.textDocument.foldingRange = {
+					dynamicRegistration = false,
+					lineFoldingOnly = true
+			}
+
 			local opts = { noremap = true, silent = true }
 
 			vim.o.updatetime = 300
-			-- vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-			-- 	group = vim.api.nvim_create_augroup("float_diagnostic", { clear = true }),
-			-- 	callback = function()
-			-- 		vim.diagnostic.open_float(nil, { focus = false })
-			-- 	end
-			-- })
+			vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+				group = vim.api.nvim_create_augroup("float_diagnostic", { clear = true }),
+				callback = function()
+					vim.diagnostic.open_float(nil, { focus = false })
+				end
+			})
 
 			vim.diagnostic.config({
 				virtual_text = false,
-				underline = false,
+				underline = true,
 			})
 
 			local on_attach = function(_, bufnr)
@@ -691,7 +697,7 @@ return require("lazy").setup({
 				map("n", "gi", vim.lsp.buf.implementation, "Go to implementation")
 				map("n", "gr", vim.lsp.buf.references, "Show references")
 				map("n", "gs", vim.lsp.buf.signature_help, "Show signature help")
-				map("n", "gt", vim.lsp.buf.type_definition, "Go to type definition")
+				map("n", "gy", vim.lsp.buf.type_definition, "Go to type definition")
 				map("n", "<leader>gw", vim.lsp.buf.document_symbol, "Show document symbols")
 				map("n", "<leader>gW", vim.lsp.buf.workspace_symbol, "Show workspace symbols")
 				map("n", "<leader>af", vim.lsp.buf.code_action, "Show code actions")
@@ -699,7 +705,7 @@ return require("lazy").setup({
 				map("n", "<leader>=", vim.lsp.buf.format, "Format document")
 				map("n", "<leader>ai", vim.lsp.buf.incoming_calls, "Show incoming calls")
 				map("n", "<leader>ao", vim.lsp.buf.outgoing_calls, "Show outgoing calls")
-				map("n", "<leader>ld", vim.diagnostic.open_float, "Show line diagnostics")
+				map("n", "<leader>ld", vim.diagnostic.setloclist, "Show line diagnostics")
 			end
 
 			lspconfig["sourcekit"].setup({
@@ -1139,5 +1145,23 @@ return require("lazy").setup({
 			"nvim-lua/plenary.nvim",
 			"nvim-telescope/telescope.nvim"
 		}
+	},
+	{
+		'kevinhwang91/nvim-ufo',
+		dependencies = {'kevinhwang91/promise-async'},
+		config = function()
+			local ufo = require('ufo')
+
+			vim.o.foldcolumn = '0' -- '0' is not bad
+			vim.o.foldnestmax = 99
+			vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
+			vim.o.foldlevelstart = 99
+			vim.o.foldenable = true
+
+			vim.keymap.set('n', '<leader>za', require('ufo').openAllFolds)
+			vim.keymap.set('n', '<leader>zc', require('ufo').closeAllFolds)
+
+			require('ufo').setup()
+		end
 	}
 })
