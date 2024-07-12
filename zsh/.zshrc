@@ -22,8 +22,7 @@ alias ll='ls -l'
 
 # ssh shortcuts
 alias gtc='cd ~/Desktop/code'
-alias gtn='cd ~/Desktop/notes/work'
-alias int="cd ~/Desktop/code/interpreter && source env.sh && poetry run python3 main.py"
+alias gtn='cd ~/Desktop/notes'
 
 # alias gtcs='cd ~/Desktop/code/server-keys'
 alias gtcs1='gcloud compute ssh --zone "us-central1-a" "instance-2" --project "mavex-ai"'
@@ -49,7 +48,6 @@ alias tmuxn0='tmux new -t 0'
 alias tmuxnc='tmux new -t code'
 alias tmuxl='tmux ls'
 alias :q='exit'
-alias :q!='exit'
 
 # python env activation
 alias activate='{ source .env/bin/activate; echo "Python virtual environment activated (.env)" } || { source .venv/bin/activate; echo "Python virtual environment activated (.venv)" }'
@@ -107,7 +105,6 @@ function set_run_alias() {
         # Maven project (Java)
         alias run="mvn"
     else
-        # Default to something, or unalias
         unalias run 2> /dev/null || true
     fi
 }
