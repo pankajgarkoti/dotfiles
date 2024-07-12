@@ -32,6 +32,7 @@ return require("lazy").setup({
 					["core.defaults"] = {},
 					["core.ui"] = {},
 					["core.ui.calendar"] = {},
+					["core.export"] = {},
 					["core.dirman"] = {
 						config = {
 							workspaces = {
@@ -1088,6 +1089,7 @@ return require("lazy").setup({
 					suggestion_color = "#ffffff",
 					cterm = 244,
 				},
+				ignore_filetypes = { TelescopePrompt = true, norg = true },
 				log_level = "info",            -- set to "off" to disable logging completely
 				disable_inline_completion = false, -- disables inline completion for use with cmp disable_keymaps = false,
 				keymaps = {
@@ -1110,41 +1112,6 @@ return require("lazy").setup({
 			vim.g.nordbones = { transparent_background = true }
 			vim.g.zenbones = { transparent_background = true }
 		end
-	},
-	{
-		"jackMort/ChatGPT.nvim",
-			event = "VeryLazy",
-			config = function()
-				require("chatgpt").setup()
-			end,
-			dependencies = {
-				"MunifTanjim/nui.nvim",
-				"nvim-lua/plenary.nvim",
-				"folke/trouble.nvim",
-				"nvim-telescope/telescope.nvim"
-			}
-	},
-	{
-		"jackMort/ChatGPT.nvim",
-		event = "VeryLazy",
-		config = function()
-			require("chatgpt").setup({
-				openai_params = {
-					model = "gpt-4o",
-					frequency_penalty = 0.1,
-					presence_penalty = 0.1,
-					max_tokens = 4095,
-					temperature = 0.3,
-					top_p = 0.1,
-					n = 1,
-				}
-			})
-		end,
-		dependencies = {
-			"MunifTanjim/nui.nvim",
-			"nvim-lua/plenary.nvim",
-			"nvim-telescope/telescope.nvim"
-		}
 	},
 	{
 		'kevinhwang91/nvim-ufo',

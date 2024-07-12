@@ -4,7 +4,7 @@ if not setup then
 end
 
 nnp.setup({
-	width = 160,
+	width = 120,
 	buffers = {
 		-- scratchPad = {
 		-- 	-- set to `false` to
