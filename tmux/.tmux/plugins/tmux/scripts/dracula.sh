@@ -87,10 +87,10 @@ fi
   dark_gray=$bg
   light_purple=$accent
   dark_purple=$accent
-  cyan=$accent
+  cyan=$bg
   green=$accent
   orange=$accent
-  red=$accent
+  red=$bg
   pink=$accent
   yellow=$accent
 
