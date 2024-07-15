@@ -31,4 +31,5 @@ vim.api.nvim_create_autocmd("BufEnter", {
 
 vim.opt.termguicolors = true
 vim.cmd("set background=dark")
+vim.cmd("set conceallevel=2")
 vim.cmd.colorscheme("catppuccin-mocha")

@@ -621,10 +621,6 @@ return require("lazy").setup({
 						"css",
 						"scss",
 						"less",
-						"json",
-						"jsonc",
-						"yaml",
-						"yml",
 					}
 
 					local is_in_table = function(table, value)
@@ -777,8 +773,22 @@ return require("lazy").setup({
 			})
 
 			lspconfig["pyright"].setup({
+				capabilities = capabilities,
 				on_attach = on_attach,
 				filetypes = { "python" },
+			})
+
+			local capabilities_alt = vim.lsp.protocol.make_client_capabilities()
+
+			capabilities_alt.textDocument.foldingRange = {
+				dynamicRegistration = false,
+				lineFoldingOnly = true
+			}
+
+			lspconfig["yamlls"].setup({
+				capabilities = capabilities_alt,
+				on_attach = on_attach,
+				filetypes = { "yaml", "yml" },
 			})
 
 			lspconfig["eslint_d"].setup({
@@ -1155,5 +1165,8 @@ return require("lazy").setup({
 
 			require('ufo').setup()
 		end
+	},
+	{
+		'mg979/vim-visual-multi'
 	}
 })
