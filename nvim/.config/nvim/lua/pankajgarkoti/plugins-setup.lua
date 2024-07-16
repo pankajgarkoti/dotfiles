@@ -549,9 +549,9 @@ return require("lazy").setup({
 			local animate = require("mini.animate")
 			return {
 				cursor = {
-					enable = true,
-					-- timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
-					-- path = animate.gen_path.walls(),
+					enable = false,
+					timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
+					path = animate.gen_path.walls(),
 				},
 				resize = {
 					enable = false,
