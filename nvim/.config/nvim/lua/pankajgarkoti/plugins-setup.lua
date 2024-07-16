@@ -485,7 +485,6 @@ return require("lazy").setup({
 		config = function()
 			vim.o.laststatus = 3
 			require("mini.starter").setup()
-			require("mini.comment").setup()
 			require("mini.align").setup()
 			require("mini.diff").setup()
 			require("mini.git").setup()
@@ -512,6 +511,28 @@ return require("lazy").setup({
 		end
 	},
 	{
+		"JoosepAlviste/nvim-ts-context-commentstring",
+		lazy = true,
+		opts = {
+			enable_autocmd = false,
+		},
+	},
+	{
+		"echasnovski/mini.comment",
+		event = "VeryLazy",
+		opts = {
+			options = {
+				custom_commentstring = function()
+					return require("ts_context_commentstring.internal").calculate_commentstring() or vim.bo.commentstring
+				end,
+			},
+		},
+		dependencies = {
+			"JoosepAlviste/nvim-ts-context-commentstring",
+			"windwp/nvim-ts-autotag",
+		},
+	},
+	{
 		"echasnovski/mini.animate",
 		event = "VeryLazy",
 		opts = function()
@@ -529,15 +550,15 @@ return require("lazy").setup({
 			return {
 				cursor = {
 					enable = true,
-					timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
-					path = animate.gen_path.walls(),
+					-- timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
+					-- path = animate.gen_path.walls(),
 				},
 				resize = {
 					enable = false,
 					timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
 				},
 				scroll = {
-					enable = false,
+					enable = true,
 					timing = animate.gen_timing.linear({ duration = 100, unit = "total" }),
 					subscroll = animate.gen_subscroll.equal({
 						predicate = function(total_scroll)
