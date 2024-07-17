@@ -1139,6 +1139,7 @@ return require("lazy").setup({
 	{
 		"supermaven-inc/supermaven-nvim",
 		enabed = true,
+		commit = 'df3ecf7',
 		config = function()
 			require("supermaven-nvim").setup({
 				color = {
@@ -1199,5 +1200,6 @@ return require("lazy").setup({
 		config = function()
 			require('render-markdown').setup({})
 		end,
-	}
+	},
+
 })
