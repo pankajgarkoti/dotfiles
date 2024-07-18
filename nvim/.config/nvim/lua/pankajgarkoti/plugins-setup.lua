@@ -1195,11 +1195,37 @@ return require("lazy").setup({
 		'MeanderingProgrammer/markdown.nvim',
 		name = 'markdown',
 		-- dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.nvim' }, -- if you use the mini.nvim suite
-		dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.icons' }, -- if you use standalone mini plugins
-		-- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+		-- dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.icons' }, -- if you use standalone mini plugins
+		dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
 		config = function()
 			require('render-markdown').setup({})
 		end,
 	},
-
+	{
+		"olimorris/codecompanion.nvim",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-treesitter/nvim-treesitter",
+			"nvim-telescope/telescope.nvim", -- Optional
+			{
+				"stevearc/dressing.nvim",   -- Optional: Improves the default Neovim UI
+				opts = {},
+			},
+		},
+		config = function()
+			require("codecompanion").setup({
+				strategies = {
+					chat = {
+						adapter = "openai",
+					},
+					inline = {
+						adapter = "openai",
+					},
+					agent = {
+						adapter = "openai",
+					},
+				}
+			})
+		end
+	}
 })

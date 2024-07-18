@@ -10,7 +10,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # custom minimal prompt
-PROMPT='%F{cyan}%1~ >%f '
+# PROMPT='%F{cyan}%1~ >%f '
 
 # flutter and java path
 export PATH='/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/pankajgarkoti/Desktop/code/flutter/bin:/Users/pankajgarkoti/Desktop/flutter/bin'
@@ -25,12 +25,7 @@ alias gtc='cd ~/Desktop/code'
 alias gtn='cd ~/Desktop/notes'
 
 # alias gtcs='cd ~/Desktop/code/server-keys'
-alias gtcs1='gcloud compute ssh --zone "us-central1-a" "instance-2" --project "mavex-ai"'
-# alias gtcs1='gtcs; ssh -i hearus-new.pem ubuntu@services.hearus.me'
-# alias gtcs2='gtcs; ssh -i hearus-new.pem ubuntu@hearus.me'
-# alias gtcs3='gtcs; ssh -i hearus-new.pem ubuntu@app.hearus.me'
-# alias gtcs4='gtcs; ssh -i services.hearus.me_key.pem ubuntu@20.127.230.110'
-# alias gtcs5='gtcs; ssh -i services.hearus.me_key.pem ubuntu@20.106.176.117'
+# alias gtcs1='gcloud compute ssh --zone "us-central1-a" "instance-2" --project "mavex-ai"' # commenting because i do not have access to this anymore
 
 # git shortcuts
 alias commit='git commit -a -m'
@@ -53,9 +48,8 @@ alias :q='exit'
 alias activate='{ source .env/bin/activate; echo "Python virtual environment activated (.env)" } || { source .venv/bin/activate; echo "Python virtual environment activated (.venv)" }'
 alias run='{ python3 main.py } || { python3 run.py } || { python3 app.py } || { python3 runner.py }'
 
-# backup obsidian notes to github
-alias saveallnotes='cd ~/Desktop/notes; git add *; commit "$(date)"; push main; echo "~/Desktop/notes has been backed up to GitHub :)"'
-alias savenotes='cd ~/Desktop/notes/work; git add *; commit "$(date)"; push main; echo "~/Desktop/notes/work has been backed up to GitHub :)"'
+# backup notes to github
+alias savenotes='cd ~/Desktop/notes; git add .; commit "$(date)"; push main; echo "~/Desktop/notes/work has been backed up to GitHub :)"'
 
 # Generated for envman. Do not edit.
 [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
