@@ -25,7 +25,7 @@ alias gtc='cd ~/Desktop/code'
 alias gtn='cd ~/Desktop/notes'
 
 # alias gtcs='cd ~/Desktop/code/server-keys'
-# alias gtcs1='gcloud compute ssh --zone "us-central1-a" "instance-2" --project "mavex-ai"' # commenting because i do not have access to this anymore
+alias gtcs1='gcloud compute ssh --zone "us-central1-a" "instance-2" --project "mavex-ai"' # commenting because i do not have access to this anymore
 
 # git shortcuts
 alias commit='git commit -a -m'
@@ -122,4 +122,7 @@ export OLLAMA_MODELS="/Volumes/spinny/ollama"
 
 # source rust environment vars
 source ~/.cargo/env
+
+# required for gpg to work and signing commits
+export GPG_TTY=$(tty)
 
