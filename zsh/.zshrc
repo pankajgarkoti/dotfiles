@@ -15,6 +15,7 @@ fi
 # flutter and java path
 export PATH='/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/pankajgarkoti/Desktop/code/flutter/bin:/Users/pankajgarkoti/Desktop/flutter/bin'
 export PATH="/opt/homebrew/opt/openjdk@11/bin:$PATH"
+export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
 
 # general shortcuts
 alias la='ls -la'
@@ -22,13 +23,17 @@ alias ll='ls -l'
 
 # ssh shortcuts
 alias gtc='cd ~/Desktop/code'
+alias gtz='cd ~/Desktop/code/work'
+alias gtzb='cd ~/Desktop/code/work/backend'
+alias gtzf='cd ~/Desktop/code/work/frontend'
 alias gtn='cd ~/Desktop/notes'
 
 # alias gtcs='cd ~/Desktop/code/server-keys'
 alias gtcs1='gcloud compute ssh --zone "us-central1-a" "instance-2" --project "mavex-ai"' # commenting because i do not have access to this anymore
+alias gtszb='ssh backend.devpod'
 
 # git shortcuts
-alias commit='git commit -a -m'
+alias commit='git commit -m'
 alias checkout='git checkout'
 alias push='git push origin'
 alias pull='git pull'
@@ -119,7 +124,7 @@ export MODULAR_HOME="$HOME/.modular"
 export PATH="$MODULAR_HOME/pkg/packages.modular.com_mojo/bin:$PATH"
 
 export OLLAMA_MODELS="/Volumes/spinny/ollama"
-
+export DYLD_LIBRARY_PATH="/usr/local/opt/sqlite/lib:/usr/lib"
 # source rust environment vars
 source ~/.cargo/env
 
