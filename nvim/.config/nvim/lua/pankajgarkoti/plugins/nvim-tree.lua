@@ -13,50 +13,13 @@ local gwidth = vim.api.nvim_list_uis()[1].width
 local gheight = vim.api.nvim_list_uis()[1].height
 local width = 80
 local height = 40
---
--- nvimtree.setup({
--- 	renderer = {
--- 		icons = {
--- 			glyphs = {
--- 				folder = {
--- 					arrow_closed = "", -- arrow when folder is closed
--- 					arrow_open = "", -- arrow when folder is open
--- 				},
--- 			},
--- 		},
--- 	},
---   filters = {
---     dotfiles = true,
---   },
--- 	actions = {
--- 		open_file = {
--- 			window_picker = {
--- 				enable = true,
--- 			},
--- 		},
--- 	},
--- 	view = {
--- 		preserve_window_proportions = true,
--- 		width = 34,
--- 		float = {
--- 			enable = true,
--- 			open_win_config = {
--- 				relative = "editor",
--- 				width = width,
--- 				height = height,
--- 				row = (gheight - height) * 0.4,
--- 				col = (gwidth - width) * 0.5,
--- 			},
--- 		},
--- 	},
--- })
 
 nvimtree.setup({
 	hijack_cursor = true,
 	sync_root_with_cwd = true,
 	view = {
-		adaptive_size = false,
 		preserve_window_proportions = true,
+		centralize_selection = true,
 		float = {
 			enable = true,
 			open_win_config = {
@@ -77,7 +40,6 @@ nvimtree.setup({
 			enable = true,
 		},
 		icons = {
-			-- git_placement = "signcolumn",
 			show = {
 				file = true,
 				folder = true,
@@ -92,8 +54,8 @@ nvimtree.setup({
 		ignore_list = { "help" },
 	},
 	diagnostics = {
-		enable = true,
-		show_on_dirs = true,
+		enable = false,
+		show_on_dirs = false,
 	},
 	filters = {
 		custom = {
@@ -103,7 +65,7 @@ nvimtree.setup({
 	actions = {
 		change_dir = {
 			enable = false,
-			restrict_above_cwd = true,
+			restrict_above_cwd = false,
 		},
 		open_file = {
 			resize_window = false,

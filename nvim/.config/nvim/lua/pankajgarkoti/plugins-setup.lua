@@ -119,10 +119,9 @@ return require("lazy").setup({
 		event = "BufReadPost",
 		config = function()
 			local opts = {
-				outline_window = { position = 'left', width = 15 },
+				outline_window = { position = 'right', width = 20 },
 
 				symbols = {
-					-- icon_fetcher = function(kind) return kind:sub(1, 1) end,
 					icon_fetcher = function(_) return "" end,
 				},
 
@@ -136,7 +135,7 @@ return require("lazy").setup({
 				},
 
 				symbol_folding = {
-					autofold_depth = 3,
+					autofold_depth = 4,
 					auto_unfold = {
 						hovered = false,
 						only = true,
@@ -147,10 +146,10 @@ return require("lazy").setup({
 				preview_window = {
 					auto_preview = true,
 					open_hover_on_preview = true,
-					width = 20, -- Percentage or integer of columns
+					width = 30, -- Percentage or integer of columns
 					min_width = 20, -- This is the number of columns
 					relative_width = true,
-					-- border = 'double',
+					border = 'double',
 					winhl = 'NormalFloat:',
 					winblend = 0,
 					live = false
@@ -158,21 +157,6 @@ return require("lazy").setup({
 			}
 
 			require("outline").setup(opts)
-
-			-- vim.api.nvim_create_autocmd("BufWinEnter", {
-			-- 	group = vim.api.nvim_create_augroup("AutoOpenOutline", { clear = true }),
-			-- 	callback = function()
-			-- 		local bufnr = vim.api.nvim_get_current_buf()
-			-- 		local filetype = vim.bo[bufnr].filetype
-			-- 		local excluded_filetypes = {
-			-- 			"starter", "dashboard", "telescope", "lazy", "mason",
-			-- 			-- Add any other filetypes you want to exclude
-			-- 		}
-			-- 		if not vim.tbl_contains(excluded_filetypes, filetype) then
-			-- 			vim.cmd("Outline")
-			-- 		end
-			-- 	end,
-			-- })
 		end,
 	},
 	"nvim-lua/plenary.nvim",
@@ -288,6 +272,7 @@ return require("lazy").setup({
 			-- local selected_theme = themes.stone_blue
 			-- local selected_theme = themes.glacier_blue
 			-- local selected_theme = themes.silver_wave
+			local selected_theme = themes.deep_sea
 
 			local colors = {
 				bg = selected_theme.bg,
@@ -532,47 +517,47 @@ return require("lazy").setup({
 			"windwp/nvim-ts-autotag",
 		},
 	},
-	{
-		"echasnovski/mini.animate",
-		event = "VeryLazy",
-		opts = function()
-			-- don't use animate when scrolling with the mouse
-			local mouse_scrolled = false
-			for _, scroll in ipairs({ "Up", "Down" }) do
-				local key = "<ScrollWheel" .. scroll .. ">"
-				vim.keymap.set({ "", "i" }, key, function()
-					mouse_scrolled = true
-					return key
-				end, { expr = true })
-			end
-
-			local animate = require("mini.animate")
-			return {
-				cursor = {
-					enable = false,
-					timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
-					path = animate.gen_path.walls(),
-				},
-				resize = {
-					enable = false,
-					timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
-				},
-				scroll = {
-					enable = true,
-					timing = animate.gen_timing.linear({ duration = 100, unit = "total" }),
-					subscroll = animate.gen_subscroll.equal({
-						predicate = function(total_scroll)
-							if mouse_scrolled then
-								mouse_scrolled = false
-								return false
-							end
-							return total_scroll > 1
-						end,
-					}),
-				},
-			}
-		end,
-	},
+	-- {
+	-- 	"echasnovski/mini.animate",
+	-- 	event = "VeryLazy",
+	-- 	opts = function()
+	-- 		-- don't use animate when scrolling with the mouse
+	-- 		local mouse_scrolled = false
+	-- 		for _, scroll in ipairs({ "Up", "Down" }) do
+	-- 			local key = "<ScrollWheel" .. scroll .. ">"
+	-- 			vim.keymap.set({ "", "i" }, key, function()
+	-- 				mouse_scrolled = true
+	-- 				return key
+	-- 			end, { expr = true })
+	-- 		end
+	--
+	-- 		local animate = require("mini.animate")
+	-- 		return {
+	-- 			cursor = {
+	-- 				enable = false,
+	-- 				timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
+	-- 				path = animate.gen_path.walls(),
+	-- 			},
+	-- 			resize = {
+	-- 				enable = false,
+	-- 				timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
+	-- 			},
+	-- 			scroll = {
+	-- 				enable = true,
+	-- 				timing = animate.gen_timing.linear({ duration = 100, unit = "total" }),
+	-- 				subscroll = animate.gen_subscroll.equal({
+	-- 					predicate = function(total_scroll)
+	-- 						if mouse_scrolled then
+	-- 							mouse_scrolled = false
+	-- 							return false
+	-- 						end
+	-- 						return total_scroll > 1
+	-- 					end,
+	-- 				}),
+	-- 			},
+	-- 		}
+	-- 	end,
+	-- },
 	"sindrets/diffview.nvim",
 	{
 		"wojciech-kulik/xcodebuild.nvim",
@@ -762,17 +747,12 @@ return require("lazy").setup({
 				on_attach = on_attach,
 			})
 
-			-- configure typescript server with plugin
-			local exists, typescript = pcall(require, "typescript")
-
-			if exists then
-				typescript.setup({
-					server = {
-						capabilities = capabilities,
-						on_attach = on_attach,
-					},
-				})
-			end
+			-- configure typescript server
+			lspconfig["tsserver"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+				filetypes = { "html", "typescript", "typescriptreact", },
+			})
 
 			-- configure css server
 			lspconfig["cssls"].setup({
@@ -1061,7 +1041,7 @@ return require("lazy").setup({
 				styles = {
 					bold = true,
 					italic = true,
-					transparency = false,
+					transparency = true,
 				},
 
 				groups = {
@@ -1194,8 +1174,6 @@ return require("lazy").setup({
 	{
 		'MeanderingProgrammer/markdown.nvim',
 		name = 'markdown',
-		-- dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.nvim' }, -- if you use the mini.nvim suite
-		-- dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.icons' }, -- if you use standalone mini plugins
 		dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
 		config = function()
 			require('render-markdown').setup({})
@@ -1227,5 +1205,5 @@ return require("lazy").setup({
 				}
 			})
 		end
-	}
+	},
 })

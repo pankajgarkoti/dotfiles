@@ -4,16 +4,9 @@ if not setup then
 end
 
 nnp.setup({
-	width = 120,
+	width = 160,
 	buffers = {
-		-- scratchPad = {
-		-- 	-- set to `false` to
-		-- 	-- disable auto-saving
-		-- 	enabled = false,
-		-- 	-- set to `nil` to default
-		-- 	-- to current working directory
-		-- 	location = "~/Desktop/notes/life/scratchpads",
-		-- },
+		blend = -0.3,
 		bo = {
 			filetype = "md",
 		},
