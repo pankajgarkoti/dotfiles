@@ -89,12 +89,12 @@ local function insert_timestamped_line(same_line)
 
 	if same_line then
 		-- Insert at the end of the current line
-		local new_content = current_content .. ' - ' .. timestamp .. ' '
+		local new_content = current_content .. ' - ' .. '[' .. timestamp .. '] '
 		vim.api.nvim_set_current_line(new_content)
 		vim.api.nvim_win_set_cursor(0, { current_line, #new_content })
 	else
 		-- Insert on the next line
-		local new_line = string.rep(' ', indent) .. '- ' .. timestamp .. ' '
+		local new_line = string.rep(' ', indent) .. ' - ' .. '[' .. timestamp .. '] '
 		vim.api.nvim_buf_set_lines(0, current_line, current_line, false, { new_line })
 		vim.api.nvim_win_set_cursor(0, { current_line + 1, #new_line })
 	end
@@ -104,6 +104,8 @@ end
 
 -- Set the keymaps
 vim.keymap.set('n', '<leader>ln', function() insert_timestamped_line(false) end,
-	{ noremap = true, silent = true, desc = "Insert timestamped line below" })
+	{ noremap = true, silent = true, desc = "Insert timestamped line below" }
+)
 vim.keymap.set('n', '<leader>ll', function() insert_timestamped_line(true) end,
-	{ noremap = true, silent = true, desc = "Insert timestamp at end of current line" })
+	{ noremap = true, silent = true, desc = "Insert timestamp at end of current line" }
+)

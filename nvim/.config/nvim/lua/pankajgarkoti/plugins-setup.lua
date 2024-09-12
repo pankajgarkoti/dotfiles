@@ -268,7 +268,7 @@ return require("lazy").setup({
 			}
 
 			-- choose a theme
-			local selected_theme = themes.ice_blue
+			local selected_theme = themes.midnight
 			-- local selected_theme = themes.stone_blue
 			-- local selected_theme = themes.glacier_blue
 			-- local selected_theme = themes.silver_wave
