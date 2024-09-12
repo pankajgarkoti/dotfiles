@@ -73,6 +73,37 @@ keymap.set('i', '<C-d>', "<C-R>=strftime('%c')<CR>", opts)
 vim.keymap.set('i', '<C-d><C-f>', "<C-R>=strftime('%c')<CR>", opts)
 vim.keymap.set('i', '<C-d><C-d>', "<C-R>=strftime('%Y-%m-%d')<CR>", opts)
 vim.keymap.set('i', '<C-d><C-t>', "<C-R>=strftime('%H:%M:%S')<CR>", opts)
-vim.keymap.set('i', '<C-d><C-i>', "<C-R>=strftime('%Y-%m-%dT%H:%M:%S')<CR>", opts)
 vim.keymap.set('i', '<C-d><C-s>', "<C-R>=strftime('%m/%d/%y')<CR>", opts)
 vim.keymap.set('i', '<C-d><C-w>', "<C-R>=strftime('%A')<CR>", opts)
+
+
+-- logging and notetaking keymaps
+
+-- Function to insert timestamped line below current line.
+-- same_line: boolean, if true, inserts the timestamp at the end of the current line, otherwise inserts it on the next line
+local function insert_timestamped_line(same_line)
+	local current_line = vim.fn.line('.')
+	local indent = vim.fn.indent(current_line)
+	local timestamp = os.date('%H:%M:%S')
+	local current_content = vim.api.nvim_get_current_line()
+
+	if same_line then
+		-- Insert at the end of the current line
+		local new_content = current_content .. ' - ' .. timestamp .. ' '
+		vim.api.nvim_set_current_line(new_content)
+		vim.api.nvim_win_set_cursor(0, { current_line, #new_content })
+	else
+		-- Insert on the next line
+		local new_line = string.rep(' ', indent) .. '- ' .. timestamp .. ' '
+		vim.api.nvim_buf_set_lines(0, current_line, current_line, false, { new_line })
+		vim.api.nvim_win_set_cursor(0, { current_line + 1, #new_line })
+	end
+
+	vim.cmd('startinsert!')
+end
+
+-- Set the keymaps
+vim.keymap.set('n', '<leader>ln', function() insert_timestamped_line(false) end,
+	{ noremap = true, silent = true, desc = "Insert timestamped line below" })
+vim.keymap.set('n', '<leader>ll', function() insert_timestamped_line(true) end,
+	{ noremap = true, silent = true, desc = "Insert timestamp at end of current line" })

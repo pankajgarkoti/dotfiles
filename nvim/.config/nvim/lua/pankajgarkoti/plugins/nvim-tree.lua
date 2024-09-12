@@ -57,11 +57,6 @@ nvimtree.setup({
 		enable = false,
 		show_on_dirs = false,
 	},
-	filters = {
-		custom = {
-			"^.git$",
-		},
-	},
 	actions = {
 		change_dir = {
 			enable = false,

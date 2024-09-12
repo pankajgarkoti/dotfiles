@@ -6,9 +6,7 @@ fterm.setup({
 		height = 0.9,
 		width = 0.9,
 	},
-	blend = 0,
-	-- border = "double",
-	border = "rounded",
+	border = "double",
 })
 
 map("n", "<C-g>", fterm.toggle)

@@ -2,6 +2,7 @@
 require("pankajgarkoti.plugins-setup")
 require("pankajgarkoti.core.options")
 require("pankajgarkoti.core.keymaps")
+require("pankajgarkoti.core.colorscheme_material")
 
 -- plugins
 require("pankajgarkoti.plugins.comment")
@@ -27,11 +28,9 @@ vim.api.nvim_create_autocmd("BufEnter", {
 	command = "set wrap",
 })
 
-
 vim.opt.termguicolors = true
 vim.cmd("set background=dark")
 vim.cmd("set conceallevel=2")
-vim.cmd.colorscheme("material-deep-ocean")
 
 if vim.g.neovide then
 	vim.o.guifont = "IosevkaTerm Nerd Font Mono:h16"

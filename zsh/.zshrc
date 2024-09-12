@@ -131,3 +131,10 @@ source ~/.cargo/env
 # required for gpg to work and signing commits
 export GPG_TTY=$(tty)
 
+
+# bun completions
+[ -s "/Users/pankajgarkoti/.bun/_bun" ] && source "/Users/pankajgarkoti/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"

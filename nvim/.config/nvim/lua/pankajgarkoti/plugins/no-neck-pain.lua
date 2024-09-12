@@ -6,7 +6,6 @@ end
 nnp.setup({
 	width = 160,
 	buffers = {
-		blend = -0.3,
 		bo = {
 			filetype = "md",
 		},
