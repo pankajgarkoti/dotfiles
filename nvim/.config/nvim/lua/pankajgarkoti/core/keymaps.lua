@@ -78,6 +78,9 @@ vim.keymap.set('i', '<C-d><C-w>', "<C-R>=strftime('%A')<CR>", opts)
 
 
 -- logging and notetaking keymaps
+-- mark the task as done
+-- vim.keymap.set('n', '<leader>ld', '<Plug>(neorg.qol.todo-items.todo.task-cycle)'
+vim.keymap.set('n', '<leader><CR>', '<Plug>(neorg.qol.todo-items.todo.task-cycle)')
 
 -- Function to insert timestamped line below current line.
 -- same_line: boolean, if true, inserts the timestamp at the end of the current line, otherwise inserts it on the next line

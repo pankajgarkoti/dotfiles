@@ -1,5 +1,5 @@
 import = [
-    "~/.config/alacritty/themes/themes/challenger_deep.toml"
+    "~/.config/alacritty/themes/themes/carbonfox.toml"
 ]
 live_config_reload = true
 
@@ -7,7 +7,7 @@ live_config_reload = true
 TERM = "xterm-256color"
 
 [font]
-size = 16.0
+size = 18.0
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"
@@ -25,18 +25,32 @@ style = "Medium Italic"
 family = "IosevkaTerm Nerd Font Mono"
 style = "Medium"
 
+[cursor.style]
+shape = "Underline"
+blinking = "Always"
+
+[cursor.vi_mode_style]
+shape = "Underline"
+blinking = "Always"
+
+[mouse]
+hide_when_typing = true
+
 [window]
 decorations = "buttonless"
 dynamic_padding = true
-opacity = 1
+opacity = 0.7
+blur = true
+resize_increments = true
 
 [window.padding]
 x = 0
 y = 0
 
 [window.dimensions]
-lines = 50
-columns = 180
+lines = 68
+columns = 260
+
 
 [shell]
 program = "/bin/zsh"
