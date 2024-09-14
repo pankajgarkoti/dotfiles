@@ -268,11 +268,11 @@ return require("lazy").setup({
 			}
 
 			-- choose a theme
-			local selected_theme = themes.midnight
 			-- local selected_theme = themes.stone_blue
 			-- local selected_theme = themes.glacier_blue
 			-- local selected_theme = themes.silver_wave
-			local selected_theme = themes.deep_sea
+			-- local selected_theme = themes.deep_sea
+			local selected_theme = themes.midnight
 
 			local colors = {
 				bg = selected_theme.bg,
@@ -341,24 +341,22 @@ return require("lazy").setup({
 					return icon:gsub("%s+", "")
 				end,
 				color = { fg = colors.fg, bg = colors.accent },
-				padding = { left = 1, right = 1 },
-				separator = { left = "░" },
+				padding = { left = 1, right = 0 },
 			})
 			insert_component(config.sections.lualine_c, {
 				"branch",
 				icon = "",
 				color = { fg = colors.bg, bg = colors.accent },
-				padding = { left = 0, right = 0 },
-				separator = { right = "▓▒░", left = "░▒▓" },
+				padding = { left = 1, right = 2 },
+				separator = { right = "⸗", left = "⸗" },
 			})
 			insert_component(config.sections.lualine_c, {
 				"filename",
+				path = 1,
 				cond = conditions.buffer_not_empty,
-				color = { fg = colors.fg, bg = colors.bg },
+				color = { fg = colors.fg, bg = colors.bg, },
 				padding = { left = 1, right = 1 },
-				separator = {
-					right = "▓▒░",
-				},
+				separator = { right = "⸗", left = "⸗" },
 				symbols = {
 					modified = "•",
 					readonly = "",
@@ -373,19 +371,19 @@ return require("lazy").setup({
 				colored = false,
 				color = { fg = colors.bg, bg = colors.accent },
 				padding = { left = 1, right = 1 },
-				separator = { right = "▓▒░", left = "░▒▓" },
+				separator = { right = "⸗", left = "⸗" },
 			})
 			insert_component(config.sections.lualine_x, {
 				"searchcount",
 				color = { fg = colors.bg, bg = colors.accent },
-				padding = { left = 1, right = 1 },
-				separator = { right = "▓▒░", left = "░▒▓" },
+				padding = { left = i1, right = 1 },
+				separator = { right = "⸗", left = "░▒▓" },
 			})
 			insert_component(config.sections.lualine_x, {
 				"location",
 				color = { fg = colors.fg, bg = colors.accent },
-				padding = { left = 1, right = 0 },
-				separator = { left = "░▒▓" },
+				padding = { left = 1, right = 1 },
+				separator = { left = "⸗" },
 			})
 			insert_component(config.sections.lualine_x, {
 				function()
@@ -396,16 +394,7 @@ return require("lazy").setup({
 				color = { fg = colors.fg, bg = colors.accent },
 				padding = { left = 1, right = 1 },
 				cond = conditions.hide_in_width,
-				separator = { right = "▓▒░" },
-			})
-			insert_component(config.sections.lualine_x, {
-				"fileformat",
-				fmt = string.lower,
-				icons_enabled = false,
-				cond = conditions.hide_in_width,
-				color = { fg = colors.bg, bg = colors.accent },
-				separator = { right = "░" },
-				padding = { left = 0, right = 1 },
+				separator = { left = "⸗", right = "⸗" },
 			})
 
 			return config
@@ -1172,12 +1161,9 @@ return require("lazy").setup({
 		'mg979/vim-visual-multi'
 	},
 	{
-		'MeanderingProgrammer/markdown.nvim',
-		name = 'markdown',
-		dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
-		config = function()
-			require('render-markdown').setup({})
-		end,
+		'MeanderingProgrammer/render-markdown.nvim',
+		opts = {},
+		dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.nvim' },
 	},
 	{
 		"olimorris/codecompanion.nvim",

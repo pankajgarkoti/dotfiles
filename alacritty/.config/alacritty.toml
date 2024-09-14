@@ -37,15 +37,11 @@ blinking = "Always"
 hide_when_typing = true
 
 [window]
-decorations = "buttonless"
+decorations = "Buttonless"
 dynamic_padding = true
-opacity = 0.7
-blur = true
-resize_increments = true
-
-[window.padding]
-x = 0
-y = 0
+opacity = 1
+blur = false
+resize_increments = false
 
 [window.dimensions]
 lines = 68

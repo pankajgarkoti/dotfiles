@@ -22,7 +22,6 @@ require("pankajgarkoti.plugins.autopairs")
 require("pankajgarkoti.plugins.lsp.eslint-lspconfig")
 
 -- enable wrapping on every buffer
-local opts = { noremap = true, silent = true }
 vim.api.nvim_create_autocmd("BufEnter", {
 	pattern = "*",
 	command = "set wrap",
@@ -31,7 +30,32 @@ vim.api.nvim_create_autocmd("BufEnter", {
 vim.opt.termguicolors = true
 vim.cmd("set background=dark")
 vim.cmd("set conceallevel=2")
-vim.cmd("colorscheme tokyobones")
+
+local colorscheme_imports = {
+	material = "pankajgarkoti.core.colorscheme_material",
+	onedark = "pankajgarkoti.core.colorscheme_onedark",
+	catppuccin = "pankajgarkoti.core.colorscheme_catppuccin",
+	gruvbox = "pankajgarkoti.core.colorscheme_gruvbox",
+}
+
+local colorscheme = nil
+local colorscheme_import = nil
+local env_colorscheme = nil
+
+-- set colorscheme here
+colorscheme = nil        -- default colorscheme
+colorscheme_import = nil -- default colorscheme import
+env_colorscheme = os.getenv("NVIM_COLORSCHEME")
+
+if colorscheme then
+	vim.cmd("colorscheme " .. colorscheme)
+elseif colorscheme_import then
+	require(colorscheme_import)
+elseif env_colorscheme then
+	vim.cmd("colorscheme " .. env_colorscheme)
+else
+	vim.cmd("colorscheme tokyobones")
+end
 
 if vim.g.neovide then
 	vim.o.guifont = "IosevkaTerm Nerd Font Mono:h16"
@@ -44,14 +68,6 @@ if vim.g.neovide then
 
 	-- set minimum neovide window size
 	vim.g.neovide_size = 0.6
-
-	-- Helper function for transparency formatting
-	local alpha = function()
-		local tranparency_fraction = vim.g.transparency or 0.8
-		local transparency = math.floor(255 * tranparency_fraction)
-
-		return string.format("%x", transparency)
-	end
 
 	-- g:neovide_transparency should be 0 if you want to unify transparency of content and title bar.
 	vim.g.neovide_window_blurred = false
