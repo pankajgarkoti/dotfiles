@@ -54,7 +54,7 @@ elseif colorscheme_import then
 elseif env_colorscheme then
 	vim.cmd("colorscheme " .. env_colorscheme)
 else
-	vim.cmd("colorscheme tokyobones")
+	vim.cmd("colorscheme catppuccin-mocha")
 end
 
 if vim.g.neovide then

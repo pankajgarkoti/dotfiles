@@ -4,7 +4,14 @@ if not setup then
 end
 
 nnp.setup({
-	width = 160,
+	-- The width of the focused window that will be centered. When the terminal width is less than the `width` option, the side buffers won't be created.
+	--- @type integer|"textwidth"|"colorcolumn"
+	width = 100,
+	-- Represents the lowest width value a side buffer should be.
+	--- @type integer
+	minSideBufferWidth = 10,
+
+
 	buffers = {
 		bo = {
 			filetype = "md",
@@ -13,9 +20,20 @@ nnp.setup({
 			fillchars = "eob: ",
 		},
 	},
+
+	--- @type table
+	mappings = {
+		--- @type boolean
+		enabled = true,
+		--- @type string
+		toggle = "<Leader>nn",
+		--- @type string | { mapping: string, value: number }
+		widthUp = "<Leader>n=",
+		--- @type string | { mapping: string, value: number }
+		widthDown = "<Leader>n-",
+	},
 })
 
--- Enable line numbers
 local map = vim.keymap.set
 
 -- Key mappings
