@@ -6,7 +6,7 @@ end
 nnp.setup({
 	-- The width of the focused window that will be centered. When the terminal width is less than the `width` option, the side buffers won't be created.
 	--- @type integer|"textwidth"|"colorcolumn"
-	width = 100,
+	width = 140,
 	-- Represents the lowest width value a side buffer should be.
 	--- @type integer
 	minSideBufferWidth = 10,
