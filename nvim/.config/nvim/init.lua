@@ -1,3 +1,14 @@
+-- enable wrapping on every buffer
+vim.api.nvim_create_autocmd("BufEnter", {
+	pattern = "*",
+	command = "set wrap",
+})
+
+vim.opt.termguicolors = true
+vim.cmd("set background=dark")
+vim.cmd("set conceallevel=2")
+vim.cmd("set guicursor=a:hor30-blinkon0")
+
 -- Core
 require("pankajgarkoti.plugins-setup")
 require("pankajgarkoti.core.options")
@@ -21,16 +32,6 @@ require("pankajgarkoti.plugins.autopairs")
 -- LSP ad-hoc config
 require("pankajgarkoti.plugins.lsp.eslint-lspconfig")
 
--- enable wrapping on every buffer
-vim.api.nvim_create_autocmd("BufEnter", {
-	pattern = "*",
-	command = "set wrap",
-})
-
-vim.opt.termguicolors = true
-vim.cmd("set background=dark")
-vim.cmd("set conceallevel=2")
-
 local colorscheme_imports = {
 	material = "pankajgarkoti.core.colorscheme_material",
 	onedark = "pankajgarkoti.core.colorscheme_onedark",
@@ -43,8 +44,8 @@ local colorscheme_import = nil
 local env_colorscheme = nil
 
 -- set colorscheme here
-colorscheme = nil        -- default colorscheme
-colorscheme_import = nil -- default colorscheme import
+colorscheme = nil                                -- default colorscheme
+colorscheme_import = colorscheme_imports.onedark -- default colorscheme import
 env_colorscheme = os.getenv("NVIM_COLORSCHEME")
 
 if colorscheme then

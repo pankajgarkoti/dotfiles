@@ -21,6 +21,9 @@ return require("lazy").setup({
 		priority = 1000,
 		config = true,
 	},
+
+	{ "navarasu/onedark.nvim",    lazy = false,   priority = 1000 },
+
 	{
 		"nvim-neorg/neorg",
 		dependencies = { "luarocks.nvim" },
@@ -1211,5 +1214,6 @@ return require("lazy").setup({
 			"nvim-telescope/telescope.nvim",
 		},
 		config = true
-	}
+	},
+	{ "ellisonleao/gruvbox.nvim", priority = 1000 }
 })
