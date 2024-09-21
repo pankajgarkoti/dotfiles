@@ -7,7 +7,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
 vim.opt.termguicolors = true
 vim.cmd("set background=dark")
 vim.cmd("set conceallevel=2")
-vim.cmd("set guicursor=a:hor30-blinkon0")
+vim.cmd("set guicursor=a:block-blinkon0")
 
 -- Core
 require("pankajgarkoti.plugins-setup")
