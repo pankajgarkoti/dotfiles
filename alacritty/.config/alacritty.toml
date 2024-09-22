@@ -29,6 +29,9 @@ style = "Medium"
 shape = "Underline"
 blinking = "Never"
 
+[cursor]
+thickness = 0.5
+
 [mouse]
 hide_when_typing = true
 

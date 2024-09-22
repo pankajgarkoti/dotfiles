@@ -54,12 +54,20 @@ else
 end
 
 
+-- vim.opt.termguicolors = true
+-- vim.cmd("set termguicolors")
+-- vim.cmd("set background=dark")
+-- vim.cmd("set conceallevel=2")
+-- vim.cmd("highlight Cursor guibg=#ffffff guifg=#000000")
+-- vim.cmd("set guicursor=a:hor30-Cursor-blinkon0,i:hor30-Cursor-blinkon2")
+-- vim.cmd("set nocursorline")
+
 vim.opt.termguicolors = true
 vim.cmd("set termguicolors")
 vim.cmd("set background=dark")
 vim.cmd("set conceallevel=2")
-vim.cmd("highlight Cursor guibg=white guifg=black")
-vim.cmd("set guicursor=a:block-Cursor-blinkon0")
+vim.cmd("set guicursor=a:hor50-Cursor-blinkon0")
+vim.cmd("highlight Cursor guifg=#000000 guibg=#ffffff")
 vim.cmd("set nocursorline")
 
 
