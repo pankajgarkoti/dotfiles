@@ -17,7 +17,7 @@ require("catppuccin").setup({
 	-- 	light = "macchiato",
 	-- 	dark = "macchiato",
 	-- },
-	transparent_background = false,
+	transparent_background = true,
 	show_end_of_buffer = true, -- show the '~' characters after the end of buffers
 	term_colors = true,
 	dim_inactive = {
@@ -49,7 +49,7 @@ require("catppuccin").setup({
 		nvimtree = true,
 		telescope = true,
 		notify = true,
-		mini = false,
+		mini = true,
 	},
 	telescope = {
 		enabled = true,

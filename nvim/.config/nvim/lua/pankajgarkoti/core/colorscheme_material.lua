@@ -27,11 +27,11 @@ require("material").setup({
 	},
 
 	disable = {
-		colored_cursor = false, -- Disable the colored cursor
-		borders = false,      -- Disable borders between verticaly split windows
-		background = true,    -- Prevent the theme from setting the background (NeoVim then uses your terminal background)
-		term_colors = false,  -- Prevent the theme from setting terminal colors
-		eob_lines = false,    -- Hide the end-of-buffer lines
+		colored_cursor = true, -- Disable the colored cursor
+		borders = false,     -- Disable borders between verticaly split windows
+		background = true,   -- Prevent the theme from setting the background (NeoVim then uses your terminal background)
+		term_colors = false, -- Prevent the theme from setting terminal colors
+		eob_lines = false,   -- Hide the end-of-buffer lines
 	},
 
 	high_visibility = {
@@ -54,6 +54,6 @@ require("material").setup({
 })
 
 -- vim.g.material_style = "palenight"
-vim.g.material_style = "deep ocean"
--- vim.g.material_style = "darker"
-vim.cmd("colorscheme material-deep-ocean")
+-- vim.g.material_style = "deep ocean"
+vim.g.material_style = "darker"
+vim.cmd("colorscheme material-darker")

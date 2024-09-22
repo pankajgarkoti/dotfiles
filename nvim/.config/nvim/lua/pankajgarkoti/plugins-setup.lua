@@ -509,47 +509,47 @@ return require("lazy").setup({
 			"windwp/nvim-ts-autotag",
 		},
 	},
-	-- {
-	-- 	"echasnovski/mini.animate",
-	-- 	event = "VeryLazy",
-	-- 	opts = function()
-	-- 		-- don't use animate when scrolling with the mouse
-	-- 		local mouse_scrolled = false
-	-- 		for _, scroll in ipairs({ "Up", "Down" }) do
-	-- 			local key = "<ScrollWheel" .. scroll .. ">"
-	-- 			vim.keymap.set({ "", "i" }, key, function()
-	-- 				mouse_scrolled = true
-	-- 				return key
-	-- 			end, { expr = true })
-	-- 		end
-	--
-	-- 		local animate = require("mini.animate")
-	-- 		return {
-	-- 			cursor = {
-	-- 				enable = false,
-	-- 				timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
-	-- 				path = animate.gen_path.walls(),
-	-- 			},
-	-- 			resize = {
-	-- 				enable = false,
-	-- 				timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
-	-- 			},
-	-- 			scroll = {
-	-- 				enable = true,
-	-- 				timing = animate.gen_timing.linear({ duration = 100, unit = "total" }),
-	-- 				subscroll = animate.gen_subscroll.equal({
-	-- 					predicate = function(total_scroll)
-	-- 						if mouse_scrolled then
-	-- 							mouse_scrolled = false
-	-- 							return false
-	-- 						end
-	-- 						return total_scroll > 1
-	-- 					end,
-	-- 				}),
-	-- 			},
-	-- 		}
-	-- 	end,
-	-- },
+	{
+		"echasnovski/mini.animate",
+		event = "VeryLazy",
+		opts = function()
+			-- don't use animate when scrolling with the mouse
+			local mouse_scrolled = false
+			for _, scroll in ipairs({ "Up", "Down" }) do
+				local key = "<ScrollWheel" .. scroll .. ">"
+				vim.keymap.set({ "", "i" }, key, function()
+					mouse_scrolled = true
+					return key
+				end, { expr = true })
+			end
+
+			local animate = require("mini.animate")
+			return {
+				cursor = {
+					enable = false,
+					timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
+					path = animate.gen_path.walls(),
+				},
+				resize = {
+					enable = false,
+					timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
+				},
+				scroll = {
+					enable = true,
+					timing = animate.gen_timing.linear({ duration = 100, unit = "total" }),
+					subscroll = animate.gen_subscroll.equal({
+						predicate = function(total_scroll)
+							if mouse_scrolled then
+								mouse_scrolled = false
+								return false
+							end
+							return total_scroll > 1
+						end,
+					}),
+				},
+			}
+		end,
+	},
 	"sindrets/diffview.nvim",
 	{
 		"wojciech-kulik/xcodebuild.nvim",
@@ -1014,7 +1014,7 @@ return require("lazy").setup({
 	},
 	{
 		"rose-pine/neovim",
-		enabled = false,
+		enabled = true,
 		lazy = false,
 		priority = 1000,
 		config = function()
@@ -1082,8 +1082,6 @@ return require("lazy").setup({
 					end
 				end,
 			})
-
-			vim.cmd("colorscheme rose-pine")
 		end,
 	},
 	{

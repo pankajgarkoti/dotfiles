@@ -4,11 +4,6 @@ vim.api.nvim_create_autocmd("BufEnter", {
 	command = "set wrap",
 })
 
-vim.opt.termguicolors = true
-vim.cmd("set background=dark")
-vim.cmd("set conceallevel=2")
-vim.cmd("set guicursor=a:block-blinkon0")
-
 -- Core
 require("pankajgarkoti.plugins-setup")
 require("pankajgarkoti.core.options")
@@ -44,8 +39,8 @@ local colorscheme_import = nil
 local env_colorscheme = nil
 
 -- set colorscheme here
-colorscheme = nil                                -- default colorscheme
-colorscheme_import = colorscheme_imports.onedark -- default colorscheme import
+colorscheme = nil
+colorscheme_import = colorscheme_imports.gruvbox
 env_colorscheme = os.getenv("NVIM_COLORSCHEME")
 
 if colorscheme then
@@ -57,6 +52,16 @@ elseif env_colorscheme then
 else
 	vim.cmd("colorscheme catppuccin-mocha")
 end
+
+
+vim.opt.termguicolors = true
+vim.cmd("set termguicolors")
+vim.cmd("set background=dark")
+vim.cmd("set conceallevel=2")
+vim.cmd("highlight Cursor guibg=white guifg=black")
+vim.cmd("set guicursor=a:block-Cursor-blinkon0")
+vim.cmd("set nocursorline")
+
 
 if vim.g.neovide then
 	vim.o.guifont = "IosevkaTerm Nerd Font Mono:h16"
