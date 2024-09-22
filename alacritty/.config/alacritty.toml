@@ -35,8 +35,8 @@ hide_when_typing = true
 [window]
 decorations = "Buttonless"
 dynamic_padding = true
-opacity = 0.9
-blur = true
+opacity = 1
+blur = false
 resize_increments = false
 
 [window.dimensions]

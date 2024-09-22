@@ -78,9 +78,44 @@ vim.keymap.set('i', '<C-d><C-w>', "<C-R>=strftime('%A')<CR>", opts)
 
 
 -- logging and notetaking keymaps
--- mark the task as done
--- vim.keymap.set('n', '<leader>ld', '<Plug>(neorg.qol.todo-items.todo.task-cycle)'
-vim.keymap.set('n', '<leader><CR>', '<Plug>(neorg.qol.todo-items.todo.task-cycle)')
+-- mark the task as done, if the checkboxes are of the form [x] or [X], change them with code
+-- if they are of form ( ) or (x) call the neorg.qol.todo-items.todo.task-cycle function
+
+local function mark_task_done()
+	local line = vim.api.nvim_get_current_line()
+	local square_match = line:match("%[%s*%]")
+	local current_line = vim.api.nvim_get_current_line()
+
+	local markdown_state_map = {
+		[' '] = "x",
+		['x'] = "-",
+		['-'] = " ",
+	}
+
+	if not square_match then
+		local new_line = "- [ ] " .. current_line
+		vim.api.nvim_set_current_line(new_line)
+		return
+	end
+
+	local boxed = function(char)
+		return "[" .. char .. "]"
+	end
+
+	for state, new_state in pairs(markdown_state_map) do
+		if square_match and square_match == state then
+			local new_line = current_line:gsub(boxed(square_match), boxed(new_state))
+			vim.api.nvim_set_current_line(new_line)
+		end
+	end
+end
+
+vim.keymap.set('n', '<leader><CR>', '<Plug>(neorg.qol.todo-items.todo.task-cycle)',
+	{ noremap = true, silent = true, desc = "Mark Neorg todo list item as done" }
+)
+vim.keymap.set('n', '<leader>lc', mark_task_done,
+	{ noremap = true, silent = true, desc = "Mark Markdown todo list item as done" }
+)
 
 -- Function to insert timestamped line below current line.
 -- same_line: boolean, if true, inserts the timestamp at the end of the current line, otherwise inserts it on the next line
