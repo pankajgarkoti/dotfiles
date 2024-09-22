@@ -114,19 +114,17 @@ KEYMAPS = {
 	{ "n", "<leader>5",    ":lua require('harpoon.ui').nav_file(5)<CR>",         { noremap = true, silent = true, desc = "Harpoon file 5" } },
 
 	-- Datetime related keymaps in insert mode
-	{ 'i', '<C-d>',        "<C-R>=strftime('%c')<CR>",                           { map = true, noremap = false, silent = true, desc = "Insert current datetime" } },
+	{ 'i', '<C-d>',        "<C-R>=strftime('%c')<CR>",                           { noremap = false, silent = true, desc = "Insert current datetime" } },
 	{ 'i', '<C-d><C-f>',   "<C-R>=strftime('%c')<CR>",                           { noremap = true, silent = true, desc = "Insert full datetime" } },
 	{ 'i', '<C-d><C-d>',   "<C-R>=strftime('%Y-%m-%d')<CR>",                     { noremap = true, silent = true, desc = "Insert current date" } },
 	{ 'i', '<C-d><C-t>',   "<C-R>=strftime('%H:%M:%S')<CR>",                     { noremap = true, silent = true, desc = "Insert current time" } },
 	{ 'i', '<C-d><C-s>',   "<C-R>=strftime('%m/%d/%y')<CR>",                     { noremap = true, silent = true, desc = "Insert short date" } },
-	-- { 'i', '<C-d><C-w>',   "<C-R>=strftime('%A')<CR>",                           { noremap = true, silent = true, desc = "Insert current weekday" } },
-	{ 'i', '<C-d><C-w>',   "<C-R>=strftime('%A %Y-%m-%d')<CR>",                  { noremap = true, silent = true, desc = "Insert current weekday" } },
+	{ 'i', '<C-d><C-w>',   "<C-R>=strftime('%A %Y-%m-%d')<CR>",                  { noremap = true, silent = true, desc = "Insert current weekday and date" } },
 	{ 'n', '<leader><CR>', '<Plug>(neorg.qol.todo-items.todo.task-cycle)',       { noremap = true, silent = true, desc = "Mark Neorg todo list item as done" } },
 	{ 'n', '<leader>lc',   mark_task_done,                                       { noremap = true, silent = true, desc = "Mark Markdown todo list item as done" } },
 	{ 'n', '<leader>ln',   function() insert_timestamped_line(false) end,        { noremap = true, silent = true, desc = "Insert timestamped line below" } },
 	{ 'n', '<leader>ll',   function() insert_timestamped_line(true) end,         { noremap = true, silent = true, desc = "Insert timestamp at end of current line" } },
 }
-
 
 
 local init_keymaps = function()
@@ -137,6 +135,11 @@ local init_keymaps = function()
 		local opts = keymap[4]
 		vim.keymap.set(mode, key, cmd, opts)
 	end
+	return true
 end
 
-init_keymaps()
+local success, _ = pcall(init_keymaps)
+
+if not success then
+	print("Failed to initialize keymaps.")
+end
