@@ -1,5 +1,4 @@
 typeset -g POWERLEVEL9K_INSTANT_PROMPT=off
-fastfetch
 export LANG='en_US.UTF-8'
 
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
@@ -9,8 +8,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# custom minimal prompt
-# PROMPT='%F{cyan}%1~ >%f '
+fastfetch
 
 # flutter and java path
 export PATH='/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/pankajgarkoti/Desktop/code/flutter/bin:/Users/pankajgarkoti/Desktop/flutter/bin'
@@ -47,6 +45,9 @@ alias tmuxc='tmux attach -t code'
 alias tmuxn0='tmux new -t 0'
 alias tmuxnc='tmux new -t code'
 alias tmuxl='tmux ls'
+alias tm='gtc; tmuxc || tmuxnc'
+
+# why not?
 alias :q='exit'
 
 # python env activation

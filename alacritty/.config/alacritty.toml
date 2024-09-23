@@ -1,10 +1,4 @@
-import = [
-	".config/alacritty/themes/themes/rose-pine-custom.toml"
-]
 live_config_reload = true
-
-[env]
-TERM = "xterm-256color"
 
 [font]
 size = 16.0
@@ -46,6 +40,46 @@ resize_increments = false
 lines = 68
 columns = 260
 
-[shell]
-program = "/bin/zsh"
-args = [  "-l", "-c", "cd ~/Desktop/code/; tmux attach -t code || tmux new -t code" ]
+[colors.primary]
+background = '#000000'
+foreground = '#C0C7C8'
+
+[colors.cursor]
+text = '#e0def4'
+cursor = '#524f67'
+
+[colors.vi_mode_cursor]
+text = '#e0def4'
+cursor = '#ffffff'
+
+[colors.selection]
+text = '#e0def4'
+background = '#403d52'
+
+[colors.normal]
+black = '#000000'
+red = '#eb6f92'
+green = '#31748f'
+yellow = '#f6c177'
+blue = '#9ccfd8'
+magenta = '#c4a7e7'
+cyan = '#ebbcba'
+white = '#e0def4'
+
+[colors.bright]
+black = '#000000'
+red = '#eb6f92'
+green = '#31748f'
+yellow = '#f6c177'
+blue = '#9ccfd8'
+magenta = '#c4a7e7'
+cyan = '#ebbcba'
+white = '#e0def4'
+
+[colors.hints]
+start = {foreground = '#908caa', background = '#1f1d2e' }
+end = { foreground = '#6e6a86', background = '#1f1d2e' }
+
+# [shell]
+# program = "/bin/zsh"
+# args = [  "-l", "-c", "cd ~/Desktop/code/; tmux attach -t code || tmux new -t code" ]
