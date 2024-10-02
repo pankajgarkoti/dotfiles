@@ -70,6 +70,23 @@ vim.cmd("set guicursor=a:hor50-Cursor-blinkon0")
 vim.cmd("highlight Cursor guifg=#000000 guibg=#ffffff")
 vim.cmd("set nocursorline")
 
+--- @return string
+--- Get the path to the python executable in the current virtual environment.
+--- If the current directory is not in a virtual environment, return python3 default path.
+--- The path is determined by running `which python3` in the current directory.
+local get_venv_python_path = function()
+	local path = ""
+	local command = vim.system({ "which" }, { "python3" })
+	command.write(command, path)
+	local should_return_default = (path == nil) or (path == "")
+	if should_return_default then
+		return "python3"
+	else
+		return path
+	end
+end
+
+vim.g.python3_host_prog = get_venv_python_path()
 
 if vim.g.neovide then
 	vim.o.guifont = "IosevkaTerm Nerd Font Mono:h16"
