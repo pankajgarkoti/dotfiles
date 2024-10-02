@@ -39,7 +39,7 @@ local colorscheme_import = nil
 local env_colorscheme = nil
 
 -- set colorscheme here
-colorscheme = nil
+colorscheme = "catppuccin-frappe"
 colorscheme_import = colorscheme_imports.gruvbox
 env_colorscheme = os.getenv("NVIM_COLORSCHEME")
 
