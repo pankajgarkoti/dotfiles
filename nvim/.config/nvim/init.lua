@@ -39,7 +39,7 @@ local colorscheme_import = nil
 local env_colorscheme = nil
 
 -- set colorscheme here
-colorscheme = "catppuccin-frappe"
+colorscheme = nil
 colorscheme_import = colorscheme_imports.gruvbox
 env_colorscheme = os.getenv("NVIM_COLORSCHEME")
 
@@ -75,9 +75,8 @@ vim.cmd("set nocursorline")
 --- If the current directory is not in a virtual environment, return python3 default path.
 --- The path is determined by running `which python3` in the current directory.
 local get_venv_python_path = function()
-	local path = ""
-	local command = vim.system({ "which" }, { "python3" })
-	command.write(command, path)
+	local command_output = vim.fn.system('which python3')
+	local path = vim.trim(command_output)
 	local should_return_default = (path == nil) or (path == "")
 	if should_return_default then
 		return "python3"

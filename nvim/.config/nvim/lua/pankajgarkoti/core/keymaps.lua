@@ -92,6 +92,7 @@ KEYMAPS = {
 	{ "n", "<leader>fc",   "<cmd>Telescope grep_string<cr>",                     { noremap = true, silent = true, desc = "Grep string under cursor" } },
 	{ "n", "<leader>fb",   "<cmd>Telescope buffers<cr>",                         { noremap = true, silent = true, desc = "List open buffers" } },
 	{ "n", "<leader>fh",   "<cmd>Telescope help_tags<cr>",                       { noremap = true, silent = true, desc = "List help tags" } },
+	{ "n", "<leader>fj",   "<cmd>Telescope treesitter<cr>",                      { noremap = true, silent = true, desc = "Treesitter symbols" } },
 
 	-- Telescope git keymaps
 	{ "n", "<leader>gc",   "<cmd>Telescope git_commits<cr>",                     { noremap = true, silent = true, desc = "List all git commits" } },
