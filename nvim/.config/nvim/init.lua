@@ -5,9 +5,9 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- Core
+require("pankajgarkoti.core.keymaps")
 require("pankajgarkoti.plugins-setup")
 require("pankajgarkoti.core.options")
-require("pankajgarkoti.core.keymaps")
 require("pankajgarkoti.core.colorscheme_material")
 
 -- plugins

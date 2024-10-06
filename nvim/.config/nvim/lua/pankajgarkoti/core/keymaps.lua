@@ -128,6 +128,69 @@ KEYMAPS = {
 }
 
 
+--[[
+Set up key mappings based on a structured table with optional overrides.
+
+Parameters:
+	mappings (table): A table where each key represents a key combination
+										and the value is another table containing the command
+										and description. Nested tables allow hierarchical key maps.
+	user_opts (table): A table optionally containing custom options such as:
+		- mode (string): The mode in which to set mappings, default is 'n' for normal mode.
+		- prefix (string): A string to prefix all key mappings, default is ''.
+		- noremap (boolean): Whether to use non-recursive mapping, default is true.
+		- silent (boolean): Whether to execute mappings silently, default is true.
+
+Usage:
+	map_keys({
+		d = {
+			name = '+debug',
+			u = { '<Cmd>lua require"dapui".toggle()<CR>', 'ui toggle' },
+			e = { '<Cmd>lua require"dapui".eval()<CR>', 'eval' },
+		},
+	}, {
+		prefix = '<leader>',
+		mode = 'n',  -- Normal mode
+	})
+]] --
+_G.map_keys = function(mappings, user_opts)
+	local opts = {
+		mode = 'n',        -- Default to normal mode
+		prefix = '<leader>', -- No prefix by default
+		noremap = true,
+		silent = true,
+	}
+
+	-- Merge user options with the default options
+	-- local opts = vim.tbl_extend('force', default_opts, user_opts or {})
+	-- Use vim.tbl_deep_extend instead of vim.tbl_extend to merge nested tables
+	if user_opts then
+		for k, v in pairs(user_opts or {}) do
+			opts[k] = v
+		end
+	end
+
+	-- Recursive function to traverse and set mappings
+	local function set_keymaps(prefix, map)
+		for key, value in pairs(map) do
+			local combo = prefix .. key
+			if type(value) == 'table' and not vim.tbl_islist(value) then
+				set_keymaps(combo, value) -- combine prefix and key for nested maps
+			else
+				local command = value[1]
+				local description = value[2] or ""
+				if not command then
+					assert(false, 'No valid command specified for key map ' .. combo .. ' got ' .. vim.inspect(value))
+				end
+				vim.api.nvim_set_keymap(opts.mode, combo, command,
+					{ noremap = opts.noremap, silent = opts.silent, desc = description })
+			end
+		end
+	end
+
+	set_keymaps(opts.prefix, mappings)
+end
+
 local init_keymaps = function()
 	for _, keymap in pairs(KEYMAPS) do
 		local mode = keymap[1]
