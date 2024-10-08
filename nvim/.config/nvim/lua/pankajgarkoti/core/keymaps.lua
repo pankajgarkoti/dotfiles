@@ -3,29 +3,28 @@ vim.g.mapleader = " "
 -- Logging and notetaking keymaps
 local function mark_task_done()
 	local line = vim.api.nvim_get_current_line()
-	local square_match = line:match("%[([ %x%-])%]")
-	local current_line = vim.api.nvim_get_current_line()
-
+	local square_match = line:match("%[%s*[%s%-x]%s*%]")
 	local markdown_state_map = {
-		[' '] = "x",
-		['x'] = "-",
-		['-'] = " ",
+		["[ ]"] = "[x]",
+		["[x]"] = "[-]",
+		["[-]"] = "[ ]"
 	}
 
+	local function get_new_line(content)
+		return string.gsub(line, "%[%s*[%s%-x]%s*%]", content, 1)
+	end
+
 	if not square_match then
-		local new_line = "- [ ] " .. current_line
+		local new_line = "- [ ] " .. line
 		vim.api.nvim_set_current_line(new_line)
 		return
 	end
 
-	local boxed = function(char)
-		return "[" .. char .. "]"
-	end
-
 	for state, new_state in pairs(markdown_state_map) do
-		if square_match and square_match == state then
-			local new_line = current_line:gsub(boxed(state), boxed(new_state))
+		if square_match == state then
+			local new_line = get_new_line(new_state)
 			vim.api.nvim_set_current_line(new_line)
+			return
 		end
 	end
 end
