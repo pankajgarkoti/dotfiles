@@ -40,7 +40,7 @@ local env_colorscheme = nil
 
 -- set colorscheme here
 colorscheme = nil
-colorscheme_import = colorscheme_imports.gruvbox
+colorscheme_import = colorscheme_imports.onedark
 env_colorscheme = os.getenv("NVIM_COLORSCHEME")
 
 if colorscheme then
