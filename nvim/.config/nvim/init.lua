@@ -1,4 +1,6 @@
 -- enable wrapping on every buffer
+vim.g.mapleader = " "
+vim.g.maplocalleader = "\\"
 vim.api.nvim_create_autocmd("BufEnter", {
 	pattern = "*",
 	command = "set wrap",
@@ -8,24 +10,20 @@ vim.api.nvim_create_autocmd("BufEnter", {
 require("pankajgarkoti.core.keymaps")
 require("pankajgarkoti.plugins-setup")
 require("pankajgarkoti.core.options")
-require("pankajgarkoti.core.colorscheme_material")
 
 -- plugins
-require("pankajgarkoti.plugins.comment")
 require("pankajgarkoti.plugins.nvim-tree")
-require("pankajgarkoti.plugins.telescope")
 require("pankajgarkoti.plugins.treesitter")
 require("pankajgarkoti.plugins.gitsigns")
 require("pankajgarkoti.plugins.fterm")
 require("pankajgarkoti.plugins.no-neck-pain")
-require("pankajgarkoti.plugins.notify")
 require("pankajgarkoti.plugins.blamer")
-require("pankajgarkoti.plugins.xcodebuild")
-require("pankajgarkoti.plugins.harpoon")
 require("pankajgarkoti.plugins.autopairs")
+require("pankajgarkoti.plugins.diffview")
 
 -- LSP ad-hoc config
 require("pankajgarkoti.plugins.lsp.eslint-lspconfig")
+
 
 local colorscheme_imports = {
 	material = "pankajgarkoti.core.colorscheme_material",
@@ -52,15 +50,6 @@ elseif env_colorscheme then
 else
 	vim.cmd("colorscheme catppuccin-mocha")
 end
-
-
--- vim.opt.termguicolors = true
--- vim.cmd("set termguicolors")
--- vim.cmd("set background=dark")
--- vim.cmd("set conceallevel=2")
--- vim.cmd("highlight Cursor guibg=#ffffff guifg=#000000")
--- vim.cmd("set guicursor=a:hor30-Cursor-blinkon0,i:hor30-Cursor-blinkon2")
--- vim.cmd("set nocursorline")
 
 vim.opt.termguicolors = true
 vim.cmd("set termguicolors")

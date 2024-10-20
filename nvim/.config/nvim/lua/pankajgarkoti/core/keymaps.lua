@@ -86,10 +86,10 @@ KEYMAPS = {
 	{ "n", "<leader>e",    ":NvimTreeToggle<CR>",                                { noremap = true, silent = true, desc = "Toggle file explorer" } },
 
 	-- Telescope keymaps
-	{ "n", "<leader>ff",   "<cmd>Telescope find_files<cr>",                      { noremap = true, silent = true, desc = "Find files" } },
-	{ "n", "<leader>fs",   "<cmd>Telescope live_grep<cr>",                       { noremap = true, silent = true, desc = "Live grep" } },
-	{ "n", "<leader>fc",   "<cmd>Telescope grep_string<cr>",                     { noremap = true, silent = true, desc = "Grep string under cursor" } },
-	{ "n", "<leader>fb",   "<cmd>Telescope buffers<cr>",                         { noremap = true, silent = true, desc = "List open buffers" } },
+	{ "n", "<leader>ff",   "<cmd>Telescope find_files no_ignore=true<cr>",       { noremap = true, silent = true, desc = "Find files" } },
+	{ "n", "<leader>fs",   "<cmd>Telescope live_grep no_ignore=true<cr>",        { noremap = true, silent = true, desc = "Live grep" } },
+	{ "n", "<leader>fc",   "<cmd>Telescope grep_string no_ignore=true<cr>",      { noremap = true, silent = true, desc = "Grep string under cursor" } },
+	{ "n", "<leader>fb",   "<cmd>Telescope buffers no_ignore=true<cr>",          { noremap = true, silent = true, desc = "List open buffers" } },
 	{ "n", "<leader>fh",   "<cmd>Telescope help_tags<cr>",                       { noremap = true, silent = true, desc = "List help tags" } },
 	{ "n", "<leader>fj",   "<cmd>Telescope treesitter<cr>",                      { noremap = true, silent = true, desc = "Treesitter symbols" } },
 

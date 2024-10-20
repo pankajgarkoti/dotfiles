@@ -1,6 +1,3 @@
-vim.g.mapleader = " "
-vim.g.maplocalleader = "\\"
-
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
 	vim.fn.system({
@@ -21,12 +18,11 @@ return require("lazy").setup({
 		priority = 1000,
 		config = true,
 	},
-	{ "navarasu/onedark.nvim",   lazy = false, priority = 1000 },
 	{
 		"nvim-neorg/neorg",
 		dependencies = { "luarocks.nvim" },
-		lazy = false, -- Disable lazy loading as some `lazy.nvim` distributions set `lazy = true` by default.
-		version = "*", -- Pin Neorg to the latest stable release.
+		version = "*",
+		lazy = false,
 		config = function()
 			require("neorg").setup({
 				load = {
@@ -111,6 +107,16 @@ return require("lazy").setup({
 		end,
 	},
 	{
+		"folke/which-key.nvim",
+		dependencies = { "luarocks.nvim" },
+		config = function()
+			vim.o.timeout = true
+			vim.o.timeoutlen = 300
+			require("which-key").setup({})
+		end,
+	},
+	{ "navarasu/onedark.nvim",   lazy = false, priority = 1000 },
+	{
 		"hedyhli/outline.nvim",
 		lazy = true,
 		cmd = { "Outline", "OutlineOpen" },
@@ -127,7 +133,7 @@ return require("lazy").setup({
 				},
 
 				outline_items = {
-					show_symbol_lineno = true,
+					show_symbol_lineno = false,
 				},
 
 				keymaps = {
@@ -164,7 +170,7 @@ return require("lazy").setup({
 	"shortcuts/no-neck-pain.nvim",
 	{
 		"folke/noice.nvim",
-		event = "VeryLazy",
+		lazy = false,
 		opts = {
 			lsp = {
 				override = {
@@ -404,12 +410,106 @@ return require("lazy").setup({
 	{
 		"nvim-telescope/telescope-fzf-native.nvim",
 		build = "make",
+		dependencies = {
+			"nvim-telescope/telescope.nvim",
+		},
 	},
 	{
 		"nvim-telescope/telescope.nvim",
 		branch = "0.1.x",
+		dependencies = {
+			'nvim-lua/plenary.nvim',
+			'jonarrien/telescope-cmdline.nvim',
+		},
+		keys = {
+			{ '<leader><leader>', '<cmd>Telescope cmdline<cr>', desc = 'Cmdline' },
+			{ ':',                '<cmd>Telescope cmdline<cr>', desc = 'Cmdline' },
+		},
+		config = function()
+			local setup, telescope = pcall(require, 'telescope')
+			if not setup then
+				return
+			end
+
+			local actions_setup, actions = pcall(require, 'telescope.actions')
+			if not actions_setup then
+				return
+			end
+			local h_pct = 0.6
+			local w_pct = 0.5
+			local h_pct_cmdline = 0.2
+			local w_pct_cmdline = 0.5
+			local w_limit = 75
+
+
+			-- configure telescope
+			telescope.setup({
+				-- configure custom mappings
+				defaults = {
+					mappings = {
+						i = {
+							["<C-k>"] = actions.move_selection_previous,                -- move to prev result
+							["<C-j>"] = actions.move_selection_next,                    -- move to next result
+							["<C-q>"] = actions.send_selected_to_qflist + actions.open_qflist, -- send selected to quickfixlist
+							['<C-o>'] = require("telescope.actions.layout").toggle_preview,
+						},
+						n = {
+							['o'] = require("telescope.actions.layout").toggle_preview,
+							['<C-c>'] = actions.close,
+						},
+					},
+					preview = {
+						hide_on_startup = true,
+					},
+					layout_strategy = 'vertical',
+					layout_config = {
+						vertical = {
+							mirror = true,
+							propt_position = 'bottom',
+							width = function(_, cols, _)
+								return math.min(math.floor(w_pct * cols), w_limit)
+							end,
+							height = function(_, _, rows)
+								return math.floor(rows * h_pct)
+							end,
+						},
+					},
+				},
+				extensions = {
+					cmdline = {
+						-- Adjust telescope picker size and layout
+						picker   = {
+							mappings = {
+								complete      = '<Tab>',
+								run_selection = '<C-CR>',
+								run_input     = '<CR>',
+							},
+							layout_strategy = 'vertical',
+							layout_config = {
+								vertical = {
+									mirror = true,
+									propt_position = 'top',
+									width = function(_, cols, _)
+										return math.min(math.floor(w_pct_cmdline * cols), w_limit)
+									end,
+									height = function(_, _, rows)
+										return math.floor(rows * h_pct_cmdline)
+									end,
+								},
+							},
+						},
+						-- for triggering telescope from cmdline
+						overseer = {
+							enabled = true,
+						},
+					},
+				},
+			})
+
+			telescope.load_extension("fzf")
+			telescope.load_extension("cmdline")
+		end
 	},
-	"rafamadriz/friendly-snippets", -- useful snippets
 	{
 		"nvim-treesitter/nvim-treesitter",
 		build = function()
@@ -431,29 +531,6 @@ return require("lazy").setup({
 	"ThePrimeagen/harpoon",
 	"numToStr/FTerm.nvim",
 	"APZelos/blamer.nvim",
-	{
-		"folke/which-key.nvim",
-		config = function()
-			vim.o.timeout = true
-			vim.o.timeoutlen = 300
-			require("which-key").setup({})
-		end,
-	},
-	{
-		'Exafunction/codeium.vim',
-		enabled = false,
-		config = function()
-			-- Change '<C-g>' here to any keycode you like.
-			vim.keymap.set('i', '<C-a>', function() return vim.fn['codeium#Accept']() end,
-				{ expr = true, silent = true })
-			vim.keymap.set('i', '<c-;>', function() return vim.fn['codeium#CycleCompletions'](1) end,
-				{ expr = true, silent = true })
-			vim.keymap.set('i', '<c-,>', function() return vim.fn['codeium#CycleCompletions'](-1) end,
-				{ expr = true, silent = true })
-			vim.keymap.set('i', '<c-x>', function() return vim.fn['codeium#Clear']() end,
-				{ expr = true, silent = true })
-		end
-	},
 	{
 		'echasnovski/mini.nvim',
 		version = '*',
@@ -507,60 +584,7 @@ return require("lazy").setup({
 			"windwp/nvim-ts-autotag",
 		},
 	},
-	{
-		"echasnovski/mini.animate",
-		event = "VeryLazy",
-		opts = function()
-			-- don't use animate when scrolling with the mouse
-			local mouse_scrolled = false
-			for _, scroll in ipairs({ "Up", "Down" }) do
-				local key = "<ScrollWheel" .. scroll .. ">"
-				vim.keymap.set({ "", "i" }, key, function()
-					mouse_scrolled = true
-					return key
-				end, { expr = true })
-			end
 
-			local animate = require("mini.animate")
-			return {
-				cursor = {
-					enable = false,
-					timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
-					path = animate.gen_path.walls(),
-				},
-				resize = {
-					enable = false,
-					timing = animate.gen_timing.linear({ duration = 50, unit = "total" }),
-				},
-				scroll = {
-					enable = true,
-					timing = animate.gen_timing.linear({ duration = 100, unit = "total" }),
-					subscroll = animate.gen_subscroll.equal({
-						predicate = function(total_scroll)
-							if mouse_scrolled then
-								mouse_scrolled = false
-								return false
-							end
-							return total_scroll > 1
-						end,
-					}),
-				},
-			}
-		end,
-	},
-	"sindrets/diffview.nvim",
-	{
-		"wojciech-kulik/xcodebuild.nvim",
-		dependencies = {
-			"nvim-telescope/telescope.nvim",
-			"MunifTanjim/nui.nvim",
-			"nvim-tree/nvim-tree.lua",      -- (optional) to manage project files
-			"nvim-treesitter/nvim-treesitter", -- (optional) for Quick tests support (required Swift parser)
-		},
-		config = function()
-			require("xcodebuild").setup({})
-		end,
-	},
 	{
 		"mfussenegger/nvim-lint",
 		event = { "BufReadPre", "BufNewFile" },
@@ -738,7 +762,7 @@ return require("lazy").setup({
 			})
 
 			-- configure typescript server
-			lspconfig["tsserver"].setup({
+			lspconfig["ts_ls"].setup({
 				capabilities = capabilities,
 				on_attach = on_attach,
 				filetypes = { "html", "typescript", "typescriptreact", },
@@ -782,7 +806,7 @@ return require("lazy").setup({
 				filetypes = { "yaml", "yml" },
 			})
 
-			lspconfig["eslint_d"].setup({
+			lspconfig["quick_lint_js"].setup({
 				on_attach = on_attach,
 				capabilities = capabilities,
 				filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
@@ -811,47 +835,47 @@ return require("lazy").setup({
 			})
 
 			-- config for vue-language-server (volar)
-			configs.volar = {
-				default_config = {
-					cmd = { 'vls --stdio' },
-					filetypes = { 'vue' },
-					root_dir = util.root_pattern('package.json', 'vue.config.js'),
-					init_options = {
-						typescript = {
-							serverPath = '/usr/lib/node_modules/typescript/lib/tsserverlibrary.js',
-						},
-						languageFeatures = {
-							references = true,
-							definition = true,
-							typeDefinition = true,
-							callHierarchy = true,
-							hover = true,
-							rename = true,
-							signatureHelp = true,
-							codeAction = true,
-							completion = {
-								defaultTagNameCase = 'both',
-								defaultAttrNameCase = 'kebabCase',
-								getDocumentNameCasesRequest = true,
-								getDocumentSelectionRequest = true,
-							},
-							documentLink = true,
-							codeLens = true,
-							diagnostics = true,
-						},
-						documentFeatures = {
-							selectionRange = true,
-							foldingRange = true,
-							documentSymbol = true,
-							documentColor = true,
-							documentFormatting = {
-								defaultPrintWidth = 100,
-								getDocumentPrintWidthRequest = true,
-							},
-						},
-					},
-				},
-			}
+			-- configs.volar = {
+			-- 	default_config = {
+			-- 		cmd = { 'vls --stdio' },
+			-- 		filetypes = { 'vue' },
+			-- 		root_dir = util.root_pattern('package.json', 'vue.config.js'),
+			-- 		init_options = {
+			-- 			typescript = {
+			-- 				serverPath = '/usr/lib/node_modules/typescript/lib/tsserverlibrary.js',
+			-- 			},
+			-- 			languageFeatures = {
+			-- 				references = true,
+			-- 				definition = true,
+			-- 				typeDefinition = true,
+			-- 				callHierarchy = true,
+			-- 				hover = true,
+			-- 				rename = true,
+			-- 				signatureHelp = true,
+			-- 				codeAction = true,
+			-- 				completion = {
+			-- 					defaultTagNameCase = 'both',
+			-- 					defaultAttrNameCase = 'kebabCase',
+			-- 					getDocumentNameCasesRequest = true,
+			-- 					getDocumentSelectionRequest = true,
+			-- 				},
+			-- 				documentLink = true,
+			-- 				codeLens = true,
+			-- 				diagnostics = true,
+			-- 			},
+			-- 			documentFeatures = {
+			-- 				selectionRange = true,
+			-- 				foldingRange = true,
+			-- 				documentSymbol = true,
+			-- 				documentColor = true,
+			-- 				documentFormatting = {
+			-- 					defaultPrintWidth = 100,
+			-- 					getDocumentPrintWidthRequest = true,
+			-- 				},
+			-- 			},
+			-- 		},
+			-- 	},
+			-- }
 
 			lspconfig["volar"].setup({
 				on_attach = on_attach,
@@ -972,7 +996,7 @@ return require("lazy").setup({
 
 			mason_lspconfig.setup({
 				ensure_installed = {
-					"tsserver",
+					"ts_ls",
 					"html",
 					"cssls",
 					"tailwindcss",
@@ -1001,7 +1025,6 @@ return require("lazy").setup({
 				-- list of formatters & linters for mason to install
 				ensure_installed = {
 					"prettier",
-					"stylua",
 					"eslint_d",
 					"black"
 				},
@@ -1011,81 +1034,9 @@ return require("lazy").setup({
 		end
 	},
 	{
-		"rose-pine/neovim",
-		enabled = true,
-		lazy = false,
-		priority = 1000,
-		config = function()
-			require("rose-pine").setup({
-				variant = "auto",  -- auto, main, moon, or dawn
-				dark_variant = "main", -- main, moon, or dawn
-				dim_inactive_windows = false,
-				extend_background_behind_borders = true,
-
-				enable = {
-					terminal = true,
-					legacy_highlights = true, -- Improve compatibility for previous versions of Neovim
-					migrations = true,   -- Handle deprecated options automatically
-				},
-
-				styles = {
-					bold = true,
-					italic = true,
-					transparency = true,
-				},
-
-				groups = {
-					border = "muted",
-					link = "iris",
-					panel = "surface",
-
-					error = "love",
-					hint = "iris",
-					info = "foam",
-					note = "pine",
-					todo = "rose",
-					warn = "gold",
-
-					git_add = "foam",
-					git_change = "rose",
-					git_delete = "love",
-					git_dirty = "rose",
-					git_ignore = "muted",
-					git_merge = "iris",
-					git_rename = "pine",
-					git_stage = "iris",
-					git_text = "rose",
-					git_untracked = "subtle",
-
-					h1 = "iris",
-					h2 = "foam",
-					h3 = "rose",
-					h4 = "gold",
-					h5 = "pine",
-					h6 = "foam",
-				},
-
-				highlight_groups = {
-					Comment = { fg = "foam" },
-					VertSplit = { fg = "muted", bg = "muted" },
-				},
-
-				before_highlight = function(group, highlight, palette)
-					if highlight.undercurl then
-						highlight.undercurl = false
-					end
-
-					if highlight.fg == palette.pine then
-						highlight.fg = palette.foam
-					end
-				end,
-			})
-		end,
-	},
-	{
 		"catppuccin/nvim",
 		name = "catppuccin",
-		enabled = true,
+		enabled = false,
 		priority = 1001,
 		lazy = false,
 		config = function()
@@ -1103,11 +1054,31 @@ return require("lazy").setup({
 	{
 		"rcarriga/nvim-notify",
 		lazy = true,
+		config = function()
+			require("notify").setup({
+				background_color = "#000000",
+				fps = 30,
+				animate = false,
+				icons = {
+					DEBUG = "",
+					ERROR = "",
+					INFO = "",
+					TRACE = "✎",
+					WARN = "",
+				},
+				level = 2,
+				minimum_width = 70,
+				max_width = 100,
+				render = "wrapped-compact",
+				stages = "static",
+				timeout = 2500,
+				top_down = true,
+			})
+		end
 	},
 	{
 		"supermaven-inc/supermaven-nvim",
 		enabed = true,
-		-- commit = 'df3ecf7',
 		config = function()
 			require("supermaven-nvim").setup({
 				color = {
@@ -1115,7 +1086,7 @@ return require("lazy").setup({
 					cterm = 244,
 				},
 				ignore_filetypes = { TelescopePrompt = true, norg = true },
-				log_level = "info",            -- set to "off" to disable logging completely
+				log_level = "off",             -- set to "off" to disable logging completely
 				disable_inline_completion = false, -- disables inline completion for use with cmp disable_keymaps = false,
 				keymaps = {
 					accept_suggestion = "<C-a>",
@@ -1125,19 +1096,7 @@ return require("lazy").setup({
 			})
 		end,
 	},
-	{
-		"zenbones-theme/zenbones.nvim",
-		enabed = false,
-		lazy = false,
-		priority = 1000,
-		dependencies = {
-			"rktjmp/lush.nvim"
-		},
-		config = function()
-			vim.g.nordbones = { transparent_background = true }
-			vim.g.zenbones = { transparent_background = true }
-		end
-	},
+
 	{
 		'kevinhwang91/nvim-ufo',
 		dependencies = { 'kevinhwang91/promise-async' },
@@ -1155,9 +1114,6 @@ return require("lazy").setup({
 
 			require('ufo').setup()
 		end
-	},
-	{
-		'mg979/vim-visual-multi'
 	},
 	{
 		'MeanderingProgrammer/render-markdown.nvim',
@@ -1200,49 +1156,7 @@ return require("lazy").setup({
 			vim.cmd([[cab cc CodeCompanion]])
 		end
 	},
-	-- {
-	-- 	"3rd/image.nvim",
-	-- 	lazy = true,
-	-- 	opts = {
-	-- 		backend = "kitty",
-	-- 		max_width = 100,
-	-- 		max_height = 12,
-	-- 		max_height_window_percentage = math.huge,
-	-- 		max_width_window_percentage = math.huge,
-	-- 		window_overlap_clear_enabled = false,
-	-- 		window_overlap_clear_ft_ignore = {
-	-- 			"cmp_menu",
-	-- 			"cmp_docs",
-	-- 			"",
-	-- 		},
-	-- 	},
-	-- },
-	-- {
-	-- 	"benlubas/molten-nvim",
-	-- 	version = "^1.0.0", -- use version <2.0.0 to avoid breaking changes
-	-- 	dependencies = { "3rd/image.nvim" },
-	-- 	build = ":UpdateRemotePlugins",
-	-- 	lazy = true,
-	-- 	init = function()
-	-- 		vim.g.molten_image_provider = "image.nvim"
-	-- 		vim.g.molten_output_win_max_height = 20
-	-- 	end,
-	-- },
 	{ "ellisonleao/gruvbox.nvim" },
-	-- {
-	-- 	"GCBallesteros/jupytext.nvim",
-	-- 	lazy = false,
-	-- 	config = function()
-	-- 		require("jupytext").setup(
-	-- 			{
-	-- 				style = "hydrogen",
-	-- 				output_extension = "auto", -- Default extension. Don't change unless you know what you are doing
-	-- 				force_ft = nil,       -- Default filetype. Don't change unless you know what you are doing
-	-- 				custom_language_formatting = {},
-	-- 			}
-	-- 		)
-	-- 	end,
-	-- },
 	{
 		"folke/lazydev.nvim",
 		ft = "lua", -- only load on lua files
@@ -1254,9 +1168,9 @@ return require("lazy").setup({
 			},
 		},
 	},
-
 	{
 		'mfussenegger/nvim-dap',
+		disabled = true,
 		lazy = true,
 		dependencies = {
 			'nvim-telescope/telescope-dap.nvim',
@@ -1317,6 +1231,7 @@ return require("lazy").setup({
 	},
 	{
 		"rcarriga/nvim-dap-ui",
+		disabled = true,
 		dependencies = { "mfussenegger/nvim-dap", "nvim-neotest/nvim-nio" },
 		lazy = true,
 		init = function()
@@ -1343,15 +1258,14 @@ return require("lazy").setup({
 	{
 		'theHamsta/nvim-dap-virtual-text',
 		lazy = true,
+		disabled = true,
 		config = function()
 			require('nvim-dap-virtual-text').setup()
 			vim.cmd('highlight! NvimDapVirtualText guifg=#7c6f64 gui=italic')
 		end
 	},
 	{
-		"folke/tokyonight.nvim",
+		"sindrets/diffview.nvim",
 		lazy = false,
-		priority = 1000,
-		opts = {},
 	}
 })
