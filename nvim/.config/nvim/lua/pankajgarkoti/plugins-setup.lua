@@ -115,7 +115,11 @@ return require("lazy").setup({
 			require("which-key").setup({})
 		end,
 	},
-	{ "navarasu/onedark.nvim",   lazy = false, priority = 1000 },
+	{
+		"navarasu/onedark.nvim",
+		lazy = false,
+		priority = 1000
+	},
 	{
 		"hedyhli/outline.nvim",
 		lazy = true,
@@ -126,30 +130,28 @@ return require("lazy").setup({
 		event = "BufReadPost",
 		config = function()
 			local opts = {
-				outline_window = { position = 'right', width = 20 },
-
+				outline_window = {
+					position = 'right',
+					width = 20
+				},
 				symbols = {
 					icon_fetcher = function(_) return "" end,
 				},
-
 				outline_items = {
 					show_symbol_lineno = false,
 				},
-
 				keymaps = {
 					up_and_jump = '<up>',
 					down_and_jump = '<down>',
 				},
-
 				symbol_folding = {
-					autofold_depth = 4,
+					autofold_depth = 1,
 					auto_unfold = {
-						hovered = false,
-						only = true,
+						hovered = true,
+						-- only = 1,
 					},
 					markers = { '', '' },
 				},
-
 				preview_window = {
 					auto_preview = true,
 					open_hover_on_preview = true,
@@ -162,7 +164,6 @@ return require("lazy").setup({
 					live = false
 				},
 			}
-
 			require("outline").setup(opts)
 		end,
 	},
@@ -197,6 +198,13 @@ return require("lazy").setup({
 						},
 					},
 					view = "mini",
+				},
+				{
+					filter = {
+						event = "notify",
+						find = "No information available",
+					},
+					opts = { skip = true },
 				},
 			},
 			presets = {
@@ -423,7 +431,6 @@ return require("lazy").setup({
 		},
 		keys = {
 			{ '<leader><leader>', '<cmd>Telescope cmdline<cr>', desc = 'Cmdline' },
-			{ ':',                '<cmd>Telescope cmdline<cr>', desc = 'Cmdline' },
 		},
 		config = function()
 			local setup, telescope = pcall(require, 'telescope')
@@ -465,7 +472,7 @@ return require("lazy").setup({
 					layout_config = {
 						vertical = {
 							mirror = true,
-							propt_position = 'bottom',
+							prompt_position = 'bottom',
 							width = function(_, cols, _)
 								return math.min(math.floor(w_pct * cols), w_limit)
 							end,
@@ -487,8 +494,8 @@ return require("lazy").setup({
 							layout_strategy = 'vertical',
 							layout_config = {
 								vertical = {
-									mirror = true,
-									propt_position = 'top',
+									mirror = false,
+									prompt_position = 'top',
 									width = function(_, cols, _)
 										return math.min(math.floor(w_pct_cmdline * cols), w_limit)
 									end,

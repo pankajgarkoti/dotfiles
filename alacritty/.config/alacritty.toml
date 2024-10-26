@@ -1,7 +1,7 @@
 live_config_reload = true
 
 [font]
-size = 18.0
+size = 16.0
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"
@@ -43,7 +43,8 @@ columns = 260
 # Default colors
 [colors.primary]
 # background = '#0d1117'
-background = '#000000'
+background = '#00131E'
+# background = "#000000"
 foreground = '#c9d1d9'
 
 # Cursor colors
