@@ -155,7 +155,7 @@ return require("lazy").setup({
 					center_on_jump = true,
 
 					-- Vim options for the outline window
-					show_numbers = true,
+					show_numbers = false,
 					show_relative_numbers = false,
 					wrap = false,
 
@@ -163,7 +163,7 @@ return require("lazy").setup({
 					-- The last two means only show cursorline when the focus is in outline/code.
 					-- 'focus_in_outline' can be used if the outline_items.auto_set_cursor
 					-- operations are too distracting due to visual contrast caused by cursorline.
-					show_cursorline = true,
+					show_cursorline = "focus_in_outline",
 					-- Enable this only if you enabled cursorline so your cursor color can
 					-- blend with the cursorline, in effect, as if your cursor is hidden
 					-- in the outline window.
@@ -171,7 +171,6 @@ return require("lazy").setup({
 					-- wasn't focused on the outline window.
 					-- This feature is experimental.
 					hide_cursor = false,
-
 					-- Whether to auto-focus on the outline window when it is opened.
 					-- Set to false to *always* retain focus on your previous buffer when opening
 					-- outline.
@@ -345,7 +344,7 @@ return require("lazy").setup({
 					---@param bufnr integer Code buffer
 					---@returns string|boolean The icon string to display, such as "f", or `false`
 					---                        to fallback to `icon_source`.
-					icon_fetcher = function()
+					icon_fetcher = function(kind, bufnr)
 						return ""
 					end,
 					-- 3rd party source for fetching icons. This is used as a fallback if
