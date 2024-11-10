@@ -35,7 +35,7 @@ nvimtree.setup({
 		full_name = true,
 		group_empty = true,
 		special_files = {},
-		symlink_destination = false,
+		symlink_destination = true,
 		indent_markers = {
 			enable = true,
 		},
@@ -45,6 +45,7 @@ nvimtree.setup({
 				folder = true,
 				folder_arrow = false,
 				git = true,
+				diagnostics = true,
 			},
 		},
 	},
@@ -54,7 +55,7 @@ nvimtree.setup({
 		ignore_list = { "help" },
 	},
 	diagnostics = {
-		enable = false,
+		enable = true,
 		show_on_dirs = false,
 	},
 	actions = {

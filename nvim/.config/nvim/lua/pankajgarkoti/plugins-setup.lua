@@ -136,7 +136,7 @@ return require("lazy").setup({
 					split_command = nil,
 
 					-- Percentage or integer of columns
-					width = 25,
+					width = 20,
 					-- Whether width is relative to the total width of nvim
 					-- When relative_width = true, this means take 25% of the total
 					-- screen width for outline window.
@@ -178,7 +178,7 @@ return require("lazy").setup({
 					-- retain focus on your code. If this is false, retaining focus will be
 					-- enforced for :Outline/:OutlineOpen and you will not be able to have the
 					-- other behaviour.
-					focus_on_open = true,
+					focus_on_open = false,
 					-- Winhighlight option for outline window.
 					-- See :help 'winhl'
 					-- To change background color to "CustomHl" for example, use "Normal:CustomHl".
@@ -243,7 +243,7 @@ return require("lazy").setup({
 					-- hover_symbol).
 					-- If you disable this you can still open hover_symbol using your keymap
 					-- below.
-					open_hover_on_preview = false,
+					open_hover_on_preview = true,
 					width = 50, -- Percentage or integer of columns
 					min_width = 50, -- Minimum number of columns
 					-- Whether width is relative to the total width of nvim.
@@ -655,9 +655,6 @@ return require("lazy").setup({
 			'nvim-lua/plenary.nvim',
 			'jonarrien/telescope-cmdline.nvim',
 		},
-		keys = {
-			{ '<leader><leader>', '<cmd>Telescope cmdline<cr>', desc = 'Cmdline' },
-		},
 		config = function()
 			local setup, telescope = pcall(require, 'telescope')
 			if not setup then
@@ -669,7 +666,7 @@ return require("lazy").setup({
 				return
 			end
 			local h_pct = 0.6
-			local w_pct = 0.5
+			local w_pct = 0.8
 			local h_pct_cmdline = 0.2
 			local w_pct_cmdline = 0.5
 			local w_limit = 75
@@ -693,8 +690,9 @@ return require("lazy").setup({
 					},
 					preview = {
 						hide_on_startup = true,
+						border = "single",
 					},
-					layout_strategy = 'vertical',
+					layout_strategy = 'horizontal',
 					layout_config = {
 						vertical = {
 							mirror = true,
@@ -708,39 +706,9 @@ return require("lazy").setup({
 						},
 					},
 				},
-				extensions = {
-					cmdline = {
-						-- Adjust telescope picker size and layout
-						picker   = {
-							mappings = {
-								complete      = '<Tab>',
-								run_selection = '<C-CR>',
-								run_input     = '<CR>',
-							},
-							layout_strategy = 'vertical',
-							layout_config = {
-								vertical = {
-									mirror = false,
-									prompt_position = 'top',
-									width = function(_, cols, _)
-										return math.min(math.floor(w_pct_cmdline * cols), w_limit)
-									end,
-									height = function(_, _, rows)
-										return math.floor(rows * h_pct_cmdline)
-									end,
-								},
-							},
-						},
-						-- for triggering telescope from cmdline
-						overseer = {
-							enabled = true,
-						},
-					},
-				},
 			})
 
 			telescope.load_extension("fzf")
-			telescope.load_extension("cmdline")
 		end
 	},
 	{
