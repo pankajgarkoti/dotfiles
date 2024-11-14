@@ -1,3 +1,4 @@
+[general]
 live_config_reload = true
 
 [font]
@@ -17,8 +18,7 @@ style = "Medium Italic"
 
 [font.normal]
 family = "IosevkaTerm Nerd Font Mono"
-# style = "Regular"
-style = "Heavy"
+style = "Medium"
 
 [cursor.style]
 shape = "Underline"
@@ -34,8 +34,6 @@ hide_when_typing = true
 decorations = "Buttonless"
 dynamic_padding = true
 resize_increments = false
-opacity = 0.7
-blur = true
 
 
 [window.dimensions]
