@@ -1,0 +1,58 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "assistant": {
+    "default_model": {
+      "provider": "zed.dev",
+      "model": "claude-3-5-sonnet-latest"
+    },
+    "version": "2",
+    "enable_experimental_live_diffs": true
+  },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  },
+  "features": {
+    "inline_completion_provider": "supermaven"
+  },
+  "cursor_shape": null,
+  "cursor_blink": false,
+  "ui_font_size": 14,
+  "buffer_font_size": 16,
+  "ui_font_family": "Iosevka Nerd Font",
+  "buffer_font_family": "IosevkaTerm Nerd Font Mono",
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "Sandcastle"
+  },
+  "scrollbar": {
+    "show": null
+  },
+  "vim_mode": true,
+  "autosave": "on_focus_change",
+  "tab_bar": {
+    "show": true,
+    "show_nav_history_buttons": true
+  },
+  "tabs": {
+    "git_status": true,
+    "close_position": "right",
+    "file_icons": true,
+    "activate_on_close": "neighbour"
+  },
+  "vim": {
+    "toggle_relative_line_numbers": true,
+    "use_system_clipboard": "always",
+    "use_multiline_find": true,
+    "use_smartcase_find": true,
+    "custom_digraphs": {}
+  }
+}
