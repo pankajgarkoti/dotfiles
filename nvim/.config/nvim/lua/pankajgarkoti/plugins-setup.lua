@@ -65,6 +65,7 @@ return require("lazy").setup({
 									--
 									-- When set to `content`, will only span as far as the longest line
 									-- within the code block.
+									-- width = "content",
 									width = "fullwidth",
 
 									-- Additional padding to apply to either the left or the right. Making
@@ -1286,35 +1287,68 @@ return require("lazy").setup({
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			"nvim-treesitter/nvim-treesitter",
-			"nvim-telescope/telescope.nvim", -- Optional
-			{
-				"stevearc/dressing.nvim",   -- Optional: Improves the default Neovim UI
-				opts = {},
-			},
+			"hrsh7th/nvim-cmp",                                                                 -- Optional: For using slash commands and variables in the chat buffer
+			"nvim-telescope/telescope.nvim",                                                    -- Optional: For using slash commands
+			{ "MeanderingProgrammer/render-markdown.nvim", ft = { "markdown", "codecompanion" } }, -- Optional: For prettier markdown rendering
+			{ "stevearc/dressing.nvim",                    opts = {} },                         -- Optional: Improves `vim.ui.select`
 		},
 		config = function()
-			require("codecompanion").setup({
+			local cc = require("codecompanion")
+			require("pankajgarkoti.plugins.utils.create_prompt_library")
+			local prompts = _G.load_code_companion_prompts()
+
+			print("=================================")
+			print("Prompt library loaded...")
+			print("Prompt library size: " .. #prompts)
+			print("=================================")
+
+			local opts = {
+				prompt_library = prompts,
 				strategies = {
 					chat = {
 						adapter = "openai",
 					},
 					inline = {
-						adapter = "openai",
+						adapter = "anthropic_s",
 					},
 					agent = {
-						adapter = "openai",
+						adapter = "anthropic_s",
 					},
-				}
-			})
+				},
+				display = {
+					chat = {
+						render_headers = true,
+						show_settings = true,
+					}
+				},
+				adapters = {
+					anthropic_h = function()
+						return require("codecompanion.adapters").extend("anthropic", {
+							schema = {
+								model = {
+									default = "claude-3-5-haiku-latest",
+								},
+							},
+						})
+					end,
+					anthropic_s = function()
+						return require("codecompanion.adapters").extend("anthropic", {
+							schema = {
+								model = {
+									default = "claude-3-5-sonnet-latest",
+								},
+							},
+						})
+					end,
+				},
+			}
+			cc.setup(opts)
 
 			vim.api.nvim_set_keymap("n", "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
 			vim.api.nvim_set_keymap("v", "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
 			vim.api.nvim_set_keymap("n", "<leader>aa", "<cmd>CodeCompanionToggle<cr>", { noremap = true, silent = true })
 			vim.api.nvim_set_keymap("v", "<leader>aa", "<cmd>CodeCompanionToggle<cr>", { noremap = true, silent = true })
 			vim.api.nvim_set_keymap("v", "ga", "<cmd>CodeCompanionAdd<cr>", { noremap = true, silent = true })
-
-			-- Expand 'cc' into 'CodeCompanion' in the command line
-			vim.cmd([[cab cc CodeCompanion]])
 		end
 	},
 	{ "ellisonleao/gruvbox.nvim" },
