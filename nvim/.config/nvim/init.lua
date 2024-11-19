@@ -12,6 +12,7 @@ require("pankajgarkoti.plugins-setup")
 require("pankajgarkoti.core.options")
 
 -- plugins
+require("pankajgarkoti.plugins.utils.cc-spinner")
 require("pankajgarkoti.plugins.nvim-tree")
 require("pankajgarkoti.plugins.treesitter")
 require("pankajgarkoti.plugins.gitsigns")
