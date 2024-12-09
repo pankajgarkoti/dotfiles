@@ -86,6 +86,8 @@
       "g c": ["vim::PushOperator", "ToggleComments"],
       "space f s": "workspace::NewSearch",
       "space f f": "file_finder::Toggle",
+      "space e": "project_panel::ToggleFocus",
+      "space o": "outline::Toggle",
       "ctrl-g": "workspace::ToggleBottomDock"
     }
   },

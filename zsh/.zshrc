@@ -46,6 +46,7 @@ alias tmuxn0='tmux new -t 0'
 alias tmuxnc='tmux new -t code'
 alias tmuxl='tmux ls'
 alias tm='gtc; tmuxc || tmuxnc'
+alias lg="lazygit"
 
 # why not?
 alias :q='exit'
