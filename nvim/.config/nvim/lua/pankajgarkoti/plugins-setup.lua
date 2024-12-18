@@ -231,14 +231,15 @@ return require("lazy").setup({
 					-- Options include: single/double/rounded/solid/shadow or an array of border
 					-- characters.
 					-- See :help nvim_open_win() and search for "border" option.
-					border = 'single',
+					-- border = 'single',
+					border = 'double',
 					-- winhl options for the preview window, see ':h winhl'
 					winhl = 'NormalFloat:',
 					-- Pseudo-transparency of the preview window, see ':h winblend'
 					winblend = 0,
 					-- Experimental feature that let's you edit the source content live
 					-- in the preview window. Like VS Code's "peek editor".
-					live = false
+					live = true
 				},
 				-- These keymaps can be a string or a table for multiple keys.
 				-- Set to `{}` to disable. (Using 'nil' will fallback to default keys)
@@ -282,7 +283,7 @@ return require("lazy").setup({
 					down = '<down>',
 				},
 				providers = {
-					priority = { 'lsp', 'coc', 'markdown', 'norg' },
+					priority = { 'lsp', 'markdown', 'norg', 'coc' },
 					-- Configuration for each provider (3rd party providers are supported)
 					lsp = {
 						-- Lsp client names to ignore
@@ -315,9 +316,10 @@ return require("lazy").setup({
 					---@param bufnr integer Code buffer
 					---@returns string|boolean The icon string to display, such as "f", or `false`
 					---                        to fallback to `icon_source`.
-					icon_fetcher = function(kind, bufnr)
-						return ""
-					end,
+					-- icon_fetcher = function(kind, bufnr)
+					-- 	return ""
+					-- end,
+					icon_fetcher = nil,
 					-- 3rd party source for fetching icons. This is used as a fallback if
 					-- icon_fetcher returned an empty string.
 					-- Currently supported values: 'lspkind'
@@ -923,6 +925,11 @@ return require("lazy").setup({
 				on_attach = on_attach,
 			})
 
+			lspconfig["gopls"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+			})
+
 			-- configure html server
 			lspconfig["html"].setup({
 				capabilities = capabilities,
@@ -947,6 +954,13 @@ return require("lazy").setup({
 				capabilities = capabilities,
 				on_attach = on_attach,
 			})
+
+
+			lspconfig["tailwindcss"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+			})
+
 
 			-- configure emmet language server
 			lspconfig["emmet_ls"].setup({

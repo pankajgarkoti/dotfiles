@@ -150,3 +150,6 @@ esac
 # pnpm end
 export XDG_CONFIG_HOME="$HOME/.config"
 export POETRY_VIRTUALENVS_IN_PROJECT=false
+
+# Added by Windsurf
+export PATH="/Users/pankajgarkoti/.codeium/windsurf/bin:$PATH"
