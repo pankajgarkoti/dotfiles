@@ -1320,7 +1320,7 @@ return require("lazy").setup({
 				prompt_library = prompts,
 				strategies = {
 					chat = {
-						adapter = "openai",
+						adapter = "anthropic_s",
 					},
 					inline = {
 						adapter = "anthropic_s",
