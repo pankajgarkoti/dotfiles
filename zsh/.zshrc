@@ -9,6 +9,7 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 fastfetch
+. ~/.config.setup.sh
 
 # flutter and java path
 export PATH='/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/pankajgarkoti/Desktop/code/flutter/bin:/Users/pankajgarkoti/Desktop/flutter/bin'

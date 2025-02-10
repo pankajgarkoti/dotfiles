@@ -27,17 +27,12 @@ return require("lazy").setup({
 			require("neorg").setup({
 				load = {
 					["core.defaults"] = {},
-					["core.ui"] = {},
-					["core.ui.calendar"] = {},
-					["core.export"] = {},
 					["core.dirman"] = {
 						config = {
 							workspaces = {
 								ws = "~/Desktop/notes",
 							},
 							index = "index.norg", -- The name of the main (root) .norg file
-							autodetect = true,
-							autochdir = true,
 						}
 					},
 					["core.completion"] = {
@@ -54,40 +49,22 @@ return require("lazy").setup({
 									},
 								},
 								code_block = {
-									-- If true will only dim the content of the code block (without the
-									-- `@code` and `@end` lines), not the entirety of the code block itself.
 									content_only = false,
-
-									-- The width to use for code block backgrounds.
-									--
-									-- When set to `fullwidth` (the default), will create a background
-									-- that spans the width of the buffer.
-									--
-									-- When set to `content`, will only span as far as the longest line
-									-- within the code block.
-									-- width = "content",
 									width = "fullwidth",
-
-									-- Additional padding to apply to either the left or the right. Making
-									-- these values negative is considered undefined behaviour (it is
-									-- likely to work, but it's not officially supported).
-									padding = {
-										-- left = 20,
-										-- right = 20,
-									},
-
-									-- If `true` will conceal (hide) the `@code` and `@end` portion of the code
-									-- block.
-									conceal = true,
-
+									conceal = false,
 									nodes = { "ranged_verbatim_tag" },
 									highlight = "CursorLine",
-									-- render = module.public.icon_renderers.render_code_block,
 									insert_enabled = true,
 								},
 							},
 						},
 					},
+					["core.summary"] = {},
+					["core.journal"] = {
+						config = {
+							workspace = "ws"
+						}
+					}
 				}
 			})
 
@@ -1264,115 +1241,36 @@ return require("lazy").setup({
 			{ "MeanderingProgrammer/render-markdown.nvim", ft = { "markdown", "codecompanion" } }, -- Optional: For prettier markdown rendering
 			{ "stevearc/dressing.nvim",                    opts = {} },                         -- Optional: Improves `vim.ui.select`
 		},
-		config = function()
-			local cc = require("codecompanion")
-			require("pankajgarkoti.plugins.utils.create_prompt_library")
-			local prompts = _G.load_code_companion_prompts()
-
-			print("=================================")
-			print("Prompt library loaded...")
-			print("Prompt library size: " .. #prompts)
-			print("=================================")
-
-			local opts = {
-				prompt_library = prompts,
-				strategies = {
-					chat = {
-						adapter = "anthropic_s",
-					},
-					inline = {
-						adapter = "anthropic_s",
-					},
-					agent = {
-						adapter = "anthropic_s",
-					},
+		opts = {
+			strategies = {
+				chat = {
+					adapter = "anthropic",
 				},
-				display = {
-					chat = {
-						render_headers = true,
-						show_settings = true,
-					}
+				inline = {
+					adapter = "anthropic",
 				},
-				adapters = {
-					anthropic_h = function()
-						return require("codecompanion.adapters").extend("anthropic", {
-							schema = {
-								model = {
-									default = "claude-3-5-haiku-latest",
-								},
+				agent = {
+					adapter = "anthropic",
+				},
+			},
+			opts = { log_level = "INFO" },
+			display = {
+				chat = {
+					show_settings = true,
+				}
+			},
+			adapters = {
+				anthropic = function()
+					return require("codecompanion.adapters").extend("anthropic", {
+						schema = {
+							model = {
+								default = "claude-3-5-sonnet-latest",
 							},
-						})
-					end,
-					anthropic_s = function()
-						return require("codecompanion.adapters").extend("anthropic", {
-							schema = {
-								model = {
-									default = "claude-3-5-sonnet-latest",
-								},
-							},
-						})
-					end,
-				},
-			}
-			cc.setup(opts)
-
-			vim.api.nvim_set_keymap("n", "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
-			vim.api.nvim_set_keymap("v", "<C-a>", "<cmd>CodeCompanionActions<cr>", { noremap = true, silent = true })
-			vim.api.nvim_set_keymap("n", "<leader>aa", "<cmd>CodeCompanionToggle<cr>", { noremap = true, silent = true })
-			vim.api.nvim_set_keymap("v", "<leader>aa", "<cmd>CodeCompanionToggle<cr>", { noremap = true, silent = true })
-			vim.api.nvim_set_keymap("v", "ga", "<cmd>CodeCompanionAdd<cr>", { noremap = true, silent = true })
-		end
-	},
-	{
-		"Hashino/doing.nvim",
-		config = function()
-			-- default options
-			require("doing").setup {
-				message_timeout = 2000,
-				doing_prefix = "Doing: ",
-
-				-- doesn't display on buffers that match filetype/filename/filepath to
-				-- entries. can be either a string array or a function that returns a
-				-- string array. filepath can be relative to cwd or absolute
-				ignored_buffers = { "NvimTree" },
-
-				-- if should append "+n more" to the status when there's tasks remaining
-				show_remaining = true,
-
-				-- if should show messages on the status string
-				show_messages = true,
-
-				-- window configs of the floating tasks editor
-				-- see :h nvim_open_win() for available options
-				edit_win_config = {
-					width = 50,
-					height = 15,
-					border = "rounded",
-				},
-
-				-- if plugin should manage the winbar
-				winbar = { enabled = true, },
-
-				store = {
-					-- name of tasks file
-					file_name = ".tasks",
-				},
-			}
-			-- example on how to change the winbar highlight
-			vim.api.nvim_set_hl(0, "WinBar", { link = "Search" })
-
-			local doing = require("doing")
-
-			vim.keymap.set("n", "<leader>da", doing.add, { desc = "[D]oing: [A]dd" })
-			vim.keymap.set("n", "<leader>de", doing.edit, { desc = "[D]oing: [E]dit" })
-			vim.keymap.set("n", "<leader>dn", doing.done, { desc = "[D]oing: Do[n]e" })
-			vim.keymap.set("n", "<leader>dt", doing.toggle, { desc = "[D]oing: [T]oggle" })
-
-			vim.keymap.set("n", "<leader>ds", function()
-				vim.notify(doing.status(true), vim.log.levels.INFO,
-					{ title = "Doing:", icon = "", })
-			end, { desc = "[D]oing: [S]tatus", })
-		end,
+						},
+					})
+				end,
+			},
+		},
 	},
 	{ "ellisonleao/gruvbox.nvim" },
 	{
