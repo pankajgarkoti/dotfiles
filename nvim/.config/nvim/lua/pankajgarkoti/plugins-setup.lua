@@ -19,64 +19,6 @@ return require("lazy").setup({
 		config = true,
 	},
 	{
-		"nvim-neorg/neorg",
-		dependencies = { "luarocks.nvim" },
-		version = "*",
-		lazy = false,
-		config = function()
-			require("neorg").setup({
-				load = {
-					["core.defaults"] = {},
-					["core.dirman"] = {
-						config = {
-							workspaces = {
-								ws = "~/Desktop/notes",
-							},
-							index = "index.norg", -- The name of the main (root) .norg file
-						}
-					},
-					["core.completion"] = {
-						config = {
-							engine = "nvim-cmp",
-						}
-					},
-					["core.concealer"] = {
-						config = {
-							icons = {
-								delimiter = {
-									horizontal_line = {
-										highlight = "@neorg.delimiters.horizontal_line",
-									},
-								},
-								code_block = {
-									content_only = false,
-									width = "fullwidth",
-									conceal = false,
-									nodes = { "ranged_verbatim_tag" },
-									highlight = "CursorLine",
-									insert_enabled = true,
-								},
-							},
-						},
-					},
-					["core.summary"] = {},
-					["core.journal"] = {
-						config = {
-							workspace = "ws"
-						}
-					}
-				}
-			})
-
-			-- keymaps
-			local opts = { noremap = true, silent = true }
-			vim.keymap.set('n', '<leader>njj', ":Neorg journal today<CR>", opts)
-			vim.keymap.set('n', '<leader>njy', ":Neorg journal yesterday<CR>", opts)
-			vim.keymap.set('n', '<leader>njt', ":Neorg journal tomorrow<CR>", opts)
-			vim.keymap.set('n', '<leader>ntc', ":Neorg toc<CR>", opts)
-		end,
-	},
-	{
 		"folke/which-key.nvim",
 		dependencies = { "luarocks.nvim" },
 		config = function()
@@ -84,11 +26,6 @@ return require("lazy").setup({
 			vim.o.timeoutlen = 300
 			require("which-key").setup({})
 		end,
-	},
-	{
-		"navarasu/onedark.nvim",
-		lazy = false,
-		priority = 1000
 	},
 	{
 		"hedyhli/outline.nvim",

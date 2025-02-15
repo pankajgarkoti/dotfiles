@@ -129,7 +129,6 @@ export PATH="$MODULAR_HOME/pkg/packages.modular.com_mojo/bin:$PATH"
 export OLLAMA_MODELS="/Volumes/spinny/ollama"
 export DYLD_LIBRARY_PATH="/usr/local/opt/sqlite/lib:/usr/lib"
 # source rust environment vars
-source ~/.cargo/env
 
 # required for gpg to work and signing commits
 export GPG_TTY=$(tty)
@@ -154,3 +153,10 @@ export POETRY_VIRTUALENVS_IN_PROJECT=false
 
 # Added by Windsurf
 export PATH="/Users/pankajgarkoti/.codeium/windsurf/bin:$PATH"
+source ~/powerlevel10k/powerlevel10k.zsh-theme
+
+# Created by `pipx` on 2025-02-15 09:37:47
+export PATH="$PATH:/Users/pankajgarkoti/.local/bin"
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init - zsh)"
