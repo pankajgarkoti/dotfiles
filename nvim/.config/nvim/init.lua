@@ -39,7 +39,7 @@ local env_colorscheme = nil
 
 -- set colorscheme here
 colorscheme = nil
-colorscheme_import = colorscheme_imports.gruvbox
+colorscheme_import = colorscheme_imports.catppuccin
 env_colorscheme = os.getenv("NVIM_COLORSCHEME")
 
 if colorscheme then
@@ -56,7 +56,9 @@ vim.opt.termguicolors = true
 vim.cmd("set background=dark")
 vim.cmd("set termguicolors")
 vim.cmd("set conceallevel=2")
-vim.cmd("set guicursor=a:hor50-Cursor-blinkon0")
+-- vim.cmd("set guicursor=a:hor50-Cursor-blinkon0")
+-- block cursor only
+vim.cmd("set guicursor=n-v-c:block-Cursor/lCursor-blinkon0")
 vim.cmd("highlight Cursor guifg=#000000 guibg=#ffffff")
 vim.cmd("set nocursorline")
 

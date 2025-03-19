@@ -16,6 +16,8 @@ local height = 40
 
 nvimtree.setup({
 	hijack_cursor = true,
+	open_on_setup = true,
+	open_on_setup_file = true,
 	sync_root_with_cwd = true,
 	view = {
 		preserve_window_proportions = true,
@@ -87,3 +89,10 @@ nvimtree.setup({
 		},
 	},
 })
+
+
+-- local function open_nvim_tree()
+--   require("nvim-tree.api").tree.open()
+-- end
+--
+-- vim.api.nvim_create_autocmd({ "VimEnter" }, { callback = open_nvim_tree })

@@ -125,6 +125,7 @@ KEYMAPS = {
 	{ 'n', '<leader>ln',   function() insert_timestamped_line(false) end,        { noremap = true, silent = true, desc = "Insert timestamped line below" } },
 	{ 'n', '<leader>ll',   function() insert_timestamped_line(true) end,         { noremap = true, silent = true, desc = "Insert timestamp at end of current line" } },
 	{ "n", "<C-a>",        "<cmd>CodeCompanionActions<cr>",                      { noremap = true, silent = true, desc = "Show CodeCompanion Actions Menu" } },
+	{ "v", "<C-a>",        "<cmd>CodeCompanionActions<cr>",                      { noremap = true, silent = true, desc = "Show CodeCompanion Actions Menu" } },
 	{ "n", "<leader>aa",   "<cmd>CodeCompanionToggle<cr>",                       { noremap = true, silent = true, desc = "Toggle CodeCompanion" } },
 	{ "v", "<leader>aa",   "<cmd>CodeCompanionToggle<cr>",                       { noremap = true, silent = true, desc = "Toggle CodeCompanion" } },
 	{ "v", "ga",           "<cmd>CodeCompanionAdd<cr>",                          { noremap = true, silent = true, desc = "Add to CodeCompanion Buffer" } },

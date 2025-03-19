@@ -851,11 +851,11 @@ return require("lazy").setup({
 			})
 
 			-- configure typescript server
-			lspconfig["ts_ls"].setup({
-				capabilities = capabilities,
-				on_attach = on_attach,
-				filetypes = { "html", "typescript", "typescriptreact", "javascript", "javascriptreact" },
-			})
+			-- lspconfig["ts_ls"].setup({
+			-- 	capabilities = capabilities,
+			-- 	on_attach = on_attach,
+			-- 	filetypes = { "html", "typescript", "typescriptreact", "javascript", "javascriptreact" },
+			-- })
 
 			-- configure css server
 			lspconfig["cssls"].setup({
@@ -927,11 +927,24 @@ return require("lazy").setup({
 			})
 
 			-- config for vue-language-server (volar)
-			lspconfig["volar"].setup({
-				on_attach = on_attach,
-				capabilities = capabilities,
-				filetypes = { "vue" },
-			})
+			-- lspconfig["volar"].setup({
+			-- 	on_attach = on_attach,
+			-- 	capabilities = capabilities,
+			-- 	filetypes = { "vue", "javascript", "typescript" },
+			-- })
+
+		lspconfig.volar.setup {
+			-- add filetypes for typescript, javascript and vue
+			filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+			init_options = {
+				vue = {
+					-- disable hybrid mode
+					hybridMode = false,
+				},
+			},
+		}
+
+  lspconfig.ts_ls.setup {}
 
 
 			-- import nvim-cmp plugin safely
@@ -1085,7 +1098,7 @@ return require("lazy").setup({
 	{
 		"catppuccin/nvim",
 		name = "catppuccin",
-		enabled = false,
+		enabled = true,
 		priority = 1001,
 		lazy = false,
 		config = function()
@@ -1209,7 +1222,7 @@ return require("lazy").setup({
 			},
 		},
 	},
-	{ "ellisonleao/gruvbox.nvim" },
+	{ "ellisonleao/gruvbox.nvim", enabled = false },
 	{
 		"folke/lazydev.nvim",
 		ft = "lua", -- only load on lua files
