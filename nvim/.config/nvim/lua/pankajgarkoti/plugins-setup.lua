@@ -927,24 +927,23 @@ return require("lazy").setup({
 			})
 
 			-- config for vue-language-server (volar)
-			-- lspconfig["volar"].setup({
-			-- 	on_attach = on_attach,
-			-- 	capabilities = capabilities,
-			-- 	filetypes = { "vue", "javascript", "typescript" },
-			-- })
-
-		lspconfig.volar.setup {
-			-- add filetypes for typescript, javascript and vue
+			lspconfig["volar"].setup({
+				on_attach = on_attach,
+				capabilities = capabilities,
 			filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
-			init_options = {
-				vue = {
-					-- disable hybrid mode
-					hybridMode = false,
-				},
-			},
-		}
+			})
 
-  lspconfig.ts_ls.setup {}
+		-- lspconfig.volar.setup {
+		-- 	-- add filetypes for typescript, javascript and vue
+		-- 	init_options = {
+		-- 		vue = {
+		-- 			-- disable hybrid mode
+		-- 			hybridMode = false,
+		-- 		},
+		-- 	},
+		-- }
+
+ 	 -- lspconfig.ts_ls.setup {}
 
 
 			-- import nvim-cmp plugin safely

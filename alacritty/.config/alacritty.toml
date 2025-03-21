@@ -5,7 +5,7 @@ import = [
 live_config_reload = true
 
 [font]
-size = 18
+size = 16
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"
@@ -34,5 +34,5 @@ resize_increments = false
 # blur = true
 
 [window.dimensions]
-lines = 76
-columns = 360
+lines = 72
+columns = 300
