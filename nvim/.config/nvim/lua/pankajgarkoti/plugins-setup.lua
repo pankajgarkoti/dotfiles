@@ -576,7 +576,7 @@ return require("lazy").setup({
 						},
 					},
 					preview = {
-						hide_on_startup = true,
+						hide_on_startup = false,
 						border = "single",
 					},
 					layout_strategy = 'horizontal',
@@ -927,11 +927,24 @@ return require("lazy").setup({
 			})
 
 			-- config for vue-language-server (volar)
-			lspconfig["volar"].setup({
+		lspconfig["volar"].setup({
 				on_attach = on_attach,
 				capabilities = capabilities,
-			filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
-			})
+				filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+				init_options = {
+						vue = {
+								hybridMode = false,
+						},
+						typescript = {
+								-- Try to find TypeScript but make it optional
+								tsdk = (function()
+										local ts_path = vim.fn.trim(vim.fn.system("find $(npm root -g) -path '*/typescript/lib' 2>/dev/null || echo ''"))
+										return ts_path ~= "" and ts_path or nil
+								end)()
+						}
+				}
+		})
+			
 
 		-- lspconfig.volar.setup {
 		-- 	-- add filetypes for typescript, javascript and vue
@@ -1011,10 +1024,10 @@ return require("lazy").setup({
 				-- sources for autocompletion
 				sources = cmp.config.sources({
 					{ name = "nvim_lsp" },
-					{ name = "supermaven" },
 					{ name = "luasnip" },
-					{ name = "buffer" },
 					{ name = "path" },
+					{ name = "buffer" },
+					{ name = "supermaven" }
 				}),
 
 				formatting = {
@@ -1335,7 +1348,22 @@ return require("lazy").setup({
 	},
 	{
 		"folke/trouble.nvim",
-		opts = {}, -- for default options, refer to the configuration section for custom setup.
+		opts = {
+			auto_close = false, -- auto close when there are no items
+			auto_open = false, -- auto open when there are items
+			auto_preview = false, -- automatically open preview when on an item
+			auto_refresh = true, -- auto refresh when open
+			auto_jump = false, -- auto jump to the item when there's only one
+			focus = false, -- Focus the window when opened
+			restore = true, -- restores the last location in the list when opening
+			follow = false, -- Follow the current item
+			indent_guides = true, -- show indent guides
+			max_items = 200, -- limit number of items that can be displayed per section
+			multiline = true, -- render multi-line messages
+			pinned = false, -- When pinned, the opened trouble window will be bound to the current buffer
+			warn_no_results = false, -- show a warning when there are no results
+			open_no_results = true, -- open the trouble window when there are no results
+		},
 		cmd = "Trouble",
 		keys = {
 			{
