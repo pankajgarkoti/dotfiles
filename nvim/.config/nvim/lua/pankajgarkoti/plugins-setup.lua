@@ -400,7 +400,8 @@ return require("lazy").setup({
 			-- local selected_theme = themes.glacier_blue
 			-- local selected_theme = themes.silver_wave
 			-- local selected_theme = themes.deep_sea
-			local selected_theme = themes.midnight
+			-- local selected_theme = themes.midnight
+			local selected_theme = themes.blue_mist
 
 			local colors = {
 				bg = selected_theme.bg,
@@ -851,11 +852,11 @@ return require("lazy").setup({
 			})
 
 			-- configure typescript server
-			-- lspconfig["ts_ls"].setup({
-			-- 	capabilities = capabilities,
-			-- 	on_attach = on_attach,
-			-- 	filetypes = { "html", "typescript", "typescriptreact", "javascript", "javascriptreact" },
-			-- })
+			lspconfig["ts_ls"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+				filetypes = { "html", "typescript", "typescriptreact", "javascript", "javascriptreact" },
+			})
 
 			-- configure css server
 			lspconfig["cssls"].setup({
@@ -927,38 +928,17 @@ return require("lazy").setup({
 			})
 
 			-- config for vue-language-server (volar)
-		lspconfig["volar"].setup({
-				on_attach = on_attach,
-				capabilities = capabilities,
-				filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
-				init_options = {
-						vue = {
-								hybridMode = false,
-						},
-						typescript = {
-								-- Try to find TypeScript but make it optional
-								tsdk = (function()
-										local ts_path = vim.fn.trim(vim.fn.system("find $(npm root -g) -path '*/typescript/lib' 2>/dev/null || echo ''"))
-										return ts_path ~= "" and ts_path or nil
-								end)()
-						}
-				}
-		})
+			lspconfig["volar"].setup({
+					on_attach = on_attach,
+					capabilities = capabilities,
+					filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+					init_options = {
+							vue = {
+									hybridMode = false,
+							},
+					}
+			})
 			
-
-		-- lspconfig.volar.setup {
-		-- 	-- add filetypes for typescript, javascript and vue
-		-- 	init_options = {
-		-- 		vue = {
-		-- 			-- disable hybrid mode
-		-- 			hybridMode = false,
-		-- 		},
-		-- 	},
-		-- }
-
- 	 -- lspconfig.ts_ls.setup {}
-
-
 			-- import nvim-cmp plugin safely
 			local cmp_status, cmp = pcall(require, "cmp")
 			if not cmp_status then
@@ -1397,5 +1377,80 @@ return require("lazy").setup({
 				desc = "Quickfix List (Trouble)",
 			},
 		},
-	}
+	},
+  -- {'romgrk/barbar.nvim',
+  --   dependencies = {
+  --     'lewis6991/gitsigns.nvim', -- OPTIONAL: for git status
+  --     'nvim-tree/nvim-web-devicons', -- OPTIONAL: for file icons
+  --   },
+  --   init = function() vim.g.barbar_auto_setup = false end,
+  --   opts = {
+  --     -- lazy.nvim will automatically call setup for you. put your options here, anything missing will use the default:
+  --     -- animation = true,
+  --     -- insert_at_start = true,
+  --     -- …etc.
+  --   },
+  --   version = '^1.0.0', -- optional: only update when a new 1.x version is released
+  -- config = function()
+  -- 	require("barbar").setup()
+  -- 		local map = vim.api.nvim_set_keymap
+  -- 		local opts = { noremap = true, silent = true }
+  --
+  -- 		-- Move to previous/next
+  -- 		map('n', '<leader>,', '<Cmd>BufferPrevious<CR>', opts)
+  -- 		map('n', '<leader>.', '<Cmd>BufferNext<CR>', opts)
+  --
+  -- 		-- Re-order to previous/next
+  -- 		map('n', '<leader><', '<Cmd>BufferMovePrevious<CR>', opts)
+  -- 		map('n', '<leader>>', '<Cmd>BufferMoveNext<CR>', opts)
+  --
+  -- 		-- Goto buffer in position...
+  -- 		map('n', '<leader>1', '<Cmd>BufferGoto 1<CR>', opts)
+  -- 		map('n', '<leader>2', '<Cmd>BufferGoto 2<CR>', opts)
+  -- 		map('n', '<leader>3', '<Cmd>BufferGoto 3<CR>', opts)
+  -- 		map('n', '<leader>4', '<Cmd>BufferGoto 4<CR>', opts)
+  -- 		map('n', '<leader>5', '<Cmd>BufferGoto 5<CR>', opts)
+  -- 		map('n', '<leader>6', '<Cmd>BufferGoto 6<CR>', opts)
+  -- 		map('n', '<leader>7', '<Cmd>BufferGoto 7<CR>', opts)
+  -- 		map('n', '<leader>8', '<Cmd>BufferGoto 8<CR>', opts)
+  -- 		map('n', '<leader>9', '<Cmd>BufferGoto 9<CR>', opts)
+  -- 		map('n', '<leader>0', '<Cmd>BufferLast<CR>', opts)
+  --
+  -- 		-- Pin/unpin buffer
+  -- 		map('n', '<leader>bp', '<Cmd>BufferPin<CR>', opts)
+  --
+  -- 		-- Goto pinned/unpinned buffer
+  -- 		--                 :BufferGotoPinned
+  -- 		--                 :BufferGotoUnpinned
+  --
+  -- 		-- Close buffer
+  -- 		map('n', '<leader>bx', '<Cmd>BufferClose<CR>', opts)
+  --
+  -- 		-- Wipeout buffer
+  -- 		--                 :BufferWipeout
+  --
+  -- 		-- Close commands
+  -- 		--                 :BufferCloseAllButCurrent
+  -- 		--                 :BufferCloseAllButPinned
+  -- 		--                 :BufferCloseAllButCurrentOrPinned
+  -- 		--                 :BufferCloseBuffersLeft
+  -- 		--                 :BufferCloseBuffersRight
+  --
+  -- 		-- Magic buffer-picking mode
+  -- 		map('n', '<C-p>',   '<Cmd>BufferPick<CR>', opts)
+  -- 		map('n', '<C-s-p>', '<Cmd>BufferPickDelete<CR>', opts)
+  --
+  -- 		-- Sort automatically by...
+  -- 		map('n', '<Space>bb', '<Cmd>BufferOrderByBufferNumber<CR>', opts)
+  -- 		map('n', '<Space>bn', '<Cmd>BufferOrderByName<CR>', opts)
+  -- 		map('n', '<Space>bd', '<Cmd>BufferOrderByDirectory<CR>', opts)
+  -- 		map('n', '<Space>bl', '<Cmd>BufferOrderByLanguage<CR>', opts)
+  -- 		map('n', '<Space>bw', '<Cmd>BufferOrderByWindowNumber<CR>', opts)
+  --
+  -- 		-- Other:
+  -- 		-- :BarbarEnable - enables barbar (enabled by default)
+  -- 		-- :BarbarDisable - very bad command, should never be used
+  --
+  -- end,
+  -- },
 })

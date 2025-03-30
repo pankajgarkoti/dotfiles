@@ -68,7 +68,7 @@ themes=(
 )
 
 # Select a theme
-selected_theme_name="midnight"  # Change this to your desired theme
+selected_theme_name="blue_mist"  # Change this to your desired theme
 selected_theme=""
 
 for theme in "${themes[@]}"; do

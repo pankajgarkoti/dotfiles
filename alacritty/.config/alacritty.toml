@@ -1,11 +1,11 @@
 [general]
 import = [
-    "~/.config/alacritty/themes/themes/duskfox.toml",
+    "~/.config/alacritty/themes/themes/catppuccin_mocha.toml",
 ]
 live_config_reload = true
 
 [font]
-size = 17
+size = 16
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"
@@ -17,14 +17,14 @@ style = "Heavy Italic"
 
 [font.italic]
 family = "IosevkaTerm Nerd Font Mono"
-style = "Medium Italic"
+style = "Heavy Italic"
 
 [font.normal]
 family = "IosevkaTerm Nerd Font Mono"
 style = "Medium"
 
 [mouse]
-hide_when_typing = true
+hide_when_typing = false
 
 [window]
 decorations = "Buttonless"
@@ -37,7 +37,7 @@ lines = 72
 columns = 300
 
 [colors.primary]
-# background = "#000000"
+background = "#000000"
 
 [keyboard]
 
