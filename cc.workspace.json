@@ -1,0 +1,164 @@
+{
+  "name": "dotfiles",
+  "version": "1.0.0",
+  "system_prompt": "You are an expert in Unix/Linux system configuration, particularly for terminal environments and development tools. These dotfiles are managed using GNU Stow for creating symlinks. The configuration includes terminal emulators, shell customization, and a comprehensive Neovim setup written in Lua.",
+  "groups": [
+    {
+      "name": "shell_configuration",
+      "system_prompt": "This group contains Zsh shell configuration including the Powerlevel10k theme setup. Focus on shell customization, environment variables, and aliases.",
+      "data": ["zshrc", "p10k_classic"]
+    },
+    {
+      "name": "terminal_setup",
+      "system_prompt": "This group contains terminal emulator and multiplexer configurations, including Alacritty, iTerm2, and Tmux settings.",
+      "data": ["alacritty_main_config", "alacritty_theme_script", "iterm_config", "tmux_conf"]
+    },
+    {
+      "name": "neovim_core",
+      "system_prompt": "Core Neovim configuration including initialization, key mappings, options, and colorscheme settings.",
+      "data": ["nvim_init", "nvim_options", "nvim_keymaps", "nvim_plugins_setup", "nvim_colorscheme"]
+    },
+    {
+      "name": "neovim_lsp",
+      "system_prompt": "Neovim LSP (Language Server Protocol) configuration including Mason, LSPSaga, and null-ls for formatting and diagnostics.",
+      "data": ["nvim_mason", "nvim_lspsaga", "nvim_nullls", "nvim_eslint"]
+    },
+    {
+      "name": "neovim_git",
+      "system_prompt": "Git-related Neovim plugins and configurations including Gitsigns, Diffview, and Blamer.",
+      "data": ["nvim_gitsigns", "nvim_diffview", "nvim_blamer"]
+    },
+    {
+      "name": "neovim_editing",
+      "system_prompt": "Editing enhancement plugins including Treesitter, auto-pairs, comments, and indentation.",
+      "data": ["nvim_treesitter", "nvim_autopairs", "nvim_comment", "nvim_indent"]
+    },
+    {
+      "name": "neovim_ai_tools",
+      "system_prompt": "AI-powered development tools including Copilot and Tabnine configurations.",
+      "data": ["nvim_copilot", "nvim_tabnine"]
+    }
+  ],
+  "data": {
+    "zshrc": {
+      "type": "file",
+      "path": "zsh/.zshrc",
+      "description": "Main Zsh shell configuration file"
+    },
+    "p10k_classic": {
+      "type": "file",
+      "path": "zsh/powerlevel10k/config/p10k-classic.zsh",
+      "description": "Powerlevel10k theme configuration"
+    },
+    "alacritty_main_config": {
+      "type": "file",
+      "path": "alacritty/.config/alacritty.toml",
+      "description": "Main Alacritty configuration"
+    },
+    "alacritty_theme_script": {
+      "type": "file",
+      "path": "alacritty/.config/alacritty_theme.zsh",
+      "description": "Alacritty theme management script"
+    },
+    "iterm_config": {
+      "type": "file",
+      "path": "iterm/iterm-default.json",
+      "description": "iTerm2 configuration"
+    },
+    "tmux_conf": {
+      "type": "file",
+      "path": "tmux/.tmux.conf",
+      "description": "Tmux configuration with Dracula theme"
+    },
+    "nvim_init": {
+      "type": "file",
+      "path": "nvim/.config/nvim/init.lua",
+      "description": "Main Neovim initialization file"
+    },
+    "nvim_plugins_setup": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins-setup.lua",
+      "description": "Plugin management and setup"
+    },
+    "nvim_options": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/core/options.lua",
+      "description": "Neovim core options and settings"
+    },
+    "nvim_keymaps": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/core/keymaps.lua",
+      "description": "Keyboard mappings and shortcuts"
+    },
+    "nvim_colorscheme": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/core/colorscheme_catppuccin.lua",
+      "description": "Color scheme configuration"
+    },
+    "nvim_mason": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/lsp/mason.lua",
+      "description": "Mason LSP package manager configuration"
+    },
+    "nvim_lspsaga": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/lsp/lspsaga.lua",
+      "description": "LSPSaga enhanced UI configuration"
+    },
+    "nvim_nullls": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/lsp/null-ls.lua",
+      "description": "Null-ls formatting and diagnostics"
+    },
+    "nvim_eslint": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/lsp/eslint-lspconfig.lua",
+      "description": "ESLint LSP configuration"
+    },
+    "nvim_gitsigns": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/gitsigns.lua",
+      "description": "Git signs in the sign column"
+    },
+    "nvim_diffview": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/diffview.lua",
+      "description": "Git diff viewer configuration"
+    },
+    "nvim_blamer": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/blamer.lua",
+      "description": "Git blame information display"
+    },
+    "nvim_treesitter": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/treesitter.lua",
+      "description": "Treesitter syntax highlighting and parsing"
+    },
+    "nvim_autopairs": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/autopairs.lua",
+      "description": "Automatic bracket pairing"
+    },
+    "nvim_comment": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/comment.lua",
+      "description": "Code commenting utilities"
+    },
+    "nvim_indent": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/indent.lua",
+      "description": "Indentation guides"
+    },
+    "nvim_copilot": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/copilot.lua",
+      "description": "GitHub Copilot configuration"
+    },
+    "nvim_tabnine": {
+      "type": "file",
+      "path": "nvim/.config/nvim/lua/pankajgarkoti/plugins/tabnine.lua",
+      "description": "Tabnine AI completion configuration"
+    }
+  }
+}
