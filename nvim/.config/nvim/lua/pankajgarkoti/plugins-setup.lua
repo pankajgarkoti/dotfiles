@@ -553,12 +553,9 @@ return require("lazy").setup({
 			if not actions_setup then
 				return
 			end
-			local h_pct = 0.6
-			local w_pct = 0.8
-			local h_pct_cmdline = 0.2
-			local w_pct_cmdline = 0.5
+			local h_pct = 0.4
+			local w_pct = 0.6
 			local w_limit = 75
-
 
 			-- configure telescope
 			telescope.setup({
@@ -577,7 +574,7 @@ return require("lazy").setup({
 						},
 					},
 					preview = {
-						hide_on_startup = false,
+						hide_on_startup = true,
 						border = "single",
 					},
 					layout_strategy = 'horizontal',
@@ -774,18 +771,16 @@ return require("lazy").setup({
 			{ "hrsh7th/cmp-cmdline" }, -- Autocompletions for the cmdline
 			{
 				"L3MON4D3/LuaSnip",
-				-- follow latest release.
-				version = "v2.*", -- Replace <CurrentMajor> by the latest released major (first number of latest release)
-				-- install jsregexp (optional!).
 				build = "make install_jsregexp",
 			},
 			{ "saadparwaiz1/cmp_luasnip" }, -- for autocompletion,
 			{ "onsails/lspkind.nvim" },  -- Optional  -> Icons in autocompletion
+			{ "dundalek/lazy-lsp.nvim" } -- Auto install lsp servers
 		},
 		config = function()
+			require("lspconfig/configs")
+			require("lspconfig/util")
 			local lspconfig = require("lspconfig")
-			local configs = require("lspconfig/configs")
-			local util = require("lspconfig/util")
 			local cmp_nvim_lsp = require("cmp_nvim_lsp")
 			local capabilities = cmp_nvim_lsp.default_capabilities()
 
@@ -797,16 +792,12 @@ return require("lazy").setup({
 			local opts = { noremap = true, silent = true }
 
 			vim.o.updatetime = 300
-			vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-				group = vim.api.nvim_create_augroup("float_diagnostic", { clear = true }),
-				callback = function()
-					vim.diagnostic.open_float(nil, { focus = false })
-				end
-			})
 
+			-- Vim List Line Diagnostics
 			vim.diagnostic.config({
-				virtual_text = false,
-				underline = true,
+				float = false,       -- Disable floating window diagnostics
+				virtual_lines = true, -- Keep your virtual_lines enabled
+				update_in_insert = true, -- Update diagnostics in insert mode
 			})
 
 			local on_attach = function(_, bufnr)
@@ -835,6 +826,49 @@ return require("lazy").setup({
 				map("n", "<leader>ld", vim.diagnostic.setloclist, "Show line diagnostics")
 			end
 
+			local lazy_lsp = require("lazy-lsp")
+			lazy_lsp.setup(
+				{
+					excluded_servers = {
+						"ccls", "zk",
+					},
+					preferred_servers = {
+						markdown = { "marksman" },
+						python = { "pyright" },
+						typescript = { "ts_ls" },
+						typescriptreact = { "ts_ls" },
+						css = { "cssls" },
+					},
+					default_config = {
+						flags = {
+							debounce_text_changes = 300,
+						},
+						on_attach = on_attach,
+						capabilities = capabilities,
+					},
+					prefer_local = false,
+					-- Override config for specific servers that will passed down to lspconfig setup.
+					-- Note that the default_config will be merged with this specific configuration so you don't need to specify everything twice.
+					configs = {
+						lua_ls = {
+							settings = {
+								Lua = {
+									diagnostics = {
+										globals = { "vim" },
+									},
+									workspace = {
+										library = {
+											[vim.fn.expand("$VIMRUNTIME/lua")] = true,
+											[vim.fn.stdpath("config") .. "/lua"] = true,
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			)
+
 			lspconfig["sourcekit"].setup({
 				capabilities = capabilities,
 				on_attach = on_attach,
@@ -862,6 +896,20 @@ return require("lazy").setup({
 			lspconfig["cssls"].setup({
 				capabilities = capabilities,
 				on_attach = on_attach,
+			})
+
+			-- configure md server
+			lspconfig["marksman"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+				filetypes = { "markdown" },
+			})
+
+			-- configure shell server
+			lspconfig["bashls"].setup({
+				capabilities = capabilities,
+				on_attach = on_attach,
+				filetypes = { "zsh", "bash", "sh" },
 			})
 
 			-- configure tailwindcss server
@@ -929,16 +977,16 @@ return require("lazy").setup({
 
 			-- config for vue-language-server (volar)
 			lspconfig["volar"].setup({
-					on_attach = on_attach,
-					capabilities = capabilities,
-					filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
-					init_options = {
-							vue = {
-									hybridMode = false,
-							},
-					}
+				on_attach = on_attach,
+				capabilities = capabilities,
+				filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+				init_options = {
+					vue = {
+						hybridMode = false,
+					},
+				}
 			})
-			
+
 			-- import nvim-cmp plugin safely
 			local cmp_status, cmp = pcall(require, "cmp")
 			if not cmp_status then
@@ -1056,6 +1104,7 @@ return require("lazy").setup({
 					"tailwindcss",
 					"emmet_ls",
 					"pyright",
+					"vue-language-server"
 				},
 				automatic_installation = true,
 			})
@@ -1080,7 +1129,13 @@ return require("lazy").setup({
 				ensure_installed = {
 					"prettier",
 					"eslint_d",
-					"black"
+					"black",
+					"stylua",
+					"marksman",
+					"prettierd",
+					"shellcheck",
+					"beautysh",
+					"shfmt",
 				},
 				-- auto-install configured formatters & linters (with null-ls)
 				automatic_installation = true,
@@ -1154,8 +1209,6 @@ return require("lazy").setup({
 		'kevinhwang91/nvim-ufo',
 		dependencies = { 'kevinhwang91/promise-async' },
 		config = function()
-			local ufo = require('ufo')
-
 			vim.o.foldcolumn = '0' -- '0' is not bad
 			vim.o.foldnestmax = 99
 			vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
@@ -1172,6 +1225,12 @@ return require("lazy").setup({
 		'MeanderingProgrammer/render-markdown.nvim',
 		opts = {},
 		dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.nvim' },
+		config = function()
+			require("render-markdown").setup({
+				completions = { lsp = { enabled = true } },
+				render_modes = true
+			})
+		end
 	},
 	{
 		"olimorris/codecompanion.nvim",
@@ -1324,23 +1383,23 @@ return require("lazy").setup({
 	},
 	{
 		"sindrets/diffview.nvim",
-		lazy = false,
+		lazy = true,
 	},
 	{
 		"folke/trouble.nvim",
 		opts = {
-			auto_close = false, -- auto close when there are no items
-			auto_open = false, -- auto open when there are items
-			auto_preview = false, -- automatically open preview when on an item
-			auto_refresh = true, -- auto refresh when open
-			auto_jump = false, -- auto jump to the item when there's only one
-			focus = false, -- Focus the window when opened
-			restore = true, -- restores the last location in the list when opening
-			follow = false, -- Follow the current item
+			auto_close = true,    -- auto close when there are no items
+			auto_open = false,    -- auto open when there are items
+			auto_preview = true,  -- automatically open preview when on an item
+			auto_refresh = true,  -- auto refresh when open
+			auto_jump = false,    -- auto jump to the item when there's only one
+			focus = true,         -- Focus the window when opened
+			restore = true,       -- restores the last location in the list when opening
+			follow = true,        -- Follow the current item
 			indent_guides = true, -- show indent guides
-			max_items = 200, -- limit number of items that can be displayed per section
-			multiline = true, -- render multi-line messages
-			pinned = false, -- When pinned, the opened trouble window will be bound to the current buffer
+			max_items = 200,      -- limit number of items that can be displayed per section
+			multiline = true,     -- render multi-line messages
+			pinned = true,        -- When pinned, the opened trouble window will be bound to the current buffer
 			warn_no_results = false, -- show a warning when there are no results
 			open_no_results = true, -- open the trouble window when there are no results
 		},
@@ -1378,79 +1437,40 @@ return require("lazy").setup({
 			},
 		},
 	},
-  -- {'romgrk/barbar.nvim',
-  --   dependencies = {
-  --     'lewis6991/gitsigns.nvim', -- OPTIONAL: for git status
-  --     'nvim-tree/nvim-web-devicons', -- OPTIONAL: for file icons
-  --   },
-  --   init = function() vim.g.barbar_auto_setup = false end,
-  --   opts = {
-  --     -- lazy.nvim will automatically call setup for you. put your options here, anything missing will use the default:
-  --     -- animation = true,
-  --     -- insert_at_start = true,
-  --     -- …etc.
-  --   },
-  --   version = '^1.0.0', -- optional: only update when a new 1.x version is released
-  -- config = function()
-  -- 	require("barbar").setup()
-  -- 		local map = vim.api.nvim_set_keymap
-  -- 		local opts = { noremap = true, silent = true }
-  --
-  -- 		-- Move to previous/next
-  -- 		map('n', '<leader>,', '<Cmd>BufferPrevious<CR>', opts)
-  -- 		map('n', '<leader>.', '<Cmd>BufferNext<CR>', opts)
-  --
-  -- 		-- Re-order to previous/next
-  -- 		map('n', '<leader><', '<Cmd>BufferMovePrevious<CR>', opts)
-  -- 		map('n', '<leader>>', '<Cmd>BufferMoveNext<CR>', opts)
-  --
-  -- 		-- Goto buffer in position...
-  -- 		map('n', '<leader>1', '<Cmd>BufferGoto 1<CR>', opts)
-  -- 		map('n', '<leader>2', '<Cmd>BufferGoto 2<CR>', opts)
-  -- 		map('n', '<leader>3', '<Cmd>BufferGoto 3<CR>', opts)
-  -- 		map('n', '<leader>4', '<Cmd>BufferGoto 4<CR>', opts)
-  -- 		map('n', '<leader>5', '<Cmd>BufferGoto 5<CR>', opts)
-  -- 		map('n', '<leader>6', '<Cmd>BufferGoto 6<CR>', opts)
-  -- 		map('n', '<leader>7', '<Cmd>BufferGoto 7<CR>', opts)
-  -- 		map('n', '<leader>8', '<Cmd>BufferGoto 8<CR>', opts)
-  -- 		map('n', '<leader>9', '<Cmd>BufferGoto 9<CR>', opts)
-  -- 		map('n', '<leader>0', '<Cmd>BufferLast<CR>', opts)
-  --
-  -- 		-- Pin/unpin buffer
-  -- 		map('n', '<leader>bp', '<Cmd>BufferPin<CR>', opts)
-  --
-  -- 		-- Goto pinned/unpinned buffer
-  -- 		--                 :BufferGotoPinned
-  -- 		--                 :BufferGotoUnpinned
-  --
-  -- 		-- Close buffer
-  -- 		map('n', '<leader>bx', '<Cmd>BufferClose<CR>', opts)
-  --
-  -- 		-- Wipeout buffer
-  -- 		--                 :BufferWipeout
-  --
-  -- 		-- Close commands
-  -- 		--                 :BufferCloseAllButCurrent
-  -- 		--                 :BufferCloseAllButPinned
-  -- 		--                 :BufferCloseAllButCurrentOrPinned
-  -- 		--                 :BufferCloseBuffersLeft
-  -- 		--                 :BufferCloseBuffersRight
-  --
-  -- 		-- Magic buffer-picking mode
-  -- 		map('n', '<C-p>',   '<Cmd>BufferPick<CR>', opts)
-  -- 		map('n', '<C-s-p>', '<Cmd>BufferPickDelete<CR>', opts)
-  --
-  -- 		-- Sort automatically by...
-  -- 		map('n', '<Space>bb', '<Cmd>BufferOrderByBufferNumber<CR>', opts)
-  -- 		map('n', '<Space>bn', '<Cmd>BufferOrderByName<CR>', opts)
-  -- 		map('n', '<Space>bd', '<Cmd>BufferOrderByDirectory<CR>', opts)
-  -- 		map('n', '<Space>bl', '<Cmd>BufferOrderByLanguage<CR>', opts)
-  -- 		map('n', '<Space>bw', '<Cmd>BufferOrderByWindowNumber<CR>', opts)
-  --
-  -- 		-- Other:
-  -- 		-- :BarbarEnable - enables barbar (enabled by default)
-  -- 		-- :BarbarDisable - very bad command, should never be used
-  --
-  -- end,
-  -- },
+	{
+		"debugloop/telescope-undo.nvim",
+		dependencies = { -- note how they're inverted to above example
+			{
+				"nvim-telescope/telescope.nvim",
+				dependencies = { "nvim-lua/plenary.nvim" },
+			},
+		},
+		keys = {
+			{ -- lazy style key map
+				"<leader>u",
+				"<cmd>Telescope undo<cr>",
+				desc = "undo history",
+			},
+		},
+		opts = {
+			-- don't use `defaults = { }` here, do this in the main telescope spec
+			extensions = {
+				undo = {
+					-- telescope-undo.nvim config, see below
+				},
+				-- no other extensions here, they can have their own spec too
+			},
+		},
+		config = function(_, opts)
+			-- Calling telescope's setup from multiple specs does not hurt, it will happily merge the
+			-- configs for us. We won't use data, as everything is in it's own namespace (telescope
+			-- defaults, as well as each extension).
+			require("telescope").setup(opts)
+			require("telescope").load_extension("undo")
+		end,
+	},
+	{
+		'creativenull/efmls-configs-nvim',
+		dependencies = { 'neovim/nvim-lspconfig' },
+	}
 })

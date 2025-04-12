@@ -21,13 +21,9 @@ null_ls.setup({
 			end,
 		}),
 	},
-
 	on_attach = function(current_client, bufnr)
 		if current_client.supports_method("textDocument/formatting") then
-			local ignore = {
-				-- "html",
-				"markdown",
-			}
+			local ignore = {}
 
 			local function should_ignore(filetype)
 				for _, ft in ipairs(ignore) do

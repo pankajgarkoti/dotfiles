@@ -1,10 +1,10 @@
 -- enable wrapping on every buffer
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
-vim.api.nvim_create_autocmd("BufEnter", {
-	pattern = "*",
-	command = "set wrap",
-})
+-- vim.api.nvim_create_autocmd("BufEnter", {
+-- 	pattern = "*",
+-- 	command = "set wrap",
+-- })
 
 -- Core
 require("pankajgarkoti.core.keymaps")

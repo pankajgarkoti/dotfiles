@@ -12,7 +12,7 @@ fastfetch
 . ~/.config.setup.sh
 
 # flutter and java path
-export PATH='/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/pankajgarkoti/Desktop/code/flutter/bin:/Users/pankajgarkoti/Desktop/flutter/bin'
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/pankajgarkoti/Desktop/code/flutter/bin:/Users/pankajgarkoti/Desktop/flutter/bin:$PATH"
 export PATH="/opt/homebrew/opt/openjdk@11/bin:$PATH"
 export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
 
@@ -166,3 +166,18 @@ if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/path.zsh.inc' ]; then .
 
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
+
+# The next line enables shell command completion for Nix.
+if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+  . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+fi
+
+export ANTHROPIC_MODEL='claude-3-7-sonnet@20250219'
+export ANTHROPIC_SMALL_FAST_MODEL='claude-3-5-haiku@20241022'
+
+export CLAUDE_CODE_USE_VERTEX=1
+export CLOUD_ML_REGION="us-east5"
+export ANTHROPIC_VERTEX_PROJECT_ID="mavex-ai"
+
+# . "$HOME/.config/alacritty_theme.zsh"
+alias claude="/Users/pankajgarkoti/.claude/local/claude"

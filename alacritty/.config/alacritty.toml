@@ -1,11 +1,9 @@
 [general]
-import = [
-    "~/.config/alacritty/themes/themes/catppuccin_mocha.toml",
-]
+import = ["~/.config/alacritty/themes/themes/github_dark.toml"]
 live_config_reload = true
 
 [font]
-size = 16
+size = 15
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"
@@ -31,6 +29,8 @@ decorations = "Buttonless"
 dynamic_padding = true
 resize_increments = false
 option_as_alt = "OnlyLeft"
+# blur = true
+# opacity = 0.85
 
 [window.dimensions]
 lines = 72
@@ -40,43 +40,46 @@ columns = 300
 background = "#000000"
 
 [keyboard]
-
 bindings = [
-  # Remap Option+Key to Ctrl-b + Key for common tmux shortcuts
-  # New window (Option + c → Ctrl-b + c)
-  { key = "C", mods = "Alt", chars = "\u0002c" },
-  # Detach (Option + d → Ctrl-b + d)
-  { key = "D", mods = "Alt", chars = "\u0002d" },
-  # Next window (Option + n → Ctrl-b + n)
-  { key = "N", mods = "Alt", chars = "\u0002n" },
-  # Previous window (Option + p → Ctrl-b + p)
-  { key = "P", mods = "Alt", chars = "\u0002p" },
-  # Split pane vertically (Option + | → Ctrl-b + |)
-  { key = "Backslash", mods = "Alt", chars = "\u0002|" },
-  # Split pane horizontally (Option + - → Ctrl-b + -)
-  { key = "Minus", mods = "Alt", chars = "\u0002-" },
-  # Select the last pane (Option + ; → Ctrl-b + ;)
-  { key = "Semicolon", mods = "Alt", chars = "\u0002;" },
-  # Resize pane (Option + arrow keys → Ctrl-b + arrow keys)
-  { key = "Left", mods = "Alt", chars = "\u0002\u001bOD" },   # Left arrow
-  { key = "Right", mods = "Alt", chars = "\u0002\u001bOC" },  # Right arrow
-  { key = "Up", mods = "Alt", chars = "\u0002\u001bOA" },     # Up arrow
-  { key = "Down", mods = "Alt", chars = "\u0002\u001bOB" },   # Down arrow
-  # Kill pane (Option + x → Ctrl-b + x)
-  { key = "X", mods = "Alt", chars = "\u0002x" },
-  # Show window list (Option + w → Ctrl-b + w)
-  { key = "W", mods = "Alt", chars = "\u0002w" },
-  # Command prompt (Option + : → Ctrl-b + :)
-  { key = "Colon", mods = "Alt", chars = "\u0002:" },
-  # Switch to windows 0-9 (Option + number → Ctrl-b + number)
-  { key = "Key0", mods = "Alt", chars = "\u00020" },
-  { key = "Key1", mods = "Alt", chars = "\u00021" },
-  { key = "Key2", mods = "Alt", chars = "\u00022" },
-  { key = "Key3", mods = "Alt", chars = "\u00023" },
-  { key = "Key4", mods = "Alt", chars = "\u00024" },
-  { key = "Key5", mods = "Alt", chars = "\u00025" },
-  { key = "Key6", mods = "Alt", chars = "\u00026" },
-  { key = "Key7", mods = "Alt", chars = "\u00027" },
-  { key = "Key8", mods = "Alt", chars = "\u00028" },
-  { key = "Key9", mods = "Alt", chars = "\u00029" }
+	# Remap Option+Key to Ctrl-b + Key for common tmux shortcuts
+	# New window (Option + c → Ctrl-b + c)
+	{ key = "C", mods = "Alt", chars = "\u0002c" },
+	# Detach (Option + d → Ctrl-b + d)
+	{ key = "D", mods = "Alt", chars = "\u0002d" },
+	# Next window (Option + n → Ctrl-b + n)
+	{ key = "N", mods = "Alt", chars = "\u0002n" },
+	# Previous window (Option + p → Ctrl-b + p)
+	{ key = "P", mods = "Alt", chars = "\u0002p" },
+	# Split pane vertically (Option + | → Ctrl-b + |)
+	{ key = "Backslash", mods = "Alt", chars = "\u0002|" },
+	# Split pane horizontally (Option + - → Ctrl-b + -)
+	{ key = "Minus", mods = "Alt", chars = "\u0002-" },
+	# Select the last pane (Option + ; → Ctrl-b + ;)
+	# Resize pane (Option + arrow keys → Ctrl-b + arrow keys)
+	{ key = "Left", mods = "Alt", chars = "\u0002\u001bOD" },  # Left arrow
+	{ key = "Right", mods = "Alt", chars = "\u0002\u001bOC" }, # Right arrow
+	{ key = "Up", mods = "Alt", chars = "\u0002\u001bOA" },    # Up arrow
+	{ key = "Down", mods = "Alt", chars = "\u0002\u001bOB" },  # Down arrow
+	{ key = "H", mods = "Alt", chars = "\u0002\u001bOD" },     # Left arrow
+	{ key = "L", mods = "Alt", chars = "\u0002\u001bOC" },     # Right arrow
+	{ key = "K", mods = "Alt", chars = "\u0002\u001bOA" },     # Up arrow
+	{ key = "J", mods = "Alt", chars = "\u0002\u001bOB" },     # Down arrow
+	{ key = "Semicolon", mods = "Alt", chars = "\u0002l" },
+	# Kill pane (Option + x → Ctrl-b + x)
+	{ key = "X", mods = "Alt", chars = "\u0002x" },
+	# Show window list (Option + w → Ctrl-b + w)
+	{ key = "W", mods = "Alt", chars = "\u0002w" },
+	# Command prompt (Option + : → Ctrl-b + :)
+	{ key = "'", mods = "Alt", chars = "\u0002:" },
+	# Switch to windows 0-9 (Option + number → Ctrl-b + number)
+	{ key = "Key0", mods = "Alt", chars = "\u00020" },
+	{ key = "Key1", mods = "Alt", chars = "\u00021" },
+	{ key = "Key2", mods = "Alt", chars = "\u00022" },
+	{ key = "Key3", mods = "Alt", chars = "\u00023" },
+	{ key = "Key4", mods = "Alt", chars = "\u00024" },
+	{ key = "Key5", mods = "Alt", chars = "\u00025" },
+	{ key = "Key6", mods = "Alt", chars = "\u00026" },
+	{ key = "Key7", mods = "Alt", chars = "\u00027" },
+	{ key = "Key8", mods = "Alt", chars = "\u00028" },
+	{ key = "Key9", mods = "Alt", chars = "\u00029" },
 ]

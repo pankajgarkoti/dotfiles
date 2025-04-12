@@ -53,82 +53,82 @@ end
 -- Set the keymaps for timestamped lines
 
 KEYMAPS = {
-	{ "i", "jk",           "<ESC>",                                              { noremap = true, silent = true, desc = "Exit insert mode" } },
-	{ "n", "<leader>nh",   ":nohl<CR>",                                          { noremap = true, silent = true, desc = "Clear search highlights" } },
+	{ "i", "jk",           "<ESC>",                                                                                                               { noremap = true, silent = true, desc = "Exit insert mode" } },
+	{ "n", "<leader>nh",   ":nohl<CR>",                                                                                                           { noremap = true, silent = true, desc = "Clear search highlights" } },
 
 	-- Increment or decrement numbers
-	{ "n", "<leader>+",    "<C-a>",                                              { noremap = true, silent = true, desc = "Increment number" } },
-	{ "n", "<leader>-",    "<C-x>",                                              { noremap = true, silent = true, desc = "Decrement number" } },
+	{ "n", "<leader>+",    "<C-a>",                                                                                                               { noremap = true, silent = true, desc = "Increment number" } },
+	{ "n", "<leader>-",    "<C-x>",                                                                                                               { noremap = true, silent = true, desc = "Decrement number" } },
 
 	-- Window management keymaps
-	{ "n", "<leader>sv",   "<C-w>v",                                             { noremap = true, silent = true, desc = "Split window vertically" } },
-	{ "n", "<leader>sh",   "<C-w>s",                                             { noremap = true, silent = true, desc = "Split window horizontally" } },
-	{ "n", "<leader>se",   "<C-w>=",                                             { noremap = true, silent = true, desc = "Equalize window dimensions" } },
-	{ "n", "<leader>sx",   ":close<CR>",                                         { noremap = true, silent = true, desc = "Close current window" } },
+	{ "n", "<leader>sv",   "<C-w>v",                                                                                                              { noremap = true, silent = true, desc = "Split window vertically" } },
+	{ "n", "<leader>sh",   "<C-w>s",                                                                                                              { noremap = true, silent = true, desc = "Split window horizontally" } },
+	{ "n", "<leader>se",   "<C-w>=",                                                                                                              { noremap = true, silent = true, desc = "Equalize window dimensions" } },
+	{ "n", "<leader>sx",   ":close<CR>",                                                                                                          { noremap = true, silent = true, desc = "Close current window" } },
 
 	-- Tab navigation keymaps
-	{ "n", "<leader>to",   "<Cmd>tabnew<CR>",                                    { noremap = true, silent = true, desc = "Open new tab" } },
-	{ "n", "<leader>tx",   "<Cmd>bdelete<CR>",                                   { noremap = true, silent = true, desc = "Close buffer" } },
-	{ "n", "<leader>tn",   "<Cmd>bnext<CR>",                                     { noremap = true, silent = true, desc = "Next buffer" } },
-	{ "n", "<leader>tp",   "<Cmd>bprevious<CR>",                                 { noremap = true, silent = true, desc = "Previous buffer" } },
+	{ "n", "<leader>to",   "<Cmd>tabnew<CR>",                                                                                                     { noremap = true, silent = true, desc = "Open new tab" } },
+	{ "n", "<leader>tx",   "<Cmd>bdelete<CR>",                                                                                                    { noremap = true, silent = true, desc = "Close buffer" } },
+	{ "n", "<leader>tn",   "<Cmd>bnext<CR>",                                                                                                      { noremap = true, silent = true, desc = "Next buffer" } },
+	{ "n", "<leader>tp",   "<Cmd>bprevious<CR>",                                                                                                  { noremap = true, silent = true, desc = "Previous buffer" } },
 
 	-- Block selection keymaps
-	{ "n", "<leader>bss",  "md",                                                 { noremap = true, silent = true, desc = "Select block start" } },
-	{ "n", "<leader>bse",  "y'd",                                                { noremap = true, silent = true, desc = "Select block end" } },
+	{ "n", "<leader>bss",  "md",                                                                                                                  { noremap = true, silent = true, desc = "Select block start" } },
+	{ "n", "<leader>bse",  "y'd",                                                                                                                 { noremap = true, silent = true, desc = "Select block end" } },
 
 	-- Plugin keymaps
-	{ "n", "<leader>sm",   ":MaximizerToggle<CR>",                               { noremap = true, silent = true, desc = "Toggle Maximizer" } },
+	{ "n", "<leader>sm",   ":MaximizerToggle<CR>",                                                                                                { noremap = true, silent = true, desc = "Toggle Maximizer" } },
 
 	-- LSP
-	{ "n", "<leader>gd",   "<cmd>lua vim.lsp.buf.definition()<CR>",              { noremap = true, silent = true, desc = "Go to definition" } },
+	{ "n", "<leader>gd",   "<cmd>lua vim.lsp.buf.definition()<CR>",                                                                               { noremap = true, silent = true, desc = "Go to definition" } },
 
 	-- Nvim Tree (file explorer)
-	{ "n", "<leader>e",    ":NvimTreeToggle<CR>",                                { noremap = true, silent = true, desc = "Toggle file explorer" } },
+	{ "n", "<leader>e",    ":NvimTreeToggle<CR>",                                                                                                 { noremap = true, silent = true, desc = "Toggle file explorer" } },
 
 	-- Telescope keymaps
-	{ "n", "<leader>ff",   "<cmd>Telescope find_files no_ignore=true<cr>",       { noremap = true, silent = true, desc = "Find files" } },
-	{ "n", "<leader>fs",   "<cmd>Telescope live_grep no_ignore=true<cr>",        { noremap = true, silent = true, desc = "Live grep" } },
-	{ "n", "<leader>fc",   "<cmd>Telescope grep_string no_ignore=true<cr>",      { noremap = true, silent = true, desc = "Grep string under cursor" } },
-	{ "n", "<leader>fb",   "<cmd>Telescope buffers no_ignore=true<cr>",          { noremap = true, silent = true, desc = "List open buffers" } },
-	{ "n", "<leader>fh",   "<cmd>Telescope help_tags<cr>",                       { noremap = true, silent = true, desc = "List help tags" } },
-	{ "n", "<leader>fj",   "<cmd>Telescope treesitter<cr>",                      { noremap = true, silent = true, desc = "Treesitter symbols" } },
+	{ "n", "<leader>ff",   "<cmd>lua require'telescope.builtin'.find_files({ find_command = {'rg', '--files', '--hidden', '-g', '!.git' }})<cr>", { noremap = true, silent = true, desc = "Find files" } },
+	{ "n", "<leader>fs",   "<cmd>lua require'telescope.builtin'.live_grep({ find_command = {'rg', '--files', '--hidden', '-g', '!.git' }})<cr>",  { noremap = true, silent = true, desc = "Live grep" } },
+	{ "n", "<leader>fc",   "<cmd>Telescope grep_string no_ignore=true<cr>",                                                                       { noremap = true, silent = true, desc = "Grep string under cursor" } },
+	{ "n", "<leader>fb",   "<cmd>Telescope buffers no_ignore=true<cr>",                                                                           { noremap = true, silent = true, desc = "List open buffers" } },
+	{ "n", "<leader>fh",   "<cmd>Telescope help_tags<cr>",                                                                                        { noremap = true, silent = true, desc = "List help tags" } },
+	{ "n", "<leader>fj",   "<cmd>Telescope treesitter<cr>",                                                                                       { noremap = true, silent = true, desc = "Treesitter symbols" } },
 
 	-- Telescope git keymaps
-	{ "n", "<leader>gc",   "<cmd>Telescope git_commits<cr>",                     { noremap = true, silent = true, desc = "List all git commits" } },
-	{ "n", "<leader>gfc",  "<cmd>Telescope git_bcommits<cr>",                    { noremap = true, silent = true, desc = "Git commits for current file" } },
-	{ "n", "<leader>gb",   "<cmd>Telescope git_branches<cr>",                    { noremap = true, silent = true, desc = "List git branches" } },
-	{ "n", "<leader>gs",   "<cmd>Telescope git_status<cr>",                      { noremap = true, silent = true, desc = "Git status" } },
+	{ "n", "<leader>gc",   "<cmd>Telescope git_commits<cr>",                                                                                      { noremap = true, silent = true, desc = "List all git commits" } },
+	{ "n", "<leader>gfc",  "<cmd>Telescope git_bcommits<cr>",                                                                                     { noremap = true, silent = true, desc = "Git commits for current file" } },
+	{ "n", "<leader>gb",   "<cmd>Telescope git_branches<cr>",                                                                                     { noremap = true, silent = true, desc = "List git branches" } },
+	{ "n", "<leader>gs",   "<cmd>Telescope git_status<cr>",                                                                                       { noremap = true, silent = true, desc = "Git status" } },
 
 	-- Restart LSP server
-	{ "n", "<leader>rs",   ":LspRestart<CR>",                                    { noremap = true, silent = true, desc = "Restart LSP server" } },
+	{ "n", "<leader>rs",   ":LspRestart<CR>",                                                                                                     { noremap = true, silent = true, desc = "Restart LSP server" } },
 
 	-- Harpoon keymaps
-	{ "n", "<leader>hm",   ":lua require('harpoon.mark').add_file()<CR>",        { noremap = true, silent = true, desc = "Add file to Harpoon" } },
-	{ "n", "<leader>hn",   ":lua require('harpoon.ui').nav_next()<CR>",          { noremap = true, silent = true, desc = "Next Harpoon mark" } },
-	{ "n", "<leader>hp",   ":lua require('harpoon.ui').nav_prev()<CR>",          { noremap = true, silent = true, desc = "Previous Harpoon mark" } },
-	{ "n", "<leader>hh",   ":lua require('harpoon.ui').toggle_quick_menu()<CR>", { noremap = true, silent = true, desc = "Toggle Harpoon quick menu" } },
-	{ "n", "<leader>1",    ":lua require('harpoon.ui').nav_file(1)<CR>",         { noremap = true, silent = true, desc = "Harpoon file 1" } },
-	{ "n", "<leader>2",    ":lua require('harpoon.ui').nav_file(2)<CR>",         { noremap = true, silent = true, desc = "Harpoon file 2" } },
-	{ "n", "<leader>3",    ":lua require('harpoon.ui').nav_file(3)<CR>",         { noremap = true, silent = true, desc = "Harpoon file 3" } },
-	{ "n", "<leader>4",    ":lua require('harpoon.ui').nav_file(4)<CR>",         { noremap = true, silent = true, desc = "Harpoon file 4" } },
-	{ "n", "<leader>5",    ":lua require('harpoon.ui').nav_file(5)<CR>",         { noremap = true, silent = true, desc = "Harpoon file 5" } },
+	{ "n", "<leader>hm",   ":lua require('harpoon.mark').add_file()<CR>",                                                                         { noremap = true, silent = true, desc = "Add file to Harpoon" } },
+	{ "n", "<leader>hn",   ":lua require('harpoon.ui').nav_next()<CR>",                                                                           { noremap = true, silent = true, desc = "Next Harpoon mark" } },
+	{ "n", "<leader>hp",   ":lua require('harpoon.ui').nav_prev()<CR>",                                                                           { noremap = true, silent = true, desc = "Previous Harpoon mark" } },
+	{ "n", "<leader>hh",   ":lua require('harpoon.ui').toggle_quick_menu()<CR>",                                                                  { noremap = true, silent = true, desc = "Toggle Harpoon quick menu" } },
+	{ "n", "<leader>1",    ":lua require('harpoon.ui').nav_file(1)<CR>",                                                                          { noremap = true, silent = true, desc = "Harpoon file 1" } },
+	{ "n", "<leader>2",    ":lua require('harpoon.ui').nav_file(2)<CR>",                                                                          { noremap = true, silent = true, desc = "Harpoon file 2" } },
+	{ "n", "<leader>3",    ":lua require('harpoon.ui').nav_file(3)<CR>",                                                                          { noremap = true, silent = true, desc = "Harpoon file 3" } },
+	{ "n", "<leader>4",    ":lua require('harpoon.ui').nav_file(4)<CR>",                                                                          { noremap = true, silent = true, desc = "Harpoon file 4" } },
+	{ "n", "<leader>5",    ":lua require('harpoon.ui').nav_file(5)<CR>",                                                                          { noremap = true, silent = true, desc = "Harpoon file 5" } },
 
 	-- Datetime related keymaps in insert mode
-	{ 'i', '<C-d>',        "<C-R>=strftime('%c')<CR>",                           { noremap = false, silent = true, desc = "Insert current datetime" } },
-	{ 'i', '<C-d><C-f>',   "<C-R>=strftime('%c')<CR>",                           { noremap = true, silent = true, desc = "Insert full datetime" } },
-	{ 'i', '<C-d><C-d>',   "<C-R>=strftime('%Y-%m-%d')<CR>",                     { noremap = true, silent = true, desc = "Insert current date" } },
-	{ 'i', '<C-d><C-t>',   "<C-R>=strftime('%H:%M:%S')<CR>",                     { noremap = true, silent = true, desc = "Insert current time" } },
-	{ 'i', '<C-d><C-s>',   "<C-R>=strftime('%m/%d/%y')<CR>",                     { noremap = true, silent = true, desc = "Insert short date" } },
-	{ 'i', '<C-d><C-w>',   "<C-R>=strftime('%A %Y-%m-%d')<CR>",                  { noremap = true, silent = true, desc = "Insert current weekday and date" } },
-	{ 'n', '<leader><CR>', '<Plug>(neorg.qol.todo-items.todo.task-cycle)',       { noremap = true, silent = true, desc = "Mark Neorg todo list item as done" } },
-	{ 'n', '<leader>lc',   mark_task_done,                                       { noremap = true, silent = true, desc = "Mark Markdown todo list item as done" } },
-	{ 'n', '<leader>ln',   function() insert_timestamped_line(false) end,        { noremap = true, silent = true, desc = "Insert timestamped line below" } },
-	{ 'n', '<leader>ll',   function() insert_timestamped_line(true) end,         { noremap = true, silent = true, desc = "Insert timestamp at end of current line" } },
-	{ "n", "<C-a>",        "<cmd>CodeCompanionActions<cr>",                      { noremap = true, silent = true, desc = "Show CodeCompanion Actions Menu" } },
-	{ "v", "<C-a>",        "<cmd>CodeCompanionActions<cr>",                      { noremap = true, silent = true, desc = "Show CodeCompanion Actions Menu" } },
-	{ "n", "<leader>aa",   "<cmd>CodeCompanionToggle<cr>",                       { noremap = true, silent = true, desc = "Toggle CodeCompanion" } },
-	{ "v", "<leader>aa",   "<cmd>CodeCompanionToggle<cr>",                       { noremap = true, silent = true, desc = "Toggle CodeCompanion" } },
-	{ "v", "ga",           "<cmd>CodeCompanionAdd<cr>",                          { noremap = true, silent = true, desc = "Add to CodeCompanion Buffer" } },
+	{ 'i', '<C-d>',        "<C-R>=strftime('%c')<CR>",                                                                                            { noremap = false, silent = true, desc = "Insert current datetime" } },
+	{ 'i', '<C-d><C-f>',   "<C-R>=strftime('%c')<CR>",                                                                                            { noremap = true, silent = true, desc = "Insert full datetime" } },
+	{ 'i', '<C-d><C-d>',   "<C-R>=strftime('%Y-%m-%d')<CR>",                                                                                      { noremap = true, silent = true, desc = "Insert current date" } },
+	{ 'i', '<C-d><C-t>',   "<C-R>=strftime('%H:%M:%S')<CR>",                                                                                      { noremap = true, silent = true, desc = "Insert current time" } },
+	{ 'i', '<C-d><C-s>',   "<C-R>=strftime('%m/%d/%y')<CR>",                                                                                      { noremap = true, silent = true, desc = "Insert short date" } },
+	{ 'i', '<C-d><C-w>',   "<C-R>=strftime('%A %Y-%m-%d')<CR>",                                                                                   { noremap = true, silent = true, desc = "Insert current weekday and date" } },
+	{ 'n', '<leader><CR>', '<Plug>(neorg.qol.todo-items.todo.task-cycle)',                                                                        { noremap = true, silent = true, desc = "Mark Neorg todo list item as done" } },
+	{ 'n', '<leader>lc',   mark_task_done,                                                                                                        { noremap = true, silent = true, desc = "Mark Markdown todo list item as done" } },
+	{ 'n', '<leader>ln',   function() insert_timestamped_line(false) end,                                                                         { noremap = true, silent = true, desc = "Insert timestamped line below" } },
+	{ 'n', '<leader>ll',   function() insert_timestamped_line(true) end,                                                                          { noremap = true, silent = true, desc = "Insert timestamp at end of current line" } },
+	{ "n", "<C-a>",        "<cmd>CodeCompanionActions<cr>",                                                                                       { noremap = true, silent = true, desc = "Show CodeCompanion Actions Menu" } },
+	{ "v", "<C-a>",        "<cmd>CodeCompanionActions<cr>",                                                                                       { noremap = true, silent = true, desc = "Show CodeCompanion Actions Menu" } },
+	{ "n", "<leader>aa",   "<cmd>CodeCompanionToggle<cr>",                                                                                        { noremap = true, silent = true, desc = "Toggle CodeCompanion" } },
+	{ "v", "<leader>aa",   "<cmd>CodeCompanionToggle<cr>",                                                                                        { noremap = true, silent = true, desc = "Toggle CodeCompanion" } },
+	{ "v", "ga",           "<cmd>CodeCompanionAdd<cr>",                                                                                           { noremap = true, silent = true, desc = "Add to CodeCompanion Buffer" } },
 }
 
 
