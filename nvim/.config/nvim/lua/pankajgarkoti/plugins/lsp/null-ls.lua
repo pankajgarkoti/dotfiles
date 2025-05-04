@@ -13,14 +13,17 @@ null_ls.setup({
 	sources = {
 		formatting.prettier,
 		formatting.black,
-		diagnostics.swiftlint,
-		diagnostics.stylua,
+		-- formatting.stylua,
+		-- diagnostics.swiftlint,
 		require("none-ls.diagnostics.eslint_d").with({
 			condition = function(utils)
 				return utils.root_has_file(".eslintrc.js")
 			end,
 		}),
 	},
+
+	vim.keymap.set("n", "<leader>fm", vim.lsp.buf.format, {}),
+
 	on_attach = function(current_client, bufnr)
 		if current_client.supports_method("textDocument/formatting") then
 			local ignore = {}

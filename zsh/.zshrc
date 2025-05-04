@@ -181,3 +181,4 @@ export ANTHROPIC_VERTEX_PROJECT_ID="mavex-ai"
 
 # . "$HOME/.config/alacritty_theme.zsh"
 alias claude="/Users/pankajgarkoti/.claude/local/claude"
+source ~/powerlevel10k/powerlevel10k.zsh-theme

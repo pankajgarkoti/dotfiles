@@ -641,7 +641,7 @@ return require("lazy").setup({
 					},
 					options = {
 						border = 'both',
-						indent_at_cursor = true,
+						indent_at_cursor = false,
 						try_as_border = false,
 					},
 					symbol = "│",
@@ -1104,7 +1104,6 @@ return require("lazy").setup({
 					"tailwindcss",
 					"emmet_ls",
 					"pyright",
-					"vue-language-server"
 				},
 				automatic_installation = true,
 			})
@@ -1273,7 +1272,6 @@ return require("lazy").setup({
 			},
 		},
 	},
-	{ "ellisonleao/gruvbox.nvim", enabled = false },
 	{
 		"folke/lazydev.nvim",
 		ft = "lua", -- only load on lua files
@@ -1285,102 +1283,102 @@ return require("lazy").setup({
 			},
 		},
 	},
-	{
-		'mfussenegger/nvim-dap',
-		disabled = true,
-		lazy = true,
-		dependencies = {
-			'nvim-telescope/telescope-dap.nvim',
-			'mfussenegger/nvim-dap-python',
-			'nvim-dap-virtual-text',
-			'nvim-dap-ui',
-		},
-		config = function()
-			local dap = require('dap')
-
-			local keymaps = { {
-				d = {
-					c = { '<Cmd>lua require"dap".continue()<CR>', 'continue' },
-					l = { '<Cmd>lua require"dap".run_last()<CR>', 'run last' },
-					q = { '<Cmd>lua require"dap".terminate()<CR>', 'terminate' },
-					h = { '<Cmd>lua require"dap".stop()<CR>', 'stop' },
-					n = { '<Cmd>lua require"dap".step_over()<CR>', 'step over' },
-					s = { '<Cmd>lua require"dap".step_into()<CR>', 'step into' },
-					S = { '<Cmd>lua require"dap".step_out()<CR>', 'step out' },
-					b = { '<Cmd>lua require"dap".toggle_breakpoint()<CR>', 'toggle br' },
-					B = { '<Cmd>lua require"dap".set_breakpoint(vim.fn.input("Breakpoint condition: "))<CR>', 'set br condition' },
-					p = { '<Cmd>lua require"dap".set_breakpoint(nil, nil, vim.fn.input("Log point message: "))<CR>', 'set log br' },
-					r = { '<Cmd>lua require"dap".repl.open()<CR>', 'REPL open' },
-					k = { '<Cmd>lua require"dap".up()<CR>', 'up callstack' },
-					j = { '<Cmd>lua require"dap".down()<CR>', 'down callstack' },
-					i = { '<Cmd>lua require"dap.ui.widgets".hover()<CR>', 'info' },
-					['?'] = { '<Cmd>lua local widgets=require"dap.ui.widgets";widgets.centered_float(widgets.scopes)<CR>', 'scopes' },
-					f = { '<Cmd>Telescope dap frames<CR>', 'search frames' },
-					C = { '<Cmd>Telescope dap commands<CR>', 'search commands' },
-					L = { '<Cmd>Telescope dap list_breakpoints<CR>', 'search breakpoints' },
-				},
-			} }
-
-			map_keys(keymaps)
-
-			vim.fn.sign_define('DapBreakpoint', { text = '🛑', texthl = '', linehl = '', numhl = '' })
-			vim.fn.sign_define('DapStopped', { text = '🚏', texthl = '', linehl = '', numhl = '' })
-			dap.defaults.fallback.terminal_win_cmd = 'tabnew'
-			dap.defaults.fallback.focus_terminal = true
-
-			local setup, dap_python = pcall(require, 'dap-python')
-
-			if setup then
-				dap_python.setup()
-				dap_python.test_runner = 'pytest'
-				dap_python.default_port = 38000
-				dap.listeners.after.event_initialized["dapui_config"] = function()
-					require('dapui').open()
-				end
-				dap.listeners.before.event_terminated["dapui_config"] = function()
-					require('dapui').close()
-				end
-				dap.listeners.before.event_exited["dapui_config"] = function()
-					require('dapui').close()
-				end
-			end
-		end,
-	},
-	{
-		"rcarriga/nvim-dap-ui",
-		disabled = true,
-		dependencies = { "mfussenegger/nvim-dap", "nvim-neotest/nvim-nio" },
-		lazy = true,
-		init = function()
-			local keymaps_n = {
-				d = {
-					u = { '<Cmd>lua require"dapui".toggle()<CR>', 'ui toggle' },
-					e = { '<Cmd>lua require"dapui".eval()<CR>', 'eval' },
-					E = { '<Cmd>lua require"dapui".float_element()<CR>', 'float element' },
-				},
-			}
-
-			local keymaps_v = {
-				d = {
-					e = { '<Cmd>lua require"dapui".eval()<CR>', 'eval' },
-					E = { '<Cmd>lua require"dapui".float_element()<CR>', 'float element' },
-				},
-			}
-
-			map_keys(keymaps_n, {})
-			map_keys(keymaps_v, {})
-		end,
-		config = true,
-	},
-	{
-		'theHamsta/nvim-dap-virtual-text',
-		lazy = true,
-		disabled = true,
-		config = function()
-			require('nvim-dap-virtual-text').setup()
-			vim.cmd('highlight! NvimDapVirtualText guifg=#7c6f64 gui=italic')
-		end
-	},
+	-- {
+	-- 	'mfussenegger/nvim-dap',
+	-- 	disabled = true,
+	-- 	lazy = true,
+	-- 	dependencies = {
+	-- 		'nvim-telescope/telescope-dap.nvim',
+	-- 		'mfussenegger/nvim-dap-python',
+	-- 		'nvim-dap-virtual-text',
+	-- 		'nvim-dap-ui',
+	-- 	},
+	-- 	config = function()
+	-- 		local dap = require('dap')
+	--
+	-- 		local keymaps = { {
+	-- 			d = {
+	-- 				c = { '<Cmd>lua require"dap".continue()<CR>', 'continue' },
+	-- 				l = { '<Cmd>lua require"dap".run_last()<CR>', 'run last' },
+	-- 				q = { '<Cmd>lua require"dap".terminate()<CR>', 'terminate' },
+	-- 				h = { '<Cmd>lua require"dap".stop()<CR>', 'stop' },
+	-- 				n = { '<Cmd>lua require"dap".step_over()<CR>', 'step over' },
+	-- 				s = { '<Cmd>lua require"dap".step_into()<CR>', 'step into' },
+	-- 				S = { '<Cmd>lua require"dap".step_out()<CR>', 'step out' },
+	-- 				b = { '<Cmd>lua require"dap".toggle_breakpoint()<CR>', 'toggle br' },
+	-- 				B = { '<Cmd>lua require"dap".set_breakpoint(vim.fn.input("Breakpoint condition: "))<CR>', 'set br condition' },
+	-- 				p = { '<Cmd>lua require"dap".set_breakpoint(nil, nil, vim.fn.input("Log point message: "))<CR>', 'set log br' },
+	-- 				r = { '<Cmd>lua require"dap".repl.open()<CR>', 'REPL open' },
+	-- 				k = { '<Cmd>lua require"dap".up()<CR>', 'up callstack' },
+	-- 				j = { '<Cmd>lua require"dap".down()<CR>', 'down callstack' },
+	-- 				i = { '<Cmd>lua require"dap.ui.widgets".hover()<CR>', 'info' },
+	-- 				['?'] = { '<Cmd>lua local widgets=require"dap.ui.widgets";widgets.centered_float(widgets.scopes)<CR>', 'scopes' },
+	-- 				f = { '<Cmd>Telescope dap frames<CR>', 'search frames' },
+	-- 				C = { '<Cmd>Telescope dap commands<CR>', 'search commands' },
+	-- 				L = { '<Cmd>Telescope dap list_breakpoints<CR>', 'search breakpoints' },
+	-- 			},
+	-- 		} }
+	--
+	-- 		map_keys(keymaps)
+	--
+	-- 		vim.fn.sign_define('DapBreakpoint', { text = '🛑', texthl = '', linehl = '', numhl = '' })
+	-- 		vim.fn.sign_define('DapStopped', { text = '🚏', texthl = '', linehl = '', numhl = '' })
+	-- 		dap.defaults.fallback.terminal_win_cmd = 'tabnew'
+	-- 		dap.defaults.fallback.focus_terminal = true
+	--
+	-- 		local setup, dap_python = pcall(require, 'dap-python')
+	--
+	-- 		if setup then
+	-- 			dap_python.setup()
+	-- 			dap_python.test_runner = 'pytest'
+	-- 			dap_python.default_port = 38000
+	-- 			dap.listeners.after.event_initialized["dapui_config"] = function()
+	-- 				require('dapui').open()
+	-- 			end
+	-- 			dap.listeners.before.event_terminated["dapui_config"] = function()
+	-- 				require('dapui').close()
+	-- 			end
+	-- 			dap.listeners.before.event_exited["dapui_config"] = function()
+	-- 				require('dapui').close()
+	-- 			end
+	-- 		end
+	-- 	end,
+	-- },
+	-- {
+	-- 	"rcarriga/nvim-dap-ui",
+	-- 	disabled = true,
+	-- 	dependencies = { "mfussenegger/nvim-dap", "nvim-neotest/nvim-nio" },
+	-- 	lazy = true,
+	-- 	init = function()
+	-- 		local keymaps_n = {
+	-- 			d = {
+	-- 				u = { '<Cmd>lua require"dapui".toggle()<CR>', 'ui toggle' },
+	-- 				e = { '<Cmd>lua require"dapui".eval()<CR>', 'eval' },
+	-- 				E = { '<Cmd>lua require"dapui".float_element()<CR>', 'float element' },
+	-- 			},
+	-- 		}
+	--
+	-- 		local keymaps_v = {
+	-- 			d = {
+	-- 				e = { '<Cmd>lua require"dapui".eval()<CR>', 'eval' },
+	-- 				E = { '<Cmd>lua require"dapui".float_element()<CR>', 'float element' },
+	-- 			},
+	-- 		}
+	--
+	-- 		map_keys(keymaps_n, {})
+	-- 		map_keys(keymaps_v, {})
+	-- 	end,
+	-- 	config = true,
+	-- },
+	-- {
+	-- 	'theHamsta/nvim-dap-virtual-text',
+	-- 	lazy = true,
+	-- 	disabled = true,
+	-- 	config = function()
+	-- 		require('nvim-dap-virtual-text').setup()
+	-- 		vim.cmd('highlight! NvimDapVirtualText guifg=#7c6f64 gui=italic')
+	-- 	end
+	-- },
 	{
 		"sindrets/diffview.nvim",
 		lazy = true,
@@ -1437,40 +1435,36 @@ return require("lazy").setup({
 			},
 		},
 	},
-	{
-		"debugloop/telescope-undo.nvim",
-		dependencies = { -- note how they're inverted to above example
-			{
-				"nvim-telescope/telescope.nvim",
-				dependencies = { "nvim-lua/plenary.nvim" },
-			},
-		},
-		keys = {
-			{ -- lazy style key map
-				"<leader>u",
-				"<cmd>Telescope undo<cr>",
-				desc = "undo history",
-			},
-		},
-		opts = {
-			-- don't use `defaults = { }` here, do this in the main telescope spec
-			extensions = {
-				undo = {
-					-- telescope-undo.nvim config, see below
-				},
-				-- no other extensions here, they can have their own spec too
-			},
-		},
-		config = function(_, opts)
-			-- Calling telescope's setup from multiple specs does not hurt, it will happily merge the
-			-- configs for us. We won't use data, as everything is in it's own namespace (telescope
-			-- defaults, as well as each extension).
-			require("telescope").setup(opts)
-			require("telescope").load_extension("undo")
-		end,
-	},
-	{
-		'creativenull/efmls-configs-nvim',
-		dependencies = { 'neovim/nvim-lspconfig' },
-	}
+	-- {
+	-- 	"debugloop/telescope-undo.nvim",
+	-- 	dependencies = { -- note how they're inverted to above example
+	-- 		{
+	-- 			"nvim-telescope/telescope.nvim",
+	-- 			dependencies = { "nvim-lua/plenary.nvim" },
+	-- 		},
+	-- 	},
+	-- 	keys = {
+	-- 		{ -- lazy style key map
+	-- 			"<leader>u",
+	-- 			"<cmd>Telescope undo<cr>",
+	-- 			desc = "undo history",
+	-- 		},
+	-- 	},
+	-- 	opts = {
+	-- 		-- don't use `defaults = { }` here, do this in the main telescope spec
+	-- 		extensions = {
+	-- 			undo = {
+	-- 				-- telescope-undo.nvim config, see below
+	-- 			},
+	-- 			-- no other extensions here, they can have their own spec too
+	-- 		},
+	-- 	},
+	-- 	config = function(_, opts)
+	-- 		-- Calling telescope's setup from multiple specs does not hurt, it will happily merge the
+	-- 		-- configs for us. We won't use data, as everything is in it's own namespace (telescope
+	-- 		-- defaults, as well as each extension).
+	-- 		require("telescope").setup(opts)
+	-- 		require("telescope").load_extension("undo")
+	-- 	end,
+	-- },
 })
