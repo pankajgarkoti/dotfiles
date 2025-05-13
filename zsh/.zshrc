@@ -12,9 +12,13 @@ fastfetch
 . ~/.config.setup.sh
 
 # flutter and java path
-export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/pankajgarkoti/Desktop/code/flutter/bin:/Users/pankajgarkoti/Desktop/flutter/bin:$PATH"
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+export PATH="$HOME/development/flutter/bin:$PATH"
+export PATH="$HOME/development/android-sdk/cmdline-tools/latest/bin:$PATH"
 export PATH="/opt/homebrew/opt/openjdk@11/bin:$PATH"
+export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
 export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
+export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
 
 # general shortcuts
 alias la='ls -la'

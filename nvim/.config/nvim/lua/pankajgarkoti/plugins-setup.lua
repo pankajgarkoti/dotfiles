@@ -1264,7 +1264,7 @@ return require("lazy").setup({
 					return require("codecompanion.adapters").extend("anthropic", {
 						schema = {
 							model = {
-								default = "claude-3-5-sonnet-latest",
+								default = "claude-3-7-sonnet-latest",
 							},
 						},
 					})
@@ -1386,19 +1386,19 @@ return require("lazy").setup({
 	{
 		"folke/trouble.nvim",
 		opts = {
-			auto_close = true,    -- auto close when there are no items
-			auto_open = false,    -- auto open when there are items
-			auto_preview = true,  -- automatically open preview when on an item
-			auto_refresh = true,  -- auto refresh when open
-			auto_jump = false,    -- auto jump to the item when there's only one
-			focus = true,         -- Focus the window when opened
-			restore = true,       -- restores the last location in the list when opening
-			follow = true,        -- Follow the current item
+			auto_close = false,  -- auto close when there are no items
+			auto_open = true,    -- auto open when there are items
+			auto_preview = true, -- automatically open preview when on an item
+			auto_refresh = true, -- auto refresh when open
+			auto_jump = false,   -- auto jump to the item when there's only one
+			focus = true,        -- Focus the window when opened
+			restore = false,     -- restores the last location in the list when opening
+			follow = true,       -- Follow the current item
 			indent_guides = true, -- show indent guides
-			max_items = 200,      -- limit number of items that can be displayed per section
-			multiline = true,     -- render multi-line messages
-			pinned = true,        -- When pinned, the opened trouble window will be bound to the current buffer
-			warn_no_results = false, -- show a warning when there are no results
+			max_items = 200,     -- limit number of items that can be displayed per section
+			multiline = true,    -- render multi-line messages
+			pinned = true,       -- When pinned, the opened trouble window will be bound to the current buffer
+			warn_no_results = true, -- show a warning when there are no results
 			open_no_results = true, -- open the trouble window when there are no results
 		},
 		cmd = "Trouble",
@@ -1435,36 +1435,13 @@ return require("lazy").setup({
 			},
 		},
 	},
-	-- {
-	-- 	"debugloop/telescope-undo.nvim",
-	-- 	dependencies = { -- note how they're inverted to above example
-	-- 		{
-	-- 			"nvim-telescope/telescope.nvim",
-	-- 			dependencies = { "nvim-lua/plenary.nvim" },
-	-- 		},
-	-- 	},
-	-- 	keys = {
-	-- 		{ -- lazy style key map
-	-- 			"<leader>u",
-	-- 			"<cmd>Telescope undo<cr>",
-	-- 			desc = "undo history",
-	-- 		},
-	-- 	},
-	-- 	opts = {
-	-- 		-- don't use `defaults = { }` here, do this in the main telescope spec
-	-- 		extensions = {
-	-- 			undo = {
-	-- 				-- telescope-undo.nvim config, see below
-	-- 			},
-	-- 			-- no other extensions here, they can have their own spec too
-	-- 		},
-	-- 	},
-	-- 	config = function(_, opts)
-	-- 		-- Calling telescope's setup from multiple specs does not hurt, it will happily merge the
-	-- 		-- configs for us. We won't use data, as everything is in it's own namespace (telescope
-	-- 		-- defaults, as well as each extension).
-	-- 		require("telescope").setup(opts)
-	-- 		require("telescope").load_extension("undo")
-	-- 	end,
-	-- },
+	{
+		'nvim-flutter/flutter-tools.nvim',
+		lazy = false,
+		dependencies = {
+			'nvim-lua/plenary.nvim',
+			'stevearc/dressing.nvim', -- optional for vim.ui.select
+		},
+		config = true,
+	}
 })
