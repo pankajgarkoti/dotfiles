@@ -19,7 +19,7 @@ style = "Heavy Italic"
 
 [font.normal]
 family = "IosevkaTerm Nerd Font Mono"
-style = "Heavy"
+style = "Medium"
 
 [mouse]
 hide_when_typing = false

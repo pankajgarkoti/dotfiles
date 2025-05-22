@@ -27,259 +27,6 @@ return require("lazy").setup({
 			require("which-key").setup({})
 		end,
 	},
-	{
-		"hedyhli/outline.nvim",
-		lazy = true,
-		cmd = { "Outline", "OutlineOpen" },
-		keys = {
-			{ "<leader>o", "<cmd>Outline<CR>", desc = "Toggle outline" },
-		},
-		event = "BufReadPost",
-		config = function()
-			local opts = {
-				outline_window = {
-					-- Where to open the split window: right/left
-					position = 'right',
-					-- The default split commands used are 'topleft vs' and 'botright vs'
-					-- depending on `position`. You can change this by providing your own
-					-- `split_command`.
-					-- `position` will not be considered if `split_command` is non-nil.
-					-- This should be a valid vim command used for opening the split for the
-					-- outline window. Eg, 'rightbelow vsplit'.
-					-- Width can be included (with will override the width setting below):
-					-- Eg, `topleft 20vsp` to prevent a flash of windows when resizing.
-					split_command = nil,
-
-					-- Percentage or integer of columns
-					width = 20,
-					-- Whether width is relative to the total width of nvim
-					-- When relative_width = true, this means take 25% of the total
-					-- screen width for outline window.
-					relative_width = true,
-					auto_jump = false,
-					jump_highlight_duration = 300,
-					center_on_jump = true,
-
-					-- Vim options for the outline window
-					show_numbers = false,
-					show_relative_numbers = false,
-					wrap = false,
-					focus_on_open = true,
-					-- Winhighlight option for outline window.
-					-- See :help 'winhl'
-					-- To change background color to "CustomHl" for example, use "Normal:CustomHl".
-					winhl = '',
-				},
-				outline_items = {
-					-- Show extra details with the symbols (lsp dependent) as virtual next
-					show_symbol_details = true,
-					-- Show corresponding line numbers of each symbol on the left column as
-					-- virtual text, for quick navigation when not focused on outline.
-					-- Why? See this comment:
-					-- https://github.com/simrat39/symbols-outline.nvim/issues/212#issuecomment-1793503563
-					show_symbol_lineno = false,
-					-- Whether to highlight the currently hovered symbol and all direct parents
-					highlight_hovered_item = true,
-					-- Whether to automatically set cursor location in outline to match
-					-- location in code when focus is in code. If disabled you can use
-					-- `:OutlineFollow[!]` from any window or `<C-g>` from outline window to
-					-- trigger this manually.
-					-- Autocmd events to automatically trigger these operations.
-					auto_update_events = {
-						-- Includes both setting of cursor and highlighting of hovered item.
-						-- The above two options are respected.
-						-- This can be triggered manually through `follow_cursor` lua API,
-						-- :OutlineFollow command, or <C-g>.
-						follow = { 'CursorMoved' },
-						-- Re-request symbols from the provider.
-						-- This can be triggered manually through `refresh_outline` lua API, or
-						-- :OutlineRefresh command.
-						items = { 'InsertLeave', 'WinEnter', 'BufEnter', 'BufWinEnter', 'TabEnter', 'BufWritePost' },
-					},
-				},
-				-- Options for outline guides which help show tree hierarchy of symbols
-				guides = {
-					enabled = true,
-					markers = {
-						-- It is recommended for bottom and middle markers to use the same number
-						-- of characters to align all child nodes vertically.
-						bottom = '└',
-						middle = '├',
-						vertical = '│',
-					},
-				},
-				symbol_folding = {
-					-- Depth past which nodes will be folded by default. Set to false to unfold all on open.
-					autofold_depth = 2,
-					-- When to auto unfold nodes
-					auto_unfold = {
-						-- Auto unfold currently hovered symbol
-						hovered = true,
-						-- Auto fold when the root level only has this many nodes.
-						-- Set true for 1 node, false for 0.
-						only = true,
-					},
-					markers = { '', '' },
-				},
-				preview_window = {
-					-- Automatically open preview of code location when navigating outline window
-					auto_preview = true,
-					-- Automatically open hover_symbol when opening preview (see keymaps for
-					-- hover_symbol).
-					-- If you disable this you can still open hover_symbol using your keymap
-					-- below.
-					open_hover_on_preview = true,
-					width = 50, -- Percentage or integer of columns
-					min_width = 50, -- Minimum number of columns
-					-- Whether width is relative to the total width of nvim.
-					-- When relative_width = true, this means take 50% of the total
-					-- screen width for preview window, ensure the result width is at least 50
-					-- characters wide.
-					relative_width = true,
-					height = 50, -- Percentage or integer of lines
-					min_height = 10, -- Minimum number of lines
-					-- Similar to relative_width, except the height is relative to the outline
-					-- window's height.
-					relative_height = true,
-					-- Border option for floating preview window.
-					-- Options include: single/double/rounded/solid/shadow or an array of border
-					-- characters.
-					-- See :help nvim_open_win() and search for "border" option.
-					-- border = 'single',
-					border = 'double',
-					-- winhl options for the preview window, see ':h winhl'
-					winhl = 'NormalFloat:',
-					-- Pseudo-transparency of the preview window, see ':h winblend'
-					winblend = 0,
-					-- Experimental feature that let's you edit the source content live
-					-- in the preview window. Like VS Code's "peek editor".
-					live = true
-				},
-				-- These keymaps can be a string or a table for multiple keys.
-				-- Set to `{}` to disable. (Using 'nil' will fallback to default keys)
-				keymaps = {
-					show_help = '?',
-					close = { '<Esc>', 'q' },
-					-- Jump to symbol under cursor.
-					-- It can auto close the outline window when triggered, see
-					-- 'auto_close' option above.
-					goto_location = '<Cr>',
-					-- Jump to symbol under cursor but keep focus on outline window.
-					peek_location = 'o',
-					-- Visit location in code and close outline immediately
-					goto_and_close = '<S-Cr>',
-					-- Change cursor position of outline window to match current location in code.
-					-- 'Opposite' of goto/peek_location.
-					restore_location = '<C-g>',
-					-- Open LSP/provider-dependent symbol hover information
-					hover_symbol = '<C-space>',
-					-- Preview location code of the symbol under cursor
-					toggle_preview = 'K',
-					rename_symbol = 'r',
-					code_actions = 'a',
-					-- These fold actions are collapsing tree nodes, not code folding
-					fold = 'h',
-					unfold = 'l',
-					fold_toggle = '<Tab>',
-					-- Toggle folds for all nodes.
-					-- If at least one node is folded, this action will fold all nodes.
-					-- If all nodes are folded, this action will unfold all nodes.
-					fold_toggle_all = '<S-Tab>',
-					fold_all = 'W',
-					unfold_all = 'E',
-					fold_reset = 'R',
-					-- Move down/up by one line and peek_location immediately.
-					-- You can also use outline_window.auto_jump=true to do this for any
-					-- j/k/<down>/<up>.
-					down_and_jump = '<C-j>',
-					up_and_jump = '<C-k>',
-					up_ = '<up>',
-					down = '<down>',
-				},
-				providers = {
-					priority = { 'lsp', 'markdown', 'norg', 'coc' },
-					-- Configuration for each provider (3rd party providers are supported)
-					lsp = {
-						-- Lsp client names to ignore
-						blacklist_clients = {},
-					},
-					markdown = {
-						-- List of supported ft's to use the markdown provider
-						filetypes = { 'markdown' },
-					},
-				},
-				symbols = {
-					-- Filter by kinds (string) for symbols in the outline.
-					-- Possible kinds are the Keys in the icons table below.
-					-- A filter list is a string[] with an optional exclude (boolean) field.
-					-- The symbols.filter option takes either a filter list or ft:filterList
-					-- key-value pairs.
-					-- Put  exclude=true  in the string list to filter by excluding the list of
-					-- kinds instead.
-					-- Include all except String and Constant:
-					--   filter = { 'String', 'Constant', exclude = true }
-					-- Only include Package, Module, and Function:
-					--   filter = { 'Package', 'Module', 'Function' }
-					-- See more examples below.
-					filter = nil,
-
-					-- You can use a custom function that returns the icon for each symbol kind.
-					-- This function takes a kind (string) as parameter and should return an
-					-- icon as string.
-					---@param kind string Key of the icons table below
-					---@param bufnr integer Code buffer
-					---@returns string|boolean The icon string to display, such as "f", or `false`
-					---                        to fallback to `icon_source`.
-					-- icon_fetcher = function(kind, bufnr)
-					-- 	return ""
-					-- end,
-					icon_fetcher = nil,
-					-- 3rd party source for fetching icons. This is used as a fallback if
-					-- icon_fetcher returned an empty string.
-					-- Currently supported values: 'lspkind'
-					icon_source = nil,
-					-- The next fallback if both icon_fetcher and icon_source has failed, is
-					-- the custom mapping of icons specified below. The icons table is also
-					-- needed for specifying hl group.
-					icons = {
-						File = { icon = '󰈔', hl = 'Identifier' },
-						Module = { icon = '󰆧', hl = 'Include' },
-						Namespace = { icon = '󰅪', hl = 'Include' },
-						Package = { icon = '󰏗', hl = 'Include' },
-						Class = { icon = '𝓒', hl = 'Type' },
-						Method = { icon = 'ƒ', hl = 'Function' },
-						Property = { icon = '', hl = 'Identifier' },
-						Field = { icon = '󰆨', hl = 'Identifier' },
-						Constructor = { icon = '', hl = 'Special' },
-						Enum = { icon = 'ℰ', hl = 'Type' },
-						Interface = { icon = '󰜰', hl = 'Type' },
-						Function = { icon = '', hl = 'Function' },
-						Variable = { icon = '', hl = 'Constant' },
-						Constant = { icon = '', hl = 'Constant' },
-						String = { icon = '𝓐', hl = 'String' },
-						Number = { icon = '#', hl = 'Number' },
-						Boolean = { icon = '⊨', hl = 'Boolean' },
-						Array = { icon = '󰅪', hl = 'Constant' },
-						Object = { icon = '⦿', hl = 'Type' },
-						Key = { icon = '🔐', hl = 'Type' },
-						Null = { icon = 'NULL', hl = 'Type' },
-						EnumMember = { icon = '', hl = 'Identifier' },
-						Struct = { icon = '𝓢', hl = 'Structure' },
-						Event = { icon = '🗲', hl = 'Type' },
-						Operator = { icon = '+', hl = 'Identifier' },
-						TypeParameter = { icon = '𝙏', hl = 'Identifier' },
-						Component = { icon = '󰅴', hl = 'Function' },
-						Fragment = { icon = '󰅴', hl = 'Constant' },
-						TypeAlias = { icon = ' ', hl = 'Type' },
-						Parameter = { icon = ' ', hl = 'Identifier' },
-						StaticMethod = { icon = ' ', hl = 'Function' },
-						Macro = { icon = ' ', hl = 'Function' },
-					},
-				},
-			}
-			require("outline").setup(opts)
-		end,
-	},
 	"nvim-lua/plenary.nvim",
 	"shortcuts/no-neck-pain.nvim",
 	{
@@ -616,16 +363,21 @@ return require("lazy").setup({
 	"marko-cerovac/material.nvim",
 	"ThePrimeagen/harpoon",
 	"numToStr/FTerm.nvim",
-	"APZelos/blamer.nvim",
 	{
 		'echasnovski/mini.nvim',
-		version = '*',
 		config = function()
 			vim.o.laststatus = 3
 			require("mini.starter").setup()
 			require("mini.align").setup()
 			require("mini.diff").setup()
 			require("mini.git").setup()
+			require('mini.bufremove').setup()
+
+			-- Delete buffers
+			vim.keymap.set('n', '<leader>q', function()
+				require('mini.bufremove').delete(0, false)
+			end)
+
 			require("mini.indentscope").setup(
 				{
 					draw = {
@@ -795,9 +547,9 @@ return require("lazy").setup({
 
 			-- Vim List Line Diagnostics
 			vim.diagnostic.config({
-				float = false,       -- Disable floating window diagnostics
-				virtual_lines = true, -- Keep your virtual_lines enabled
-				update_in_insert = true, -- Update diagnostics in insert mode
+				float = false,
+				virtual_lines = true,
+				update_in_insert = false,
 			})
 
 			local on_attach = function(_, bufnr)
@@ -1097,6 +849,7 @@ return require("lazy").setup({
 			end
 
 			mason_lspconfig.setup({
+				automatic_enable = {},
 				ensure_installed = {
 					"ts_ls",
 					"html",
@@ -1437,11 +1190,113 @@ return require("lazy").setup({
 	},
 	{
 		'nvim-flutter/flutter-tools.nvim',
-		lazy = false,
+		lazy = true,
 		dependencies = {
 			'nvim-lua/plenary.nvim',
 			'stevearc/dressing.nvim', -- optional for vim.ui.select
 		},
 		config = true,
+	},
+	{
+		"azorng/goose.nvim",
+		config = function()
+			require('goose').setup({
+				default_global_keymaps = true, -- If false, disables all default global keymaps
+				keymap = {
+					global = {
+						toggle = '<leader>gg',           -- Open goose. Close if opened
+						open_input = '<leader>gi',       -- Opens and focuses on input window on insert mode
+						open_input_new_session = '<leader>gI', -- Opens and focuses on input window on insert mode. Creates a new session
+						open_output = '<leader>go',      -- Opens and focuses on output window
+						toggle_focus = '<leader>gt',     -- Toggle focus between goose and last window
+						close = '<leader>gq',            -- Close UI windows
+						toggle_fullscreen = '<leader>gf', -- Toggle between normal and fullscreen mode
+						select_session = '<leader>gs',   -- Select and load a goose session
+						goose_mode_chat = '<leader>gmc', -- Set goose mode to `chat`. (Tool calling disabled. No editor context besides selections)
+						goose_mode_auto = '<leader>gma', -- Set goose mode to `auto`. (Default mode with full agent capabilities)
+						configure_provider = '<leader>gp', -- Quick provider and model switch from predefined list
+						diff_open = '<leader>gdf',       -- Opens a diff tab of a modified file since the last goose prompt
+						diff_next = '<leader>g]',        -- Navigate to next file diff
+						diff_prev = '<leader>g[',        -- Navigate to previous file diff
+						diff_close = '<leader>gc',       -- Close diff view tab and return to normal editing
+						diff_revert_all = '<leader>gra', -- Revert all file changes since the last goose prompt
+						diff_revert_this = '<leader>grt', -- Revert current file changes since the last goose prompt
+					},
+					window = {
+						submit = '<cr>',         -- Submit prompt
+						close = '<esc>',         -- Close UI windows
+						stop = '<C-c>',          -- Stop goose while it is running
+						next_message = ']]',     -- Navigate to next message in the conversation
+						prev_message = '[[',     -- Navigate to previous message in the conversation
+						mention_file = '@',      -- Pick a file and add to context. See File Mentions section
+						toggle_pane = '<tab>',   -- Toggle between input and output panes
+						prev_prompt_history = '<up>', -- Navigate to previous prompt in history
+						next_prompt_history = '<down>' -- Navigate to next prompt in history
+					}
+				},
+				ui = {
+					window_width = 0.3,  -- Width as percentage of editor width
+					input_height = 0.3,  -- Input height as percentage of window height
+					fullscreen = false,  -- Start in fullscreen mode (default: false)
+					layout = "right",    -- Options: "center" or "right"
+					floating_height = 0.8, -- Height as percentage of editor height for "center" layout
+					display_model = true, -- Display model name on top winbar
+					display_goose_mode = true -- Display mode on top winbar: auto|chat
+				},
+				providers = {}
+			})
+		end,
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			{
+				"MeanderingProgrammer/render-markdown.nvim",
+				opts = {
+					anti_conceal = { enabled = false },
+				},
+			}
+		},
+	},
+	{
+		'Bekaboo/dropbar.nvim',
+		-- optional, but required for fuzzy finder support
+		dependencies = {
+			'nvim-telescope/telescope-fzf-native.nvim',
+			build = 'make'
+		},
+		config = function()
+			local dropbar_api = require('dropbar.api')
+			vim.keymap.set('n', '<Leader>;', dropbar_api.pick, { desc = 'Pick symbols in winbar' })
+			vim.keymap.set('n', '[;', dropbar_api.goto_context_start, { desc = 'Go to start of current context' })
+			vim.keymap.set('n', '];', dropbar_api.select_next_context, { desc = 'Select next context' })
+		end
+	},
+	{
+		"yetone/avante.nvim",
+		event = "VeryLazy",
+		version = false, -- Never set this value to "*"! Never!
+		opts = {
+			provider = "claude",
+		},
+		-- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
+		build = "make",
+		-- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
+		dependencies = {
+			"nvim-treesitter/nvim-treesitter",
+			"stevearc/dressing.nvim",
+			"nvim-lua/plenary.nvim",
+			"MunifTanjim/nui.nvim",
+			--- The below dependencies are optional,
+			"nvim-telescope/telescope.nvim", -- for file_selector provider telescope
+			"hrsh7th/nvim-cmp",           -- autocompletion for avante commands and mentions
+			"nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
+			{
+				-- Make sure to set this up properly if you have lazy=true
+				'MeanderingProgrammer/render-markdown.nvim',
+				opts = {
+					file_types = { "markdown", "Avante" },
+				},
+				ft = { "markdown", "Avante" },
+			},
+		},
 	}
 })

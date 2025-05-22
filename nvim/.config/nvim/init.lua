@@ -7,8 +7,8 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- Core
-require("pankajgarkoti.core.keymaps")
 require("pankajgarkoti.plugins-setup")
+require("pankajgarkoti.core.keymaps")
 require("pankajgarkoti.core.options")
 
 -- plugins
@@ -18,12 +18,14 @@ require("pankajgarkoti.plugins.treesitter")
 require("pankajgarkoti.plugins.gitsigns")
 require("pankajgarkoti.plugins.fterm")
 require("pankajgarkoti.plugins.no-neck-pain")
-require("pankajgarkoti.plugins.blamer")
 require("pankajgarkoti.plugins.autopairs")
 require("pankajgarkoti.plugins.diffview")
 
 -- LSP ad-hoc config
 require("pankajgarkoti.plugins.lsp.eslint-lspconfig")
+
+-- autocmds
+require("pankajgarkoti.core.autocmds")
 
 
 local colorscheme_imports = {
