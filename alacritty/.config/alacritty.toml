@@ -1,9 +1,9 @@
 [general]
-import = ["~/.config/alacritty/themes/themes/catppuccin_mocha.toml"]
+import = ["~/.config/alacritty/themes/themes/material_theme_mod.toml"]
 live_config_reload = true
 
 [font]
-size = 14
+size = 15
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"
@@ -33,6 +33,10 @@ option_as_alt = "OnlyLeft"
 [window.dimensions]
 lines = 72
 columns = 300
+
+
+[colors.primary]
+background = '#000000'
 
 [keyboard]
 bindings = [

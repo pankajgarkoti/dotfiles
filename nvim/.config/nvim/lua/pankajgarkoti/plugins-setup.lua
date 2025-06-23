@@ -1258,7 +1258,6 @@ return require("lazy").setup({
 	},
 	{
 		'Bekaboo/dropbar.nvim',
-		-- optional, but required for fuzzy finder support
 		dependencies = {
 			'nvim-telescope/telescope-fzf-native.nvim',
 			build = 'make'
@@ -1273,24 +1272,20 @@ return require("lazy").setup({
 	{
 		"yetone/avante.nvim",
 		event = "VeryLazy",
-		version = false, -- Never set this value to "*"! Never!
+		version = false,
 		opts = {
 			provider = "claude",
 		},
-		-- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
 		build = "make",
-		-- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
 		dependencies = {
 			"nvim-treesitter/nvim-treesitter",
 			"stevearc/dressing.nvim",
 			"nvim-lua/plenary.nvim",
 			"MunifTanjim/nui.nvim",
-			--- The below dependencies are optional,
-			"nvim-telescope/telescope.nvim", -- for file_selector provider telescope
-			"hrsh7th/nvim-cmp",           -- autocompletion for avante commands and mentions
-			"nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
+			"nvim-telescope/telescope.nvim",
+			"hrsh7th/nvim-cmp",
+			"nvim-tree/nvim-web-devicons",
 			{
-				-- Make sure to set this up properly if you have lazy=true
 				'MeanderingProgrammer/render-markdown.nvim',
 				opts = {
 					file_types = { "markdown", "Avante" },
@@ -1298,5 +1293,41 @@ return require("lazy").setup({
 				ft = { "markdown", "Avante" },
 			},
 		},
+	},
+	{
+		"obsidian-nvim/obsidian.nvim",
+		version = "*",
+		lazy = false,
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+		},
+		opts = {
+			workspaces = {
+				{
+					name = "notes",
+					path = "~/Desktop/notes",
+				},
+			},
+			daily_notes = {
+				folder = "Journal",
+				date_format = "%Y/%m/%Y-%m-%d",
+				-- template = "~/Desktop/notes/templates/daily.md",
+				template = "~/Desktop/notes/templates/daily.md",
+				alias_format = "%B %-d, %Y",
+				autorun = true,
+			},
+			templates = {
+				folder = "templates",
+				date_format = "%Y-%m-%d",
+			},
+		},
+		config = function(_, opts)
+			require("obsidian").setup(opts)
+
+			-- Set up global keymaps that work from any buffer
+			vim.keymap.set('n', '<leader>oy', '<cmd>ObsidianYesterday<cr>', { desc = "Open yesterday's daily note" })
+			vim.keymap.set('n', '<leader>ot', '<cmd>ObsidianToday<cr>', { desc = "Open today's daily note" })
+			vim.keymap.set('n', '<leader>om', '<cmd>ObsidianTomorrow<cr>', { desc = "Open tomorrow's daily note" })
+		end,
 	}
 })
