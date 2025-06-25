@@ -3,7 +3,7 @@ import = ["~/.config/alacritty/themes/themes/material_theme_mod.toml"]
 live_config_reload = true
 
 [font]
-size = 15
+size = 22
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"

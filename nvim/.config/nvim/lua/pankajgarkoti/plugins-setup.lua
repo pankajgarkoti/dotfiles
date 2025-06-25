@@ -14,11 +14,6 @@ vim.opt.rtp:prepend(lazypath)
 
 return require("lazy").setup({
 	{
-		"vhyrro/luarocks.nvim",
-		priority = 1000,
-		config = true,
-	},
-	{
 		"folke/which-key.nvim",
 		dependencies = { "luarocks.nvim" },
 		config = function()
@@ -252,7 +247,7 @@ return require("lazy").setup({
 			insert_component(config.sections.lualine_x, {
 				"searchcount",
 				color = { fg = colors.bg, bg = colors.accent },
-				padding = { left = i1, right = 1 },
+				padding = { left = 1, right = 1 },
 				separator = { right = "⸗", left = "░▒▓" },
 			})
 			insert_component(config.sections.lualine_x, {
@@ -901,15 +896,11 @@ return require("lazy").setup({
 		priority = 1001,
 		lazy = false,
 		config = function()
-			local variants = {
-				latte = "latte",
-				frappe = "frappe",
-				macchiato = "macchiato",
-				mocha = "mocha"
-			}
 			require("catppuccin").setup({
 				transparent_background = true,
 			})
+
+			vim.cmd("colorscheme catppuccin-mocha")
 		end
 	},
 	{
@@ -1017,7 +1008,7 @@ return require("lazy").setup({
 					return require("codecompanion.adapters").extend("anthropic", {
 						schema = {
 							model = {
-								default = "claude-3-7-sonnet-latest",
+								default = "claude-sonnet-4-20250514",
 							},
 						},
 					})
@@ -1025,17 +1016,17 @@ return require("lazy").setup({
 			},
 		},
 	},
-	{
-		"folke/lazydev.nvim",
-		ft = "lua", -- only load on lua files
-		opts = {
-			library = {
-				-- See the configuration section for more details
-				-- Load luvit types when the `vim.uv` word is found
-				{ path = "luvit-meta/library", words = { "vim%.uv" } },
-			},
-		},
-	},
+	-- {
+	-- 	"folke/lazydev.nvim",
+	-- 	ft = "lua", -- only load on lua files
+	-- 	opts = {
+	-- 		library = {
+	-- 			-- See the configuration section for more details
+	-- 			-- Load luvit types when the `vim.uv` word is found
+	-- 			{ path = "luvit-meta/library", words = { "vim%.uv" } },
+	-- 		},
+	-- 	},
+	-- },
 	-- {
 	-- 	'mfussenegger/nvim-dap',
 	-- 	disabled = true,
@@ -1188,15 +1179,15 @@ return require("lazy").setup({
 			},
 		},
 	},
-	{
-		'nvim-flutter/flutter-tools.nvim',
-		lazy = true,
-		dependencies = {
-			'nvim-lua/plenary.nvim',
-			'stevearc/dressing.nvim', -- optional for vim.ui.select
-		},
-		config = true,
-	},
+	-- {
+	-- 	'nvim-flutter/flutter-tools.nvim',
+	-- 	lazy = true,
+	-- 	dependencies = {
+	-- 		'nvim-lua/plenary.nvim',
+	-- 		'stevearc/dressing.nvim', -- optional for vim.ui.select
+	-- 	},
+	-- 	config = true,
+	-- },
 	{
 		"azorng/goose.nvim",
 		config = function()
@@ -1256,78 +1247,4 @@ return require("lazy").setup({
 			}
 		},
 	},
-	{
-		'Bekaboo/dropbar.nvim',
-		dependencies = {
-			'nvim-telescope/telescope-fzf-native.nvim',
-			build = 'make'
-		},
-		config = function()
-			local dropbar_api = require('dropbar.api')
-			vim.keymap.set('n', '<Leader>;', dropbar_api.pick, { desc = 'Pick symbols in winbar' })
-			vim.keymap.set('n', '[;', dropbar_api.goto_context_start, { desc = 'Go to start of current context' })
-			vim.keymap.set('n', '];', dropbar_api.select_next_context, { desc = 'Select next context' })
-		end
-	},
-	{
-		"yetone/avante.nvim",
-		event = "VeryLazy",
-		version = false,
-		opts = {
-			provider = "claude",
-		},
-		build = "make",
-		dependencies = {
-			"nvim-treesitter/nvim-treesitter",
-			"stevearc/dressing.nvim",
-			"nvim-lua/plenary.nvim",
-			"MunifTanjim/nui.nvim",
-			"nvim-telescope/telescope.nvim",
-			"hrsh7th/nvim-cmp",
-			"nvim-tree/nvim-web-devicons",
-			{
-				'MeanderingProgrammer/render-markdown.nvim',
-				opts = {
-					file_types = { "markdown", "Avante" },
-				},
-				ft = { "markdown", "Avante" },
-			},
-		},
-	},
-	{
-		"obsidian-nvim/obsidian.nvim",
-		version = "*",
-		lazy = false,
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-		},
-		opts = {
-			workspaces = {
-				{
-					name = "notes",
-					path = "~/Desktop/notes",
-				},
-			},
-			daily_notes = {
-				folder = "Journal",
-				date_format = "%Y/%m/%Y-%m-%d",
-				-- template = "~/Desktop/notes/templates/daily.md",
-				template = "~/Desktop/notes/templates/daily.md",
-				alias_format = "%B %-d, %Y",
-				autorun = true,
-			},
-			templates = {
-				folder = "templates",
-				date_format = "%Y-%m-%d",
-			},
-		},
-		config = function(_, opts)
-			require("obsidian").setup(opts)
-
-			-- Set up global keymaps that work from any buffer
-			vim.keymap.set('n', '<leader>oy', '<cmd>ObsidianYesterday<cr>', { desc = "Open yesterday's daily note" })
-			vim.keymap.set('n', '<leader>ot', '<cmd>ObsidianToday<cr>', { desc = "Open today's daily note" })
-			vim.keymap.set('n', '<leader>om', '<cmd>ObsidianTomorrow<cr>', { desc = "Open tomorrow's daily note" })
-		end,
-	}
 })
