@@ -2,7 +2,7 @@
 
 ## Install
 
-*It is always a good idea to backup your existing dotfiles before goofing around with them.*
+_It is always a good idea to backup your existing dotfiles before goofing around with them._
 
 ```bash
 git clone https://github.com/pankajgarkoti/dotfiles.git
@@ -63,4 +63,4 @@ done
 
 ## Uninstall
 
-*Just remove the dotfiles???*
+_Just remove the dotfiles???_
