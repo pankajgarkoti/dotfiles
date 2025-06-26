@@ -49,6 +49,17 @@ local function insert_timestamped_line(same_line)
 	vim.cmd("startinsert!")
 end
 
+-- Function to toggle conceal level
+local function toggle_conceal()
+	if vim.wo.conceallevel == 0 then
+		vim.wo.conceallevel = 2
+		vim.notify("Conceal enabled", vim.log.levels.INFO)
+	else
+		vim.wo.conceallevel = 0
+		vim.notify("Conceal disabled (raw text)", vim.log.levels.INFO)
+	end
+end
+
 -- Set the keymaps for timestamped lines
 
 KEYMAPS = {
@@ -357,6 +368,12 @@ KEYMAPS = {
 		"<leader>lc",
 		toggle_markdown_task,
 		{ noremap = true, silent = true, desc = "Mark Markdown todo list item as done" },
+	},
+	{
+		"n",
+		"<leader>lr",
+		toggle_conceal,
+		{ noremap = true, silent = true, desc = "Toggle conceal (raw/rendered)" },
 	},
 	{
 		"n",
