@@ -51,6 +51,15 @@ end
 
 -- Function to toggle conceal level
 local function toggle_conceal()
+	if vim.bo.filetype == "markdown" then
+		local ok, render_markdown = pcall(require, "render-markdown")
+		if ok then
+			render_markdown.toggle()
+			return
+		end
+	end
+
+	-- Fallback for other filetypes
 	if vim.wo.conceallevel == 0 then
 		vim.wo.conceallevel = 2
 		vim.notify("Conceal enabled", vim.log.levels.INFO)
