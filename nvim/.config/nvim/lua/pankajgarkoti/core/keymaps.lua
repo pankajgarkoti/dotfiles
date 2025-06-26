@@ -376,6 +376,14 @@ KEYMAPS = {
 	},
 	{
 		"n",
+		"<leader>dn",
+		function()
+			require("pankajgarkoti.core.daily_note").open_daily_note()
+		end,
+		{ noremap = true, silent = true, desc = "Open or create daily note" },
+	},
+	{
+		"n",
 		"<C-a>",
 		"<cmd>CodeCompanionActions<cr>",
 		{ noremap = true, silent = true, desc = "Show CodeCompanion Actions Menu" },
