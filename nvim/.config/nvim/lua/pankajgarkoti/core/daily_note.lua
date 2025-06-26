@@ -17,6 +17,19 @@ M.config = {
 	template_path = nil, -- No template by default
 }
 
+--- Helper to get date components from a daily note path.
+-- @param path string The full path to the note file.
+-- @return table|nil A table with {year, month, day} or nil if parsing fails.
+-- @warning This function assumes the file_format is "%Y-%m-%d.md".
+local function get_date_from_path(path)
+	local filename = vim.fn.fnamemodify(path, ":t")
+	local year, month, day = filename:match("^(%d%d%d%d)-(%d%d)-(%d%d)%.md$")
+	if not (year and month and day) then
+		return nil
+	end
+	return { year = tonumber(year), month = tonumber(month), day = tonumber(day) }
+end
+
 --- Opens the daily note.
 -- If it exists, it opens it.
 -- If it doesn't exist, it creates it by copying yesterday's note.
@@ -65,6 +78,42 @@ function M.open_daily_note()
 
 	vim.fn.writefile(vim.split(content, "\n"), today_path)
 	vim.cmd("e " .. today_path)
+end
+
+--- Opens the next or previous daily note relative to the current open note.
+-- @param offset number The day offset. 1 for next day, -1 for previous day.
+function M.open_adjacent_note(offset)
+	local current_path = vim.fn.expand("%:p")
+	local journal_dir = M.config.base_dir .. "/" .. M.config.journal_path
+
+	-- Check if we are in a journal note
+	if not current_path:find(journal_dir, 1, true) then
+		vim.notify("Not in a daily note.", vim.log.levels.WARN)
+		return
+	end
+
+	local current_date_parts = get_date_from_path(current_path)
+	if not current_date_parts then
+		vim.notify("Could not determine date from current file name.", vim.log.levels.WARN)
+		return
+	end
+
+	local current_timestamp = os.time(current_date_parts)
+	local adjacent_timestamp = current_timestamp + (offset * 24 * 60 * 60)
+	local adjacent_date = os.date("*t", adjacent_timestamp)
+
+	local adjacent_dir_path = M.config.base_dir .. "/" .. M.config.journal_path .. "/" .. os.date(M.config.dir_format, os.time(adjacent_date))
+	local adjacent_filename = os.date(M.config.file_format, os.time(adjacent_date))
+	local adjacent_path = adjacent_dir_path .. "/" .. adjacent_filename
+
+	if vim.fn.filereadable(adjacent_path) == 1 then
+		vim.cmd("e " .. adjacent_path)
+		local direction = offset > 0 and "next" or "previous"
+		vim.notify("Opened " .. direction .. " day's note.", vim.log.levels.INFO)
+	else
+		local date_str = os.date("%Y-%m-%d", adjacent_timestamp)
+		vim.notify("Note for " .. date_str .. " does not exist.", vim.log.levels.WARN)
+	end
 end
 
 return M

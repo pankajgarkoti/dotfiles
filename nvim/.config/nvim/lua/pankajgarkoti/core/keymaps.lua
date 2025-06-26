@@ -384,6 +384,22 @@ KEYMAPS = {
 	},
 	{
 		"n",
+		"<leader>dnn",
+		function()
+			require("pankajgarkoti.core.daily_note").open_adjacent_note(1)
+		end,
+		{ noremap = true, silent = true, desc = "Open next daily note" },
+	},
+	{
+		"n",
+		"<leader>dnp",
+		function()
+			require("pankajgarkoti.core.daily_note").open_adjacent_note(-1)
+		end,
+		{ noremap = true, silent = true, desc = "Open previous daily note" },
+	},
+	{
+		"n",
 		"<C-a>",
 		"<cmd>CodeCompanionActions<cr>",
 		{ noremap = true, silent = true, desc = "Show CodeCompanion Actions Menu" },
