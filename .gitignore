@@ -2,3 +2,5 @@
 .gitconfig-work
 .gitconfig-personal
 .gitconfig
+.aider*
+!.aider.config.yml
