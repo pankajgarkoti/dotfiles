@@ -972,6 +972,9 @@ return require("lazy").setup({
 			require("render-markdown").setup({
 				completions = { lsp = { enabled = true } },
 				render_modes = { "n", "v" },
+				anti_conceal = {
+					enabled = false,
+				},
 			})
 		end
 	},
