@@ -1016,113 +1016,6 @@ return require("lazy").setup({
 			},
 		},
 	},
-	-- {
-	-- 	"folke/lazydev.nvim",
-	-- 	ft = "lua", -- only load on lua files
-	-- 	opts = {
-	-- 		library = {
-	-- 			-- See the configuration section for more details
-	-- 			-- Load luvit types when the `vim.uv` word is found
-	-- 			{ path = "luvit-meta/library", words = { "vim%.uv" } },
-	-- 		},
-	-- 	},
-	-- },
-	-- {
-	-- 	'mfussenegger/nvim-dap',
-	-- 	disabled = true,
-	-- 	lazy = true,
-	-- 	dependencies = {
-	-- 		'nvim-telescope/telescope-dap.nvim',
-	-- 		'mfussenegger/nvim-dap-python',
-	-- 		'nvim-dap-virtual-text',
-	-- 		'nvim-dap-ui',
-	-- 	},
-	-- 	config = function()
-	-- 		local dap = require('dap')
-	--
-	-- 		local keymaps = { {
-	-- 			d = {
-	-- 				c = { '<Cmd>lua require"dap".continue()<CR>', 'continue' },
-	-- 				l = { '<Cmd>lua require"dap".run_last()<CR>', 'run last' },
-	-- 				q = { '<Cmd>lua require"dap".terminate()<CR>', 'terminate' },
-	-- 				h = { '<Cmd>lua require"dap".stop()<CR>', 'stop' },
-	-- 				n = { '<Cmd>lua require"dap".step_over()<CR>', 'step over' },
-	-- 				s = { '<Cmd>lua require"dap".step_into()<CR>', 'step into' },
-	-- 				S = { '<Cmd>lua require"dap".step_out()<CR>', 'step out' },
-	-- 				b = { '<Cmd>lua require"dap".toggle_breakpoint()<CR>', 'toggle br' },
-	-- 				B = { '<Cmd>lua require"dap".set_breakpoint(vim.fn.input("Breakpoint condition: "))<CR>', 'set br condition' },
-	-- 				p = { '<Cmd>lua require"dap".set_breakpoint(nil, nil, vim.fn.input("Log point message: "))<CR>', 'set log br' },
-	-- 				r = { '<Cmd>lua require"dap".repl.open()<CR>', 'REPL open' },
-	-- 				k = { '<Cmd>lua require"dap".up()<CR>', 'up callstack' },
-	-- 				j = { '<Cmd>lua require"dap".down()<CR>', 'down callstack' },
-	-- 				i = { '<Cmd>lua require"dap.ui.widgets".hover()<CR>', 'info' },
-	-- 				['?'] = { '<Cmd>lua local widgets=require"dap.ui.widgets";widgets.centered_float(widgets.scopes)<CR>', 'scopes' },
-	-- 				f = { '<Cmd>Telescope dap frames<CR>', 'search frames' },
-	-- 				C = { '<Cmd>Telescope dap commands<CR>', 'search commands' },
-	-- 				L = { '<Cmd>Telescope dap list_breakpoints<CR>', 'search breakpoints' },
-	-- 			},
-	-- 		} }
-	--
-	-- 		map_keys(keymaps)
-	--
-	-- 		vim.fn.sign_define('DapBreakpoint', { text = '🛑', texthl = '', linehl = '', numhl = '' })
-	-- 		vim.fn.sign_define('DapStopped', { text = '🚏', texthl = '', linehl = '', numhl = '' })
-	-- 		dap.defaults.fallback.terminal_win_cmd = 'tabnew'
-	-- 		dap.defaults.fallback.focus_terminal = true
-	--
-	-- 		local setup, dap_python = pcall(require, 'dap-python')
-	--
-	-- 		if setup then
-	-- 			dap_python.setup()
-	-- 			dap_python.test_runner = 'pytest'
-	-- 			dap_python.default_port = 38000
-	-- 			dap.listeners.after.event_initialized["dapui_config"] = function()
-	-- 				require('dapui').open()
-	-- 			end
-	-- 			dap.listeners.before.event_terminated["dapui_config"] = function()
-	-- 				require('dapui').close()
-	-- 			end
-	-- 			dap.listeners.before.event_exited["dapui_config"] = function()
-	-- 				require('dapui').close()
-	-- 			end
-	-- 		end
-	-- 	end,
-	-- },
-	-- {
-	-- 	"rcarriga/nvim-dap-ui",
-	-- 	disabled = true,
-	-- 	dependencies = { "mfussenegger/nvim-dap", "nvim-neotest/nvim-nio" },
-	-- 	lazy = true,
-	-- 	init = function()
-	-- 		local keymaps_n = {
-	-- 			d = {
-	-- 				u = { '<Cmd>lua require"dapui".toggle()<CR>', 'ui toggle' },
-	-- 				e = { '<Cmd>lua require"dapui".eval()<CR>', 'eval' },
-	-- 				E = { '<Cmd>lua require"dapui".float_element()<CR>', 'float element' },
-	-- 			},
-	-- 		}
-	--
-	-- 		local keymaps_v = {
-	-- 			d = {
-	-- 				e = { '<Cmd>lua require"dapui".eval()<CR>', 'eval' },
-	-- 				E = { '<Cmd>lua require"dapui".float_element()<CR>', 'float element' },
-	-- 			},
-	-- 		}
-	--
-	-- 		map_keys(keymaps_n, {})
-	-- 		map_keys(keymaps_v, {})
-	-- 	end,
-	-- 	config = true,
-	-- },
-	-- {
-	-- 	'theHamsta/nvim-dap-virtual-text',
-	-- 	lazy = true,
-	-- 	disabled = true,
-	-- 	config = function()
-	-- 		require('nvim-dap-virtual-text').setup()
-	-- 		vim.cmd('highlight! NvimDapVirtualText guifg=#7c6f64 gui=italic')
-	-- 	end
-	-- },
 	{
 		"sindrets/diffview.nvim",
 		lazy = true,
@@ -1247,4 +1140,28 @@ return require("lazy").setup({
 			}
 		},
 	},
+	{
+		"pankajgarkoti/daily-notes.nvim",
+		config = function()
+			require("daily-notes").setup({
+				base_dir = "~/Desktop/notes",                     -- Your notes directory
+				journal_path = "Journal",                         -- Subdirectory for daily notes
+				template_path = "~/Desktop/notes/templates/daily.md", -- Optional templatea
+			})
+		end,
+		keys = {
+			{ "<leader>dn", function() require("daily-notes").open_daily_note() end,       desc = "Open daily note" },
+			{ "<leader>dk", function() require("daily-notes").open_adjacent_note(-1) end,  desc = "Previous daily note" },
+			{ "<leader>dj", function() require("daily-notes").open_adjacent_note(1) end,   desc = "Next daily note" },
+			{ "<leader>dm", function() require("daily-notes").create_tomorrow_note() end,  desc = "Create tomorrow's note" },
+			{ "<leader>dc", function() require("daily-notes").configure_interactive() end, desc = "Configure daily notes" },
+		},
+		cmd = {
+			"DailyNote",
+			"DailyNotePrev",
+			"DailyNoteNext",
+			"DailyNoteTomorrow",
+			"DailyNoteConfig",
+		},
+	}
 })
