@@ -1,7 +1,7 @@
 vim.g.mapleader = " "
 
 -- Logging and notetaking keymaps
-local function mark_task_done()
+local function toggle_markdown_task()
 	local line = vim.api.nvim_get_current_line()
 	local square_match = line:match("%[%s*[%s%-x]%s*%]")
 	local markdown_state_map = {
@@ -355,7 +355,7 @@ KEYMAPS = {
 	{
 		"n",
 		"<leader>lc",
-		mark_task_done,
+		toggle_markdown_task,
 		{ noremap = true, silent = true, desc = "Mark Markdown todo list item as done" },
 	},
 	{
@@ -373,30 +373,6 @@ KEYMAPS = {
 			insert_timestamped_line(true)
 		end,
 		{ noremap = true, silent = true, desc = "Insert timestamp at end of current line" },
-	},
-	{
-		"n",
-		"<leader>dn",
-		function()
-			require("pankajgarkoti.core.daily_note").open_daily_note()
-		end,
-		{ noremap = true, silent = true, desc = "Open or create daily note" },
-	},
-	{
-		"n",
-		"<leader>dnn",
-		function()
-			require("pankajgarkoti.core.daily_note").open_adjacent_note(1)
-		end,
-		{ noremap = true, silent = true, desc = "Open next daily note" },
-	},
-	{
-		"n",
-		"<leader>dnp",
-		function()
-			require("pankajgarkoti.core.daily_note").open_adjacent_note(-1)
-		end,
-		{ noremap = true, silent = true, desc = "Open previous daily note" },
 	},
 	{
 		"n",
