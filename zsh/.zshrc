@@ -182,7 +182,11 @@ export ANTHROPIC_SMALL_FAST_MODEL='claude-3-5-haiku@20241022'
 export CLAUDE_CODE_USE_VERTEX=1
 export CLOUD_ML_REGION="us-east5"
 export ANTHROPIC_VERTEX_PROJECT_ID="mavex-ai"
+export GOOGLE_GENAI_USE_VERTEXAI=true
+export GOOGLE_CLOUD_PROJECT="mavex-ai"
+export GOOGLE_CLOUD_LOCATION="us-east5"
 
 # . "$HOME/.config/alacritty_theme.zsh"
 alias claude="/Users/pankajgarkoti/.claude/local/claude"
+alias monitor="/Users/pankajgarkoti/dotfiles/zsh/monitor.zsh"
 source ~/powerlevel10k/powerlevel10k.zsh-theme
