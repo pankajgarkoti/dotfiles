@@ -581,7 +581,7 @@ return require("lazy").setup({
 					},
 					preferred_servers = {
 						markdown = { "marksman" },
-						python = { "pyright" },
+						python = { "basedpyright" },
 						typescript = { "ts_ls" },
 						typescriptreact = { "ts_ls" },
 						css = { "cssls" },
@@ -679,7 +679,7 @@ return require("lazy").setup({
 				filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
 			})
 
-			lspconfig["pyright"].setup({
+			lspconfig["basedpyright"].setup({
 				capabilities = capabilities,
 				on_attach = on_attach,
 				filetypes = { "python" },
@@ -851,7 +851,8 @@ return require("lazy").setup({
 					"cssls",
 					"tailwindcss",
 					"emmet_ls",
-					"pyright",
+					-- "pyright",
+					"basedpyright",
 				},
 				automatic_installation = true,
 			})
