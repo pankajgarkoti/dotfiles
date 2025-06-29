@@ -3,7 +3,7 @@ import = ["~/.config/alacritty/themes/themes/catppuccin_mocha.toml"]
 live_config_reload = true
 
 [font]
-size = 22
+size = 16
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"
@@ -36,7 +36,7 @@ columns = 300
 
 
 [colors.primary]
-background = '#000000'
+# background = '#000000'
 
 [keyboard]
 bindings = [
@@ -49,6 +49,8 @@ bindings = [
 	{ key = "N", mods = "Alt", chars = "\u0002n" },
 	# Previous window (Option + p → Ctrl-b + p)
 	{ key = "P", mods = "Alt", chars = "\u0002p" },
+	# Last window (Option + p → Ctrl-b + p)
+	{ key = "L", mods = "Alt", chars = "\u0002l" },
 	# Split pane vertically (Option + | → Ctrl-b + |)
 	{ key = "Backslash", mods = "Alt", chars = "\u0002|" },
 	# Split pane horizontally (Option + - → Ctrl-b + -)
