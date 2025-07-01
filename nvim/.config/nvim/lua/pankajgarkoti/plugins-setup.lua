@@ -1146,6 +1146,7 @@ return require("lazy").setup({
 	},
 	{
 		"pankajgarkoti/daily-notes.nvim",
+		commit = "3652d2f94b6d9dfc2d4e17d10cc0f1ed7f831518",
 		config = function()
 			require("daily-notes").setup({
 				base_dir = "~/Desktop/notes",                     -- Your notes directory

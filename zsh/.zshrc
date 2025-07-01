@@ -176,8 +176,8 @@ if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
   . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
 fi
 
-export ANTHROPIC_MODEL='claude-3-7-sonnet@20250219'
-export ANTHROPIC_SMALL_FAST_MODEL='claude-3-5-haiku@20241022'
+export ANTHROPIC_MODEL='claude-4-sonnet'
+export ANTHROPIC_SMALL_FAST_MODEL='claude-3-7-sonnet'
 
 export CLAUDE_CODE_USE_VERTEX=1
 export CLOUD_ML_REGION="us-east5"
@@ -187,6 +187,5 @@ export GOOGLE_CLOUD_PROJECT="mavex-ai"
 export GOOGLE_CLOUD_LOCATION="us-east5"
 
 # . "$HOME/.config/alacritty_theme.zsh"
-alias claude="/Users/pankajgarkoti/.claude/local/claude"
 alias monitor="/Users/pankajgarkoti/dotfiles/zsh/monitor.zsh"
 source ~/powerlevel10k/powerlevel10k.zsh-theme

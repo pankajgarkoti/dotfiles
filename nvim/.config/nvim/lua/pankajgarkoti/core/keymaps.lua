@@ -1,52 +1,105 @@
 vim.g.mapleader = " "
 
--- Logging and notetaking keymaps
-local function toggle_markdown_task()
-	local line = vim.api.nvim_get_current_line()
-	local square_match = line:match("%[%s*[%s%-x]%s*%]")
-	local markdown_state_map = {
-		["[ ]"] = "[x]",
-		["[x]"] = "[-]",
-		["[-]"] = "[ ]",
-	}
 
-	local function get_new_line(content)
-		return string.gsub(line, "%[%s*[%s%-x]%s*%]", content, 1)
-	end
+local function process_single_line(line)
+	-- Match standard markdown checkbox patterns: [ ], [x], [-]
+	local checkbox_pattern = "%[([%s%-x])%]"
+	local checkbox_state = line:match(checkbox_pattern)
 
-	if not square_match then
-		local new_line = "- [ ] " .. line
-		vim.api.nvim_set_current_line(new_line)
-		return
-	end
+	if not checkbox_state then
+		-- Check if line already has a bullet point (with possible indentation)
+		local indent, bullet, space, content = line:match("^(%s*)([%-%*%+])(%s+)(.*)")
 
-	for state, new_state in pairs(markdown_state_map) do
-		if square_match == state then
-			local new_line = get_new_line(new_state)
-			vim.api.nvim_set_current_line(new_line)
-			return
+		if indent and bullet then
+			-- Preserve existing bullet style and indentation
+			return indent .. bullet .. space .. "[ ] " .. content
+		else
+			-- No existing bullet, add new one
+			return "- [ ] " .. line
 		end
 	end
-end
 
--- Helper function to insert timestamped line
-local function insert_timestamped_line(same_line)
-	local current_line = vim.fn.line(".")
-	local indent = vim.fn.indent(current_line)
-	local timestamp = os.date("%H:%M:%S")
-	local current_content = vim.api.nvim_get_current_line()
+	-- Define clear state transitions
+	local next_state = {
+		[" "] = "x", -- [ ] -> [x]
+		["x"] = "-", -- [x] -> [-]
+		["-"] = " ", -- [-] -> [ ]
+	}
 
-	if same_line then
-		local new_content = current_content .. " - " .. "[" .. timestamp .. "] "
-		vim.api.nvim_set_current_line(new_content)
-		vim.api.nvim_win_set_cursor(0, { current_line, #new_content })
-	else
-		local new_line = string.rep(" ", indent) .. " - " .. "[" .. timestamp .. "] "
-		vim.api.nvim_buf_set_lines(0, current_line, current_line, false, { new_line })
-		vim.api.nvim_win_set_cursor(0, { current_line + 1, #new_line })
+	local new_state = next_state[checkbox_state]
+	if new_state then
+		return line:gsub(checkbox_pattern, "[" .. new_state .. "]", 1)
 	end
 
-	vim.cmd("startinsert!")
+	return line
+end
+
+local function calculate_new_cursor_position(old_line, new_line, old_cursor_col)
+	local checkbox_pattern = "%[([%s%-x])%]"
+	local old_checkbox_pos = old_line:find(checkbox_pattern)
+	local new_checkbox_pos = new_line:find(checkbox_pattern)
+
+	-- If no checkbox in old line, we added "- [ ] " at the beginning
+	if not old_checkbox_pos and new_checkbox_pos then
+		local added_prefix = new_line:match("^(.-)%[")
+		return old_cursor_col + #added_prefix + 3 -- +3 for "[ ]"
+	end
+
+	-- If cursor was before the checkbox, no adjustment needed
+	if old_checkbox_pos and old_cursor_col < old_checkbox_pos then
+		return old_cursor_col
+	end
+
+	-- If cursor was at or after checkbox, check if line length changed
+	local length_diff = #new_line - #old_line
+	return math.max(0, old_cursor_col + length_diff)
+end
+
+
+local function toggle_markdown_task()
+	-- Check if we're in visual mode for multi-line support
+	local mode = vim.fn.mode()
+	local start_line, end_line
+
+	if mode == 'V' or mode == 'v' or mode == '\22' then -- Visual modes
+		local start_pos = vim.fn.getpos("'<")
+		local end_pos = vim.fn.getpos("'>")
+		start_line = start_pos[2]
+		end_line = end_pos[2]
+	else
+		-- Single line mode
+		start_line = vim.api.nvim_win_get_cursor(0)[1]
+		end_line = start_line
+	end
+
+	-- Process each line in the range
+	for line_num = start_line, end_line do
+		local line = vim.api.nvim_buf_get_lines(0, line_num - 1, line_num, false)[1]
+		local cursor_col = vim.api.nvim_win_get_cursor(0)[2]
+
+		-- Only get cursor position for the current line
+		local preserve_cursor = (line_num == vim.api.nvim_win_get_cursor(0)[1])
+
+		local new_line = process_single_line(line)
+
+		-- Calculate new cursor position if this is the current line
+		if preserve_cursor and new_line ~= line then
+			cursor_col = calculate_new_cursor_position(line, new_line, cursor_col)
+		end
+
+		-- Update the line
+		vim.api.nvim_buf_set_lines(0, line_num - 1, line_num, false, { new_line })
+
+		-- Restore cursor position for current line
+		if preserve_cursor then
+			vim.api.nvim_win_set_cursor(0, { line_num, cursor_col })
+		end
+	end
+
+	-- Exit visual mode if we were in it
+	if mode == 'V' or mode == 'v' or mode == '\22' then
+		vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
+	end
 end
 
 -- Function to toggle conceal level
@@ -386,22 +439,6 @@ KEYMAPS = {
 	},
 	{
 		"n",
-		"<leader>ln",
-		function()
-			insert_timestamped_line(false)
-		end,
-		{ noremap = true, silent = true, desc = "Insert timestamped line below" },
-	},
-	{
-		"n",
-		"<leader>ll",
-		function()
-			insert_timestamped_line(true)
-		end,
-		{ noremap = true, silent = true, desc = "Insert timestamp at end of current line" },
-	},
-	{
-		"n",
 		"<C-a>",
 		"<cmd>CodeCompanionActions<cr>",
 		{ noremap = true, silent = true, desc = "Show CodeCompanion Actions Menu" },
@@ -432,32 +469,7 @@ KEYMAPS = {
 	},
 }
 
---[[
-Set up key mappings based on a structured table with optional overrides.
 
-Parameters:
-	mappings (table): A table where each key represents a key combination
-										and the value is another table containing the command
-										and description. Nested tables allow hierarchical key maps.
-	user_opts (table): A table optionally containing custom options such as:
-		- mode (string): The mode in which to set mappings, default is 'n' for normal mode.
-		- prefix (string): A string to prefix all key mappings, default is ''.
-		- noremap (boolean): Whether to use non-recursive mapping, default is true.
-		- silent (boolean): Whether to execute mappings silently, default is true.
-
-Usage:
-	map_keys({
-		d = {
-			name = '+debug',
-			u = { '<Cmd>lua require"dapui".toggle()<CR>', 'ui toggle' },
-			e = { '<Cmd>lua require"dapui".eval()<CR>', 'eval' },
-		},
-	}, {
-		prefix = '<leader>',
-		mode = 'n',  -- Normal mode
-	})
-]]
---
 _G.map_keys = function(mappings, user_opts)
 	local opts = {
 		mode = "n",        -- Default to normal mode

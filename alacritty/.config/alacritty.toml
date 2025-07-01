@@ -3,7 +3,7 @@ import = ["~/.config/alacritty/themes/themes/catppuccin_mocha.toml"]
 live_config_reload = true
 
 [font]
-size = 16
+size = 22
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"
