@@ -57,8 +57,32 @@ alias lg="lazygit"
 alias :q='exit'
 
 # python env activation
-alias activate='{ source .env/bin/activate; echo "Python virtual environment activated (.env)" } || { source .venv/bin/activate; echo "Python virtual environment activated (.venv)" }'
-alias run='{ python3 main.py } || { python3 run.py } || { python3 app.py } || { python3 runner.py }'
+activate() {
+    if [[ -f ".env/bin/activate" ]]; then
+        source ".env/bin/activate"
+        echo "Python virtual environment activated (.env)"
+    elif [[ -f ".venv/bin/activate" ]]; then
+        source ".venv/bin/activate"
+        echo "Python virtual environment activated (.venv)"
+    else
+        echo "No virtual environment found (.env or .venv)" >&2
+        return 1
+    fi
+}
+
+run() {
+    local files=("main.py" "run.py" "app.py" "runner.py")
+    
+    for file in "${files[@]}"; do
+        if [[ -f "$file" ]]; then
+            python3 "$file"
+            return $?
+        fi
+    done
+    
+    echo "No runnable Python file found (${files[*]})" >&2
+    return 1
+}
 
 # backup notes to github
 alias savenotes='cd ~/Desktop/notes; git add .; commit "$(date)"; push main; echo "~/Desktop/notes/work has been backed up to GitHub :)"'
@@ -66,7 +90,6 @@ alias savenotes='cd ~/Desktop/notes; git add .; commit "$(date)"; push main; ech
 # Generated for envman. Do not edit.
 [ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
 
-alias firefox=/Applications/Firefox.app/Contents/MacOS/firefox-bin
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh" || true
 
 # neofetch
@@ -85,7 +108,7 @@ if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc' ]; 
 function set_run_alias() {
     if [[ -f "pyproject.toml" ]]; then
         # Poetry project
-        alias run="poetry run"
+        alias run="uv run"
     elif [[ -f "package.json" ]]; then
         # Node.js project
         alias run="npm run"
@@ -171,17 +194,12 @@ if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/path.zsh.inc' ]; then .
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
 
-# The next line enables shell command completion for Nix.
-if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
-  . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
-fi
-
 export ANTHROPIC_MODEL='claude-4-sonnet'
 export ANTHROPIC_SMALL_FAST_MODEL='claude-3-7-sonnet'
 
-export CLAUDE_CODE_USE_VERTEX=1
+export CLAUDE_CODE_USE_VERTEX=0
 export CLOUD_ML_REGION="us-east5"
-export ANTHROPIC_VERTEX_PROJECT_ID="mavex-ai"
+# export ANTHROPIC_VERTEX_PROJECT_ID="mavex-ai"
 export GOOGLE_GENAI_USE_VERTEXAI=true
 export GOOGLE_CLOUD_PROJECT="mavex-ai"
 export GOOGLE_CLOUD_LOCATION="us-east5"
@@ -189,3 +207,4 @@ export GOOGLE_CLOUD_LOCATION="us-east5"
 # . "$HOME/.config/alacritty_theme.zsh"
 alias monitor="/Users/pankajgarkoti/dotfiles/zsh/monitor.zsh"
 source ~/powerlevel10k/powerlevel10k.zsh-theme
+alias claude="/Users/pankajgarkoti/.claude/local/claude"

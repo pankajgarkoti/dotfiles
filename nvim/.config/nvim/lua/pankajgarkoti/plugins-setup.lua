@@ -305,12 +305,13 @@ return require("lazy").setup({
 				defaults = {
 					mappings = {
 						i = {
-							["<C-k>"] = actions.move_selection_previous,                -- move to prev result
-							["<C-j>"] = actions.move_selection_next,                    -- move to next result
-							["<C-q>"] = actions.send_selected_to_qflist + actions.open_qflist, -- send selected to quickfixlist
+							["<C-k>"] = actions.move_selection_previous,       -- move to prev result
+							["<C-j>"] = actions.move_selection_next,           -- move to next result
+							["<C-q>"] = actions.send_to_qflist + actions.open_qflist, -- send selected to quickfixlist
 							['<C-o>'] = require("telescope.actions.layout").toggle_preview,
 						},
 						n = {
+							["<C-q>"] = actions.send_to_qflist + actions.open_qflist,
 							['o'] = require("telescope.actions.layout").toggle_preview,
 							['<C-c>'] = actions.close,
 						},
@@ -581,7 +582,7 @@ return require("lazy").setup({
 					},
 					preferred_servers = {
 						markdown = { "marksman" },
-						python = { "basedpyright" },
+						python = { "pyright" },
 						typescript = { "ts_ls" },
 						typescriptreact = { "ts_ls" },
 						css = { "cssls" },
@@ -679,7 +680,7 @@ return require("lazy").setup({
 				filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
 			})
 
-			lspconfig["basedpyright"].setup({
+			lspconfig["pyright"].setup({
 				capabilities = capabilities,
 				on_attach = on_attach,
 				filetypes = { "python" },
@@ -853,6 +854,7 @@ return require("lazy").setup({
 					"emmet_ls",
 					-- "pyright",
 					"basedpyright",
+					"pyright",
 				},
 				automatic_installation = true,
 			})
@@ -1076,15 +1078,6 @@ return require("lazy").setup({
 			},
 		},
 	},
-	-- {
-	-- 	'nvim-flutter/flutter-tools.nvim',
-	-- 	lazy = true,
-	-- 	dependencies = {
-	-- 		'nvim-lua/plenary.nvim',
-	-- 		'stevearc/dressing.nvim', -- optional for vim.ui.select
-	-- 	},
-	-- 	config = true,
-	-- },
 	{
 		"azorng/goose.nvim",
 		config = function()
@@ -1146,13 +1139,16 @@ return require("lazy").setup({
 	},
 	{
 		"pankajgarkoti/daily-notes.nvim",
-		commit = "3652d2f94b6d9dfc2d4e17d10cc0f1ed7f831518",
+		commit = "96ecc9c",
 		config = function()
-			require("daily-notes").setup({
-				base_dir = "~/Desktop/notes",                     -- Your notes directory
-				journal_path = "Journal",                         -- Subdirectory for daily notes
-				template_path = "~/Desktop/notes/templates/daily.md", -- Optional templatea
-			})
+			require("daily-notes").setup(
+
+				{
+					base_dir        = "~/Desktop/notes",               -- Your notes directory
+					journal_path    = "Journal",                       -- Subdirectory for daily notes
+					template_path   = "~/Desktop/notes/templates/daily.md", -- Optional templatea
+					ignored_headers = { "Notes", "Logs" },
+				})
 		end,
 		keys = {
 			{ "<leader>dn", function() require("daily-notes").open_daily_note() end,       desc = "Open daily note" },
@@ -1160,6 +1156,8 @@ return require("lazy").setup({
 			{ "<leader>dj", function() require("daily-notes").open_adjacent_note(1) end,   desc = "Next daily note" },
 			{ "<leader>dm", function() require("daily-notes").create_tomorrow_note() end,  desc = "Create tomorrow's note" },
 			{ "<leader>dc", function() require("daily-notes").configure_interactive() end, desc = "Configure daily notes" },
+			{ "<leader>ll", function() require("daily-notes").insert_timestamp() end,      desc = "Insert timestamp" },
+			{ "<leader>ln", function() require("daily-notes").insert_timestamp(true) end,  desc = "Insert timestamp on new line" },
 		},
 		cmd = {
 			"DailyNote",
@@ -1167,6 +1165,7 @@ return require("lazy").setup({
 			"DailyNoteNext",
 			"DailyNoteTomorrow",
 			"DailyNoteConfig",
+			"DailyNoteTimestamp",
 		},
 	}
 })
