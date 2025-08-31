@@ -15,7 +15,6 @@ vim.opt.rtp:prepend(lazypath)
 return require("lazy").setup({
 	{
 		"folke/which-key.nvim",
-		dependencies = { "luarocks.nvim" },
 		config = function()
 			vim.o.timeout = true
 			vim.o.timeoutlen = 300

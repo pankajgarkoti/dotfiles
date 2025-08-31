@@ -214,3 +214,4 @@ export DYLD_LIBRARY_PATH=""
 export PKG_CONFIG_PATH="/opt/homebrew/opt/sqlite/lib/pkgconfig"
 
 alias claude="/Users/pankajgarkoti/.claude/local/claude"
+source ~/powerlevel10k/powerlevel10k.zsh-theme
