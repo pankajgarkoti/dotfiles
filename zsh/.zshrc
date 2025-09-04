@@ -210,8 +210,8 @@ source ~/powerlevel10k/powerlevel10k.zsh-theme
 export PATH="/opt/homebrew/opt/sqlite/bin:$PATH"
 export LDFLAGS="-L/opt/homebrew/opt/sqlite/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/sqlite/include"
-export DYLD_LIBRARY_PATH=""
+# export DYLD_LIBRARY_PATH=""
 export PKG_CONFIG_PATH="/opt/homebrew/opt/sqlite/lib/pkgconfig"
 
-alias claude="/Users/pankajgarkoti/.claude/local/claude"
+# alias claude="/Users/pankajgarkoti/.claude/local/claude"
 source ~/powerlevel10k/powerlevel10k.zsh-theme
