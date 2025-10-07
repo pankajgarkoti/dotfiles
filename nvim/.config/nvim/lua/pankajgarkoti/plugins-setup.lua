@@ -901,7 +901,6 @@ return require("lazy").setup({
 			require("catppuccin").setup({
 				transparent_background = true,
 			})
-
 			vim.cmd("colorscheme catppuccin-mocha")
 		end
 	},
@@ -932,15 +931,9 @@ return require("lazy").setup({
 	},
 	{
 		"supermaven-inc/supermaven-nvim",
-		enabed = true,
 		config = function()
 			require("supermaven-nvim").setup({
-				color = {
-					suggestion_color = "#ffffff",
-					cterm = 244,
-				},
-				ignore_filetypes = { TelescopePrompt = true, norg = true },
-				log_level = "off",             -- set to "off" to disable logging completely
+				ignore_filetypes = { TelescopePrompt = true },
 				disable_inline_completion = false, -- disables inline completion for use with cmp disable_keymaps = false,
 				keymaps = {
 					accept_suggestion = "<C-a>",
