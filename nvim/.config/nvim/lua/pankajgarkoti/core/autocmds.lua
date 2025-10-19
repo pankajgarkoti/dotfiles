@@ -1,14 +1,3 @@
--- vim.api.nvim_create_autocmd("FileType", {
--- 	pattern = { "lua", "python", "javascript", "typescript", "rust", "go" }, -- Add your desired filetypes here
--- 	callback = function()
--- 		local exists, outline = pcall(require, "outline")
--- 		if not exists then return end
--- 		vim.defer_fn(function()
--- 			outline.open()
--- 		end, 500) -- Small delay to ensure LSP is ready
--- 	end,
--- })
-
 vim.api.nvim_create_autocmd('BufDelete', {
 	callback = function()
 		-- Count listed buffers (ignoring unlisted ones like NvimTree, etc.)
@@ -23,4 +12,9 @@ vim.api.nvim_create_autocmd('BufDelete', {
 			end)
 		end
 	end
+})
+
+vim.api.nvim_create_autocmd("BufEnter", {
+	pattern = "*",
+	command = "set wrap",
 })

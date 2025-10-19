@@ -1,0 +1,6 @@
+vim.cmd("set background=dark")
+vim.cmd("set termguicolors")
+vim.cmd("set conceallevel=0")
+vim.cmd("set guicursor=n-v-c:block-Cursor/lCursor-blinkon0")
+vim.cmd("highlight Cursor guifg=#000000 guibg=#ffffff")
+vim.cmd("set nocursorline")

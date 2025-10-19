@@ -8,7 +8,6 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-fastfetch
 . ~/.config.setup.sh
 
 # flutter and java path
@@ -197,14 +196,6 @@ if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc' ]; 
 export ANTHROPIC_MODEL='claude-sonnet-4-20250514'
 export ANTHROPIC_SMALL_FAST_MODEL='claude-3-7-sonnet-latest'
 
-# export CLAUDE_CODE_USE_VERTEX=0
-# export CLOUD_ML_REGION="us-east5"
-# export ANTHROPIC_VERTEX_PROJECT_ID="mavex-ai"
-# export GOOGLE_GENAI_USE_VERTEXAI=true
-# export GOOGLE_CLOUD_PROJECT="mavex-ai"
-# export GOOGLE_CLOUD_LOCATION="us-east5"
-
-# . "$HOME/.config/alacritty_theme.zsh"
 alias monitor="/Users/pankajgarkoti/dotfiles/zsh/monitor.zsh"
 source ~/powerlevel10k/powerlevel10k.zsh-theme
 export PATH="/opt/homebrew/opt/sqlite/bin:$PATH"

@@ -1,5 +1,5 @@
 vim.g.mapleader = " "
-
+vim.g.maplocalleader = "\\"
 
 local function process_single_line(line)
 	-- Match standard markdown checkbox patterns: [ ], [x], [-]
@@ -54,7 +54,6 @@ local function calculate_new_cursor_position(old_line, new_line, old_cursor_col)
 	local length_diff = #new_line - #old_line
 	return math.max(0, old_cursor_col + length_diff)
 end
-
 
 local function toggle_markdown_task()
 	-- Check if we're in visual mode for multi-line support
@@ -124,6 +123,7 @@ end
 
 -- Set the keymaps for timestamped lines
 
+vim.g.mapleader = " "
 KEYMAPS = {
 	{
 		"i",
@@ -176,62 +176,6 @@ KEYMAPS = {
 		"<leader>sx",
 		":close<CR>",
 		{ noremap = true, silent = true, desc = "Close current window" },
-	},
-
-	-- Tab navigation keymaps
-	{
-		"n",
-		"<leader>to",
-		"<Cmd>tabnew<CR>",
-		{ noremap = true, silent = true, desc = "Open new tab" },
-	},
-	{
-		"n",
-		"<leader>tx",
-		"<Cmd>bdelete<CR>",
-		{ noremap = true, silent = true, desc = "Close buffer" },
-	},
-	{
-		"n",
-		"<leader>tn",
-		"<Cmd>bnext<CR>",
-		{ noremap = true, silent = true, desc = "Next buffer" },
-	},
-	{
-		"n",
-		"<leader>tp",
-		"<Cmd>bprevious<CR>",
-		{ noremap = true, silent = true, desc = "Previous buffer" },
-	},
-
-	-- Block selection keymaps
-	{
-		"n",
-		"<leader>bss",
-		"md",
-		{ noremap = true, silent = true, desc = "Select block start" },
-	},
-	{
-		"n",
-		"<leader>bse",
-		"y'd",
-		{ noremap = true, silent = true, desc = "Select block end" },
-	},
-
-	-- Plugin keymaps
-	{
-		"n",
-		"<leader>sm",
-		":MaximizerToggle<CR>",
-		{ noremap = true, silent = true, desc = "Toggle Maximizer" },
-	},
-
-	-- LSP
-	{
-		"n",
-		"<leader>gd",
-		"<cmd>lua vim.lsp.buf.definition()<CR>",
-		{ noremap = true, silent = true, desc = "Go to definition" },
 	},
 
 	-- Nvim Tree (file explorer)
@@ -290,6 +234,12 @@ KEYMAPS = {
 		"<leader>fj",
 		"<cmd>Telescope treesitter<cr>",
 		{ noremap = true, silent = true, desc = "Treesitter symbols" },
+	},
+	{
+		"n",
+		"<leader>fk",
+		"<cmd>Telescope keymaps<cr>",
+		{ noremap = true, silent = true, desc = "Defined keymaps" },
 	},
 
 	-- Telescope git keymaps
@@ -422,14 +372,8 @@ KEYMAPS = {
 	{
 		"n",
 		"<leader><CR>",
-		"<Plug>(neorg.qol.todo-items.todo.task-cycle)",
-		{ noremap = true, silent = true, desc = "Mark Neorg todo list item as done" },
-	},
-	{
-		"n",
-		"<leader>lc",
 		toggle_markdown_task,
-		{ noremap = true, silent = true, desc = "Mark Markdown todo list item as done" },
+		{ noremap = true, silent = true, desc = "Toggle between markdown task states" },
 	},
 	{
 		"n",
@@ -449,24 +393,6 @@ KEYMAPS = {
 		"<cmd>CodeCompanionActions<cr>",
 		{ noremap = true, silent = true, desc = "Show CodeCompanion Actions Menu" },
 	},
-	{
-		"n",
-		"<leader>aa",
-		"<cmd>CodeCompanionToggle<cr>",
-		{ noremap = true, silent = true, desc = "Toggle CodeCompanion" },
-	},
-	{
-		"v",
-		"<leader>aa",
-		"<cmd>CodeCompanionToggle<cr>",
-		{ noremap = true, silent = true, desc = "Toggle CodeCompanion" },
-	},
-	{
-		"v",
-		"ga",
-		"<cmd>CodeCompanionAdd<cr>",
-		{ noremap = true, silent = true, desc = "Add to CodeCompanion Buffer" },
-	},
 }
 
 
@@ -480,7 +406,6 @@ _G.map_keys = function(mappings, user_opts)
 
 	-- Merge user options with the default options
 	-- local opts = vim.tbl_extend('force', default_opts, user_opts or {})
-	-- Use vim.tbl_deep_extend instead of vim.tbl_extend to merge nested tables
 	if user_opts then
 		for k, v in pairs(user_opts or {}) do
 			opts[k] = v

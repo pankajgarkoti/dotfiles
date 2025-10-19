@@ -33,8 +33,8 @@ status() {
 		else
 			echo "Background: Black (uncommented)"
 		fi
-	elif grep -q "size = 22" "$ALACRITTY_CONFIG"; then
-		echo "Current mode: External Monitor (font size 22)"
+	elif grep -q "size = 20" "$ALACRITTY_CONFIG"; then
+		echo "Current mode: External Monitor (font size 20)"
 		if grep -q "# background = '#000000'" "$ALACRITTY_CONFIG"; then
 			echo "Background: Theme default (override is commented)"
 		else
@@ -63,19 +63,19 @@ status() {
 # Toggle between two monitor configurations by modifying Alacritty config
 # Switches between:
 #   - Font size 16 with commented background (laptop mode)
-#   - Font size 22 with uncommented black background (external monitor mode)
+#   - Font size 20 with uncommented black background (external monitor mode)
 # Arguments: None
 # Returns: None
 # Side effects: Modifies the Alacritty configuration file in-place
 toggle() {
 	if grep -q "size = 16" "$ALACRITTY_CONFIG"; then
-		# Change font size to 22 and uncomment background
-		sed -i '' 's/size = 16/size = 22/' "$ALACRITTY_CONFIG"
+		# Change font size to 20 and uncomment background
+		sed -i '' 's/size = 16/size = 20/' "$ALACRITTY_CONFIG"
 		sed -i '' "s/# background = '#000000'/background = '#000000'/" "$ALACRITTY_CONFIG"
-		echo "Switched to: External Monitor mode (font size 22, black background)"
+		echo "Switched to: External Monitor mode (font size 20, black background)"
 	else
 		# Change font size to 16 and comment background
-		sed -i '' 's/size = 22/size = 16/' "$ALACRITTY_CONFIG"
+		sed -i '' 's/size = 20/size = 16/' "$ALACRITTY_CONFIG"
 		sed -i '' "s/background = '#000000'/# background = '#000000'/" "$ALACRITTY_CONFIG"
 		echo "Switched to: Laptop mode (font size 16, theme default background)"
 	fi
@@ -99,7 +99,7 @@ toggle_bg() {
 }
 
 # Toggle Alacritty font size
-# Switches between font size 16 (laptop) and 22 (external monitor)
+# Switches between font size 16 (laptop) and 20 (external monitor)
 # Or sets a specific font size if provided
 # Arguments:
 #   $1 (optional) - The font size to set
@@ -112,14 +112,14 @@ toggle_font() {
 		sed -i '' "s/size = $current_size/size = $1/" "$ALACRITTY_CONFIG"
 		echo "Switched to: Font size $1"
 	else
-		# Toggle between 16 and 22
+		# Toggle between 16 and 20
 		if grep -q "size = 16" "$ALACRITTY_CONFIG"; then
-			# Change font size to 22
-			sed -i '' 's/size = 16/size = 22/' "$ALACRITTY_CONFIG"
-			echo "Switched to: Font size 22 (External Monitor)"
+			# Change font size to 20
+			sed -i '' 's/size = 16/size = 20/' "$ALACRITTY_CONFIG"
+			echo "Switched to: Font size 20 (External Monitor)"
 		else
 			# Change font size to 16
-			sed -i '' 's/size = 22/size = 16/' "$ALACRITTY_CONFIG"
+			sed -i '' 's/size = 20/size = 16/' "$ALACRITTY_CONFIG"
 			echo "Switched to: Font size 16 (Laptop)"
 		fi
 	fi
