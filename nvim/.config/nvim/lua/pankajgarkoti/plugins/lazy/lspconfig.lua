@@ -233,7 +233,7 @@ return {
 		lspconfig["volar"].setup({
 			on_attach = on_attach,
 			capabilities = capabilities,
-			filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+			filetypes = {  'vue' },
 			init_options = {
 				vue = {
 					hybridMode = false,

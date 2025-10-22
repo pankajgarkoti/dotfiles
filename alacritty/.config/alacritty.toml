@@ -1,9 +1,9 @@
 [general]
-import = ["~/.config/alacritty/themes/themes/nord.toml"]
+import = ["~/.config/alacritty/themes/themes/one_dark.toml"]
 live_config_reload = true
 
 [font]
-size = 16
+size = 20
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"
