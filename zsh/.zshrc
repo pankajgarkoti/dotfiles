@@ -91,10 +91,6 @@ alias savenotes='cd ~/Desktop/notes; git add .; commit "$(date)"; push main; ech
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh" || true
 
-# neofetch
-source ~/powerlevel10k/powerlevel10k.zsh-theme
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 export PATH="$PATH:/Applications/Docker.app/Contents/Resources/bin/"
 
@@ -149,23 +145,10 @@ alias uvicorn="run uvicorn main:app"
 alias main="run python3 main.py"
 alias mock="run python3 mock.py"
 
-export MODULAR_HOME="$HOME/.modular"
-export PATH="$MODULAR_HOME/pkg/packages.modular.com_mojo/bin:$PATH"
-
-export OLLAMA_MODELS="/Volumes/spinny/ollama"
 export DYLD_LIBRARY_PATH="/usr/local/opt/sqlite/lib:/usr/lib"
-# source rust environment vars
 
 # required for gpg to work and signing commits
 export GPG_TTY=$(tty)
-
-
-# bun completions
-[ -s "/Users/pankajgarkoti/.bun/_bun" ] && source "/Users/pankajgarkoti/.bun/_bun"
-
-# bun
-export BUN_INSTALL="$HOME/.bun"
-export PATH="$BUN_INSTALL/bin:$PATH"
 
 # pnpm
 export PNPM_HOME="/Users/pankajgarkoti/Library/pnpm"
@@ -174,12 +157,12 @@ case ":$PATH:" in
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
 # pnpm end
+
 export XDG_CONFIG_HOME="$HOME/.config"
 export POETRY_VIRTUALENVS_IN_PROJECT=false
 
 # Added by Windsurf
 export PATH="/Users/pankajgarkoti/.codeium/windsurf/bin:$PATH"
-source ~/powerlevel10k/powerlevel10k.zsh-theme
 
 # Created by `pipx` on 2025-02-15 09:37:47
 export PATH="$PATH:/Users/pankajgarkoti/.local/bin"
@@ -187,24 +170,16 @@ export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init - zsh)"
 
-export ANTHROPIC_MODEL='claude-sonnet-4-20250514'
-export ANTHROPIC_SMALL_FAST_MODEL='claude-3-7-sonnet-latest'
-
 alias monitor="/Users/pankajgarkoti/dotfiles/zsh/monitor.zsh"
-source ~/powerlevel10k/powerlevel10k.zsh-theme
+
+# Fixes broken SQLITE
 export PATH="/opt/homebrew/opt/sqlite/bin:$PATH"
-# export LDFLAGS="-L/opt/homebrew/opt/sqlite/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/sqlite/include"
-# export DYLD_LIBRARY_PATH=""
 export PKG_CONFIG_PATH="/opt/homebrew/opt/sqlite/lib/pkgconfig"
-
-# alias claude="/Users/pankajgarkoti/.claude/local/claude"
-source ~/powerlevel10k/powerlevel10k.zsh-theme
-
-. "$HOME/.turso/env"
 
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/Users/pankajgarkoti/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/pankajgarkoti/google-cloud-sdk/path.zsh.inc'; fi
 
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/pankajgarkoti/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/pankajgarkoti/google-cloud-sdk/completion.zsh.inc'; fi
+source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
