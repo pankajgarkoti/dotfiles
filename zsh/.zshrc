@@ -187,12 +187,6 @@ export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init - zsh)"
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/pankajgarkoti/Downloads/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
-
 export ANTHROPIC_MODEL='claude-sonnet-4-20250514'
 export ANTHROPIC_SMALL_FAST_MODEL='claude-3-7-sonnet-latest'
 
@@ -208,3 +202,9 @@ export PKG_CONFIG_PATH="/opt/homebrew/opt/sqlite/lib/pkgconfig"
 source ~/powerlevel10k/powerlevel10k.zsh-theme
 
 . "$HOME/.turso/env"
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/pankajgarkoti/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/pankajgarkoti/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/pankajgarkoti/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/pankajgarkoti/google-cloud-sdk/completion.zsh.inc'; fi
