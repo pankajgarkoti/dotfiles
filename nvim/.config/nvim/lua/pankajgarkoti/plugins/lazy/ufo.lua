@@ -11,6 +11,13 @@ return {
 		vim.keymap.set('n', '<leader>za', require('ufo').openAllFolds)
 		vim.keymap.set('n', '<leader>zc', require('ufo').closeAllFolds)
 
-		require('ufo').setup()
+		require('ufo').setup({
+			provider_selector = function(bufnr, filetype, buftype)
+				if filetype == 'markdown' then
+					return { 'treesitter', 'indent' }
+				end
+				return { 'lsp', 'indent' }
+			end
+		})
 	end
 }

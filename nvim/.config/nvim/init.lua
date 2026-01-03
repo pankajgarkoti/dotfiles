@@ -4,7 +4,7 @@ require("pankajgarkoti.plugins.setup")
 require("pankajgarkoti.core.options")
 
 -- LSP ad-hoc config
-require("pankajgarkoti.plugins.lsp.eslint-lspconfig")
+-- require("pankajgarkoti.plugins.lsp.eslint-lspconfig")
 
 -- autocmds
 require("pankajgarkoti.core.autocmds")

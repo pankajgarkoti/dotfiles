@@ -18,12 +18,8 @@ return {
 		},
 		{ "saadparwaiz1/cmp_luasnip" }, -- for autocompletion,
 		{ "onsails/lspkind.nvim" },    -- Optional  -> Icons in autocompletion
-		{ "dundalek/lazy-lsp.nvim" }   -- Auto install lsp servers
 	},
 	config = function()
-		require("lspconfig/configs")
-		require("lspconfig/util")
-		local lspconfig = require("lspconfig")
 		local cmp_nvim_lsp = require("cmp_nvim_lsp")
 		local capabilities = cmp_nvim_lsp.default_capabilities()
 
@@ -69,88 +65,30 @@ return {
 			map("n", "<leader>ld", vim.diagnostic.setloclist, "Show line diagnostics")
 		end
 
-		local lazy_lsp = require("lazy-lsp")
-		lazy_lsp.setup(
-			{
-				excluded_servers = {
-					"ccls", "zk",
-				},
-				preferred_servers = {
-					markdown = { "marksman" },
-					python = { "pyright" },
-					typescript = { "ts_ls" },
-					typescriptreact = { "ts_ls" },
-					css = { "cssls" },
-				},
-				default_config = {
-					flags = {
-						debounce_text_changes = 300,
-					},
-					on_attach = on_attach,
-					capabilities = capabilities,
-				},
-				prefer_local = false,
-				-- Override config for specific servers that will passed down to lspconfig setup.
-				-- Note that the default_config will be merged with this specific configuration so you don't need to specify everything twice.
-				configs = {
-					lua_ls = {
-						settings = {
-							Lua = {
-								diagnostics = {
-									globals = { "vim" },
-								},
-								workspace = {
-									library = {
-										[vim.fn.expand("$VIMRUNTIME/lua")] = true,
-										[vim.fn.stdpath("config") .. "/lua"] = true,
-									},
-								},
-							},
-						},
-					},
-				},
-			}
-		)
+		-- Helper function to setup LSP servers using the new 0.11+ API
+		local function setup_lsp(server_name, config)
+			config = config or {}
+			config.capabilities = config.capabilities or capabilities
+			config.on_attach = config.on_attach or on_attach
+			vim.lsp.config(server_name, config)
+			vim.lsp.enable(server_name)
+		end
 
-		lspconfig["sourcekit"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-		})
+		setup_lsp("sourcekit")
+		setup_lsp("gopls")
+		setup_lsp("html")
 
-		lspconfig["gopls"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-		})
-
-		-- configure html server
-		lspconfig["html"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-		})
-
-		-- configure typescript server
-		lspconfig["ts_ls"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
+		setup_lsp("ts_ls", {
 			filetypes = { "html", "typescript", "typescriptreact", "javascript", "javascriptreact" },
 		})
 
-		-- configure css server
-		lspconfig["cssls"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-		})
+		setup_lsp("cssls")
 
-		-- configure md server
-		lspconfig["marksman"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
+		setup_lsp("marksman", {
 			filetypes = { "markdown" },
 		})
 
-		lspconfig["remark_ls"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
+		setup_lsp("remark_ls", {
 			filetypes = { "markdown" },
 			settings = {
 				remark = {
@@ -159,61 +97,36 @@ return {
 			}
 		})
 
-		-- configure shell server
-		lspconfig["bashls"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
+		setup_lsp("bashls", {
 			filetypes = { "zsh", "bash", "sh" },
 		})
 
-		-- configure tailwindcss server
-		lspconfig["tailwindcss"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-		})
+		setup_lsp("tailwindcss")
 
-
-		lspconfig["tailwindcss"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
-		})
-
-
-		-- configure emmet language server
-		lspconfig["emmet_ls"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
+		setup_lsp("emmet_ls", {
 			filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
 		})
 
-		lspconfig["pyright"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
+		setup_lsp("pyright", {
 			filetypes = { "python" },
 		})
 
 		local capabilities_alt = vim.lsp.protocol.make_client_capabilities()
-
 		capabilities_alt.textDocument.foldingRange = {
 			dynamicRegistration = false,
 			lineFoldingOnly = true
 		}
 
-		lspconfig["yamlls"].setup({
+		setup_lsp("yamlls", {
 			capabilities = capabilities_alt,
-			on_attach = on_attach,
 			filetypes = { "yaml", "yml" },
 		})
 
-		lspconfig["quick_lint_js"].setup({
-			on_attach = on_attach,
-			capabilities = capabilities,
+		setup_lsp("quick_lint_js", {
 			filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte", "javascript", "typescript" },
 		})
 
-		lspconfig["lua_ls"].setup({
-			capabilities = capabilities,
-			on_attach = on_attach,
+		setup_lsp("lua_ls", {
 			settings = {
 				Lua = {
 					diagnostics = {
@@ -229,10 +142,7 @@ return {
 			},
 		})
 
-		-- config for vue-language-server (volar)
-		lspconfig["volar"].setup({
-			on_attach = on_attach,
-			capabilities = capabilities,
+		setup_lsp("vue_ls", {
 			filetypes = {  'vue' },
 			init_options = {
 				vue = {
@@ -318,12 +228,11 @@ return {
 					maxwidth = 50,
 					ellipsis_char = "...",
 					symbol_map = {
-						Codeium = "",
-						Supermaven = "",
+						Codeium = "",
+						Supermaven = "",
 					},
 				}),
 			},
 		})
 	end,
 }
-

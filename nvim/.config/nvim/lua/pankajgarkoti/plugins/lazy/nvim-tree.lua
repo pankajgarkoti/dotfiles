@@ -1,6 +1,6 @@
 return {
 	"nvim-tree/nvim-tree.lua",
-	lazy = true,
+	lazy = false,
 	config = function()
 		local setup, nvimtree = pcall(require, "nvim-tree")
 
@@ -13,8 +13,12 @@ return {
 		vim.g.loaded_netrwPlugin = 1
 		vim.cmd([[ highlight NvimTreeIndentMarker guifg=#3FC5FF ]])
 
-		local gwidth = vim.api.nvim_list_uis()[1].width
-		local gheight = vim.api.nvim_list_uis()[1].height
+		local ui_list = vim.api.nvim_list_uis()
+		if #ui_list == 0 then
+			return  -- No UI available, skip setup
+		end
+		local gwidth = ui_list[1].width
+		local gheight = ui_list[1].height
 		local width = 80
 		local height = 40
 
