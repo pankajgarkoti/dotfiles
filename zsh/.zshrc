@@ -10,6 +10,8 @@ fi
 
 . ~/.config.setup.sh
 
+fastfetch
+
 # flutter and java path
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 export PATH="$HOME/development/flutter/bin:$PATH"
@@ -18,6 +20,12 @@ export PATH="/opt/homebrew/opt/openjdk@11/bin:$PATH"
 export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
 export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
 export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
+export JAVA_HOME="/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"
+
+# Android SDK tools
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+export PATH="$PATH:$ANDROID_HOME/emulator"
+export PATH="$PATH:$ANDROID_HOME/platform-tools"
 
 # general shortcuts
 alias la='ls -la'
@@ -183,3 +191,7 @@ if [ -f '/Users/pankajgarkoti/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/p
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/pankajgarkoti/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/pankajgarkoti/google-cloud-sdk/completion.zsh.inc'; fi
 source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
+
+# Added by Antigravity
+export PATH="/Users/pankajgarkoti/.antigravity/antigravity/bin:$PATH"
+alias cmuxsh='doctl compute ssh cmux-long-running-1'

@@ -1,9 +1,10 @@
 [general]
-import = ["~/.config/alacritty/themes/themes/one_dark.toml"]
+# import = ["~/.config/alacritty/themes/themes/one_dark.toml"]
+import = ["~/.config/alacritty/themes/themes/argonaut.toml"]
 live_config_reload = true
 
 [font]
-size = 20
+size = 17
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"
@@ -36,7 +37,7 @@ columns = 300
 
 
 [colors.primary]
-background = '#000000'
+# background = '#000000'
 
 [keyboard]
 bindings = [
