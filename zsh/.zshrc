@@ -190,8 +190,9 @@ if [ -f '/Users/pankajgarkoti/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/p
 
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/pankajgarkoti/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/pankajgarkoti/google-cloud-sdk/completion.zsh.inc'; fi
-source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
 
 # Added by Antigravity
 export PATH="/Users/pankajgarkoti/.antigravity/antigravity/bin:$PATH"
 alias cmuxsh='doctl compute ssh cmux-long-running-1'
+source ~/powerlevel10k/powerlevel10k.zsh-theme
+alias sudoclaude='claude --dangerously-skip-permissions'
