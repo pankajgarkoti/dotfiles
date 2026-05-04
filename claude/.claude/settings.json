@@ -1,0 +1,32 @@
+{
+  "alwaysThinkingEnabled": true,
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark",
+  "model": "opus[1m]",
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh",
+    "padding": 0,
+    "refreshInterval": 1
+  },
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "~/.claude/hooks/update-state.sh" } ] }
+    ],
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "~/.claude/hooks/update-state.sh" } ] }
+    ],
+    "PostToolUse": [
+      { "hooks": [ { "type": "command", "command": "~/.claude/hooks/update-state.sh" } ] }
+    ],
+    "Notification": [
+      { "hooks": [ { "type": "command", "command": "~/.claude/hooks/update-state.sh" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "~/.claude/hooks/update-state.sh" } ] }
+    ],
+    "SessionEnd": [
+      { "hooks": [ { "type": "command", "command": "~/.claude/hooks/clear-state.sh" } ] }
+    ]
+  }
+}

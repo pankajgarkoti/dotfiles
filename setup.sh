@@ -78,6 +78,7 @@ targets=(
     "tmux"
     "lazygit"
     "alacritty"
+    "claude"
 )
 
 for target in "${targets[@]}"; do
