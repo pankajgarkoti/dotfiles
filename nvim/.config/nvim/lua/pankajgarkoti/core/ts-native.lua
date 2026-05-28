@@ -1,0 +1,17 @@
+-- Automatically start native Tree-sitter highlighting and indentation
+-- vim.api.nvim_create_autocmd("FileType", {
+-- 	pattern = {
+-- 		"lua", "markdown", "yaml", "json", "python", 
+-- 		"javascript", "typescript", "typescriptreact", 
+-- 		"html", "css", "svelte", "graphql", "bash", 
+-- 		"vim", "dockerfile", "gitignore"
+-- 	},
+-- 	callback = function()
+-- 		-- Start native highlighting
+-- 		vim.treesitter.start()
+--
+-- 		-- Enable native folding via treesitter (optional but recommended)
+-- 		vim.wo.foldmethod = "expr"
+-- 		vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+-- 	end,
+-- })
