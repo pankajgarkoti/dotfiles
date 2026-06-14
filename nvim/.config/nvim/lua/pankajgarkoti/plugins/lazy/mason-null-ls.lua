@@ -25,8 +25,6 @@ return {
 				"beautysh",
 				"shfmt",
 			},
-			-- auto-install configured formatters & linters (with null-ls)
-			automatic_installation = true,
 		})
 	end
 }

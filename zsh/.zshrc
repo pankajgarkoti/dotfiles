@@ -1,16 +1,47 @@
-typeset -g POWERLEVEL9K_INSTANT_PROMPT=off
 export LANG='en_US.UTF-8'
 
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
+# export PROMPT='[ %1~ %# ] > '
+# export PROMPT='[ %1~ %# ] > '
+# Git info
+autoload -Uz vcs_info
+
+setopt prompt_subst
+
+zstyle ':vcs_info:*' enable git
+zstyle ':vcs_info:*' max-exports 2
+zstyle ':vcs_info:git:*' check-for-changes true
+zstyle ':vcs_info:git:*' stagedstr '%F{green}!'
+zstyle ':vcs_info:git:*' unstagedstr '%F{green}?'
+# %b -> branch, %c%u -> staged/unstaged markers (no spaces, kept tight)
+zstyle ':vcs_info:git:*' formats ':%b' '%c%u'
+
+git_untracked_marker() {
+    git rev-parse --is-inside-work-tree >/dev/null 2>&1 || return
+
+    [[ -n "$(git ls-files --others --exclude-standard 2>/dev/null | head -n1)" ]] &&
+        echo '%F{green}+'
+}
+
+precmd() {
+    vcs_info
+
+    # Build the git segment: branch, plus a single leading space before the
+    # marker group only when at least one marker is present.
+    GIT_SEGMENT="${vcs_info_msg_0_}"
+    local markers="${vcs_info_msg_1_}$(git_untracked_marker)"
+    [[ -n "$markers" ]] && GIT_SEGMENT+=" ${markers}"
+
+    if (( EUID == 0 )); then
+        PROMPT_ARROW='%F{red}>%f'
+    else
+        PROMPT_ARROW='%F{green}>%f'
+    fi
+}
+
+PROMPT='[ %F{cyan}%1~%f%F{242}${GIT_SEGMENT}%f ] ${PROMPT_ARROW} '
 
 . ~/.config.setup.sh
 
-fastfetch
 
 # flutter and java path
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
@@ -23,7 +54,8 @@ export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
 export JAVA_HOME="/Library/Java/JavaVirtualMachines/zulu-17.jdk/Contents/Home"
 
 # Android SDK tools
-export ANDROID_HOME="$HOME/Library/Android/sdk"
+# export ANDROID_HOME="$HOME/Library/Android/sdk"
+export ANDROID_HOME="/opt/homebrew/share/android-commandlinetools"
 export PATH="$PATH:$ANDROID_HOME/emulator"
 export PATH="$PATH:$ANDROID_HOME/platform-tools"
 
@@ -33,14 +65,7 @@ alias ll='ls -l'
 
 # ssh shortcuts
 alias gtc='cd ~/Desktop/code'
-alias gtz='cd ~/Desktop/code/work'
-alias gtzb='cd ~/Desktop/code/work/backend'
-alias gtzf='cd ~/Desktop/code/work/frontend'
 alias gtn='cd ~/Desktop/notes'
-
-# alias gtcs='cd ~/Desktop/code/server-keys'
-alias gtcs1='gcloud compute ssh --zone "us-central1-a" "instance-2" --project "mavex-ai"' # commenting because i do not have access to this anymore
-alias gtszb='ssh backend.devpod'
 
 # git shortcuts
 alias commit='git commit -m'
@@ -93,20 +118,12 @@ run() {
 
 # backup notes to github
 alias savenotes='cd ~/Desktop/notes; git add .; commit "$(date)"; push main; echo "~/Desktop/notes/work has been backed up to GitHub :)"'
-
-# Generated for envman. Do not edit.
-[ -s "$HOME/.config/envman/load.sh" ] && source "$HOME/.config/envman/load.sh"
-
-test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh" || true
-
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 export PATH="$PATH:/Applications/Docker.app/Contents/Resources/bin/"
 
 # # The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/path.zsh.inc' ]; then source '/Users/pankajgarkoti/Downloads/google-cloud-sdk/path.zsh.inc'; fi
-#
+# if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/path.zsh.inc' ]; then source '/Users/pankajgarkoti/Downloads/google-cloud-sdk/path.zsh.inc'; fi
 # # The next line enables shell command completion for gcloud.
-if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then source '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
+# if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then source '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
 
 function set_run_alias() {
     if [[ -f "pyproject.toml" ]]; then
@@ -185,14 +202,21 @@ export PATH="/opt/homebrew/opt/sqlite/bin:$PATH"
 export CPPFLAGS="-I/opt/homebrew/opt/sqlite/include"
 export PKG_CONFIG_PATH="/opt/homebrew/opt/sqlite/lib/pkgconfig"
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/pankajgarkoti/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/pankajgarkoti/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/pankajgarkoti/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/pankajgarkoti/google-cloud-sdk/completion.zsh.inc'; fi
-
 # Added by Antigravity
-export PATH="/Users/pankajgarkoti/.antigravity/antigravity/bin:$PATH"
-alias cmuxsh='doctl compute ssh cmux-long-running-1'
-source ~/powerlevel10k/powerlevel10k.zsh-theme
-alias sudoclaude='claude --dangerously-skip-permissions'
+# alias sudoclaude='claude --dangerously-skip-permissions'
+
+# alias qemu_ubuntu='qemu-system-x86_64 -machine type=pc,accel=tcg -m 4G -smp 2 -cpu max -drive file=ubuntu-server.qcow2,format=qcow2 -boot c -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net-pci,netdev=n1 -serial mon:stdio -vga std -display cocoa'
+
+# opencode
+export PATH=/Users/pankajgarkoti/.opencode/bin:$PATH
+source ~/.config.setup.sh
+
+# bun completions
+[ -s "/Users/pankajgarkoti/.bun/_bun" ] && source "/Users/pankajgarkoti/.bun/_bun"
+
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
+# some flamboyance
+fastfetch

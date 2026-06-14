@@ -4,7 +4,7 @@ import = ["~/.config/alacritty/themes/themes/argonaut.toml"]
 live_config_reload = true
 
 [font]
-size = 17
+size = 15
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"
@@ -20,21 +20,22 @@ style = "Heavy Italic"
 
 [font.normal]
 family = "IosevkaTerm Nerd Font Mono"
-style = "Bold"
+style = "Medium"
 
 [mouse]
 hide_when_typing = false
 
 [window]
-decorations = "Buttonless"
+decorations = "Full"
 dynamic_padding = true
 resize_increments = false
 option_as_alt = "OnlyLeft"
+opacity = 0.7
+blur = true
 
 [window.dimensions]
 lines = 72
 columns = 300
-
 
 [colors.primary]
 # background = '#000000'

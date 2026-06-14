@@ -25,7 +25,7 @@ null_ls.setup({
 	vim.keymap.set("n", "<leader>fm", vim.lsp.buf.format, {}),
 
 	on_attach = function(current_client, bufnr)
-		if current_client.supports_method("textDocument/formatting") then
+		if current_client.supports_method(current_client, "textDocument/formatting") then
 			local ignore = {}
 
 			local function should_ignore(filetype)
