@@ -1,8 +1,7 @@
 {
-  "alwaysThinkingEnabled": true,
-  "skipDangerousModePermissionPrompt": true,
+  "tui": "fullscreen",
   "theme": "dark",
-  "model": "opus[1m]",
+  "model": "opus",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh",

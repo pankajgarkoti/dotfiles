@@ -105,6 +105,8 @@ segment() {
 
 # ── mood machine — first match wins ───────────────────────────────────────────
 ctx_int=${ctx_pct%.*}
+# Fixed 3-digit slot (" 9%" … "100%") so ctx changes never shift the layout.
+ctx_str=$(printf "%3d%%" "${ctx_int:-0}")
 mood="default"
 case "$cwd" in
     *dotfiles*|*/nvim*|*/.config*) cwd_wizardly=1 ;;
@@ -127,135 +129,86 @@ elif [ "$hr" -ge 0 ] && [ "$hr" -lt 5 ]; then mood="vampire"
 elif [ "$idle_secs" -lt 4 ]; then mood="working"
 fi
 
-frame=$(( $(date +%s) % 4 ))
+# ── display width (terminal columns) of each arg, one per line ───────────────
+# Wide/fullwidth chars (CJK, emoji) count 2, combining marks count 0.
+disp_width() {
+    perl -CSA -e 'for (@ARGV) { my $w = 0;
+        for my $c (split //) {
+            if    ($c =~ /[\p{Mn}\p{Me}\p{Cf}]/)  { }
+            elsif ($c =~ /[\p{EA=W}\p{EA=F}]/)    { $w += 2 }
+            else                                  { $w += 1 }
+        } print "$w\n" }' -- "$@"
+}
 
+frame=$(( $(date +%s) % 4 ))
+suffix=""
+
+# Each mood defines exactly 4 frames; the current one is padded to the widest
+# so the statusline doesn't shift as frames cycle.
 case "$mood" in
     panic)
         icon_bg="$RED"
-        case $frame in
-            0) icon="(╯°□°)╯︵┻━┻" ;;
-            1) icon="(ノಠ益ಠ)ノ彡┻━┻" ;;
-            2) icon="(┛◉Д◉)┛彡┻━┻" ;;
-            3) icon="(ノಥДಥ)ノ彡┻━┻" ;;
-        esac
-        icon="$icon ${ctx_int}%"
-        ;;
+        frames=("(╯°□°)╯︵┻━┻" "(ノಠ益ಠ)ノ彡┻━┻" "(┛◉Д◉)┛彡┻━┻" "(ノಥДಥ)ノ彡┻━┻")
+        suffix=" $ctx_str" ;;
     stressed)
         icon_bg="$RED"
-        case $frame in
-            0|2) icon="(;´д｀)ゞ" ;;
-            1|3) icon="(>﹏<);;" ;;
-        esac
-        icon="$icon ${ctx_int}%"
-        ;;
+        frames=("(;´д｀)ゞ" "(>﹏<);;" "(;´д｀)ゞ" "(>﹏<);;")
+        suffix=" $ctx_str" ;;
     warming)
         icon_bg="$ORANGE"
-        case $frame in
-            0|2) icon="(°,,°);" ;;
-            1|3) icon="(°,,°)~~" ;;
-        esac
-        icon="$icon ${ctx_int}%"
-        ;;
+        frames=("(°,,°);" "(°,,°)~~" "(°,,°);" "(°,,°)~~")
+        suffix=" $ctx_str" ;;
     yolo)
         icon_bg="$RED"
-        case $frame in
-            0) icon="( •̀ᴗ•́ )و" ;;
-            1) icon="(╬ ಠ益ಠ)" ;;
-            2) icon="( •̀ᴗ•́ )و🔥" ;;
-            3) icon="(ง •̀_•́)ง" ;;
-        esac
-        icon="$icon YOLO"
-        ;;
+        frames=("( •̀ᴗ•́ )و" "(╬ ಠ益ಠ)" "( •̀ᴗ•́ )و🔥" "(ง •̀_•́)ง")
+        suffix=" YOLO" ;;
     plan)
         icon_bg="$CYAN"
-        case $frame in
-            0) icon="(¬‿¬ )" ;;
-            1) icon="(  ・_・)" ;;
-            2) icon="( ¬‿¬)" ;;
-            3) icon="(・_・  )" ;;
-        esac
-        icon="$icon plan"
-        ;;
+        frames=("(¬‿¬ )" "(  ・_・)" "( ¬‿¬)" "(・_・  )")
+        suffix=" plan" ;;
     awaiting)
         icon_bg="$YELLOW"
-        case $frame in
-            0|2) icon="(°,,°)╯" ;;
-            1|3) icon="╰(°,,°)" ;;
-        esac
-        icon="$icon ?"
-        ;;
+        frames=("(°,,°)╯" "╰(°,,°)" "(°,,°)╯" "╰(°,,°)")
+        suffix=" ?" ;;
     victory)
         icon_bg="$GREEN"
-        case $frame in
-            0) icon="╰(°▽°)╯" ;;
-            1) icon="\\(°ヮ°)/" ;;
-            2) icon="ᕦ(ò_óˇ)ᕤ" ;;
-            3) icon="\\(°ヮ°)/" ;;
-        esac
-        icon="$icon ${todo_done}/${todo_total}✓"
-        ;;
+        frames=("╰(°▽°)╯" "\\(°ヮ°)/" "ᕦ(ò_óˇ)ᕤ" "\\(°ヮ°)/")
+        suffix=" ${todo_done}/${todo_total}✓" ;;
     subagent)
         icon_bg="$CYAN"
-        case $frame in
-            0|2) icon="[¬‿¬]" ;;
-            1|3) icon="[•‿•]" ;;
-        esac
-        icon="$icon $agent_name"
-        ;;
+        frames=("[¬‿¬]" "[•‿•]" "[¬‿¬]" "[•‿•]")
+        suffix=" $agent_name" ;;
     worktree)
         icon_bg="$PURPLE"
-        case $frame in
-            0|2) icon="(°,,°)║(°,,°)" ;;
-            1|3) icon="(°,,°)║(•,,•)" ;;
-        esac
-        icon="$icon $wt_name"
-        ;;
+        frames=("(°,,°)║(°,,°)" "(°,,°)║(•,,•)" "(°,,°)║(°,,°)" "(°,,°)║(•,,•)")
+        suffix=" $wt_name" ;;
     fresh)
         icon_bg="$YELLOW"
-        case $frame in
-            0|2) icon="\\(◕ヮ◕)/" ;;
-            1|3) icon="\\(°ヮ°)/" ;;
-        esac ;;
+        frames=("\\(◕ヮ◕)/" "\\(°ヮ°)/" "\\(◕ヮ◕)/" "\\(°ヮ°)/") ;;
     sleepy)
         icon_bg="$PURPLE"
-        case $frame in
-            0) icon="(--,,--) z" ;;
-            1) icon="(--,,--) zZ" ;;
-            2) icon="(--,,--) zZz" ;;
-            3) icon="(--,,--)" ;;
-        esac ;;
+        frames=("(--,,--) z" "(--,,--) zZ" "(--,,--) zZz" "(--,,--)") ;;
     wizard)
         icon_bg="$CYAN"
-        case $frame in
-            0|2) icon="(◑.◑)ᕗ" ;;
-            1)   icon="ᕦ(ò_óˇ)ᕤ" ;;
-            3)   icon="(∩ᵔᗜᵔ)⊃━☆" ;;
-        esac ;;
+        frames=("(◑.◑)ᕗ" "ᕦ(ò_óˇ)ᕤ" "(◑.◑)ᕗ" "(∩ᵔᗜᵔ)⊃━☆") ;;
     vampire)
         icon_bg="$PURPLE"
-        case $frame in
-            0) icon="(ʘᗩʘ')" ;;
-            1) icon="(¬‿¬ )" ;;
-            2) icon="(ʘᗩʘ')" ;;
-            3) icon="(⊙_⊙ )" ;;
-        esac ;;
+        frames=("(ʘᗩʘ')" "(¬‿¬ )" "(ʘᗩʘ')" "(⊙_⊙ )") ;;
     working)
         icon_bg="$GREEN"
-        case $frame in
-            0) icon="┏(°,,°)┛" ;;
-            1) icon="♪┏(°,,°)┛♪" ;;
-            2) icon="♪┗(°,,°)┓♪" ;;
-            3) icon="┗(°,,°)┓" ;;
-        esac ;;
+        frames=("┏(°,,°)┛" "♪┏(°,,°)┛♪" "♪┗(°,,°)┓♪" "┗(°,,°)┓") ;;
     default|*)
         icon_bg="$PINK"
-        case $frame in
-            0) icon="\\(°,,°)/" ;;
-            1) icon=" (°,,°) " ;;
-            2) icon="/(°,,°)\\" ;;
-            3) icon=" (°,,°) " ;;
-        esac ;;
+        frames=("\\(°,,°)/" " (°,,°) " "/(°,,°)\\" " (°,,°) ") ;;
 esac
+
+icon="${frames[$frame]}"
+widths=( $(disp_width "${frames[@]}") )
+max_w=0
+for w in "${widths[@]}"; do [ "$w" -gt "$max_w" ] && max_w=$w; done
+pad=$(( max_w - ${widths[$frame]} ))
+[ "$pad" -gt 0 ] && icon="$icon$(printf '%*s' "$pad" "")"
+icon="$icon$suffix"
 
 # ── render: split into LEFT (icon + model) and RIGHT (everything else) ────────
 LARROW=$''   # left-pointing powerline arrow
@@ -283,9 +236,11 @@ if [ -n "$vim_mode" ]; then
     right+=$(segment "$ORANGE" "$prev" "vim:$vim_mode"); prev="$ORANGE"
 fi
 
-if [ "$CLAUDE_MODE" = "acceptEdits" ]; then
-    right+=$(segment "$GREEN" "$prev" "auto-edit"); prev="$GREEN"
-fi
+case "$CLAUDE_MODE" in
+    acceptEdits) right+=$(segment "$GREEN"  "$prev" "auto-edit"); prev="$GREEN" ;;
+    auto)        right+=$(segment "$PURPLE" "$prev" "⏵⏵ auto");  prev="$PURPLE" ;;
+    dontAsk)     right+=$(segment "$ORANGE" "$prev" "dont-ask");  prev="$ORANGE" ;;
+esac
 
 if [ -n "$output_style" ] && [ "$output_style" != "default" ]; then
     right+=$(segment "$PINK" "$prev" "$output_style"); prev="$PINK"
@@ -298,7 +253,7 @@ elif [ "${ctx_int:-0}" -ge 50 ]; then ctx_bg="$ORANGE"
 elif [ "${ctx_int:-0}" -ge 25 ]; then ctx_bg="$YELLOW"
 else                                  ctx_bg="$COMMENT"
 fi
-right+=$(segment "$ctx_bg" "$prev" "ctx ${ctx_int}%"); prev="$ctx_bg"
+right+=$(segment "$ctx_bg" "$prev" "ctx $ctx_str"); prev="$ctx_bg"
 
 if [ "$todo_total" -gt 0 ] && [ "$todo_done" -lt "$todo_total" ]; then
     right+=$(segment "$CYAN" "$prev" "${todo_done}/${todo_total}"); prev="$CYAN"
@@ -312,16 +267,35 @@ right+=$(segment "$ORANGE" "$prev" " ${now} ${SEP} ${tz}")
 right+="$(reset)$(fg "$ORANGE")${ARROW}$(reset)"
 
 # ── pad the middle to span the full terminal width ───────────────────────────
-# Strip ANSI for length; treat each char as 1 column (close enough for our chars).
+# Strip ANSI, then measure real terminal columns.
 vis_len() {
     local s
     s=$(printf '%s' "$1" | sed -E $'s/\x1b\\[[0-9;]*m//g')
-    LC_ALL=en_US.UTF-8 printf '%s' "$s" | awk '{ print length }'
+    disp_width "$s"
 }
 
+# The harness runs us without a tty and doesn't set $COLUMNS (tput would just say
+# 80), so walk up the process tree to the first ancestor with a tty — claude
+# itself — and ask that tty for its size.
+tty_width() {
+    local pid=$PPID t
+    while [ -n "$pid" ] && [ "$pid" -gt 1 ]; do
+        t=$(ps -o tty= -p "$pid" 2>/dev/null | tr -d ' ')
+        if [ -n "$t" ] && [ "$t" != "??" ]; then
+            stty -f "/dev/$t" size 2>/dev/null | awk '{ print $2 }'
+            return
+        fi
+        pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+    done
+}
+
+# Columns to hold back from the right edge (0 = flush to the terminal edge).
+EDGE_MARGIN=0
+
 term_width=${COLUMNS:-0}
-[ "$term_width" -lt 20 ] && term_width=$(tput cols 2>/dev/null || echo 0)
-[ "$term_width" -lt 20 ] && term_width=120
+[ "$term_width" -lt 20 ] && term_width=$(tty_width)
+[ "${term_width:-0}" -lt 20 ] && term_width=120
+term_width=$(( term_width - EDGE_MARGIN ))
 
 left_w=$(vis_len "$left")
 right_w=$(vis_len "$right")
