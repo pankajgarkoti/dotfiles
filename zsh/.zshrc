@@ -42,6 +42,9 @@ PROMPT='[ %F{cyan}%1~%f%F{242}${GIT_SEGMENT}%f ] ${PROMPT_ARROW} '
 
 . ~/.config.setup.sh
 
+# initialize completion system
+autoload -Uz compinit && compinit
+
 
 # flutter and java path
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
@@ -121,9 +124,9 @@ alias savenotes='cd ~/Desktop/notes; git add .; commit "$(date)"; push main; ech
 export PATH="$PATH:/Applications/Docker.app/Contents/Resources/bin/"
 
 # # The next line updates PATH for the Google Cloud SDK.
-# if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/path.zsh.inc' ]; then source '/Users/pankajgarkoti/Downloads/google-cloud-sdk/path.zsh.inc'; fi
+# if [ -f '/Users/pgwork/Downloads/google-cloud-sdk/path.zsh.inc' ]; then source '/Users/pgwork/Downloads/google-cloud-sdk/path.zsh.inc'; fi
 # # The next line enables shell command completion for gcloud.
-# if [ -f '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then source '/Users/pankajgarkoti/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
+# if [ -f '/Users/pgwork/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then source '/Users/pgwork/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
 
 function set_run_alias() {
     if [[ -f "pyproject.toml" ]]; then
@@ -170,13 +173,11 @@ alias uvicorn="run uvicorn main:app"
 alias main="run python3 main.py"
 alias mock="run python3 mock.py"
 
-export DYLD_LIBRARY_PATH="/usr/local/opt/sqlite/lib:/usr/lib"
-
 # required for gpg to work and signing commits
 export GPG_TTY=$(tty)
 
 # pnpm
-export PNPM_HOME="/Users/pankajgarkoti/Library/pnpm"
+export PNPM_HOME="/Users/pgwork/Library/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
@@ -187,15 +188,15 @@ export XDG_CONFIG_HOME="$HOME/.config"
 export POETRY_VIRTUALENVS_IN_PROJECT=false
 
 # Added by Windsurf
-export PATH="/Users/pankajgarkoti/.codeium/windsurf/bin:$PATH"
+export PATH="/Users/pgwork/.codeium/windsurf/bin:$PATH"
 
 # Created by `pipx` on 2025-02-15 09:37:47
-export PATH="$PATH:/Users/pankajgarkoti/.local/bin"
+export PATH="$PATH:/Users/pgwork/.local/bin"
 export PYENV_ROOT="$HOME/.pyenv"
 [[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init - zsh)"
 
-alias monitor="/Users/pankajgarkoti/dotfiles/zsh/monitor.zsh"
+alias monitor="/Users/pgwork/dotfiles/zsh/monitor.zsh"
 
 # Fixes broken SQLITE
 export PATH="/opt/homebrew/opt/sqlite/bin:$PATH"
@@ -208,11 +209,11 @@ export PKG_CONFIG_PATH="/opt/homebrew/opt/sqlite/lib/pkgconfig"
 # alias qemu_ubuntu='qemu-system-x86_64 -machine type=pc,accel=tcg -m 4G -smp 2 -cpu max -drive file=ubuntu-server.qcow2,format=qcow2 -boot c -netdev user,id=n1,hostfwd=tcp::2222-:22 -device virtio-net-pci,netdev=n1 -serial mon:stdio -vga std -display cocoa'
 
 # opencode
-export PATH=/Users/pankajgarkoti/.opencode/bin:$PATH
+export PATH=/Users/pgwork/.opencode/bin:$PATH
 source ~/.config.setup.sh
 
 # bun completions
-[ -s "/Users/pankajgarkoti/.bun/_bun" ] && source "/Users/pankajgarkoti/.bun/_bun"
+[ -s "/Users/pgwork/.bun/_bun" ] && source "/Users/pgwork/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"

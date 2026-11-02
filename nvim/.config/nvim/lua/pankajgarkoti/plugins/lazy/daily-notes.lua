@@ -3,9 +3,9 @@ return {
 	config = function()
 		require("daily-notes").setup(
 			{
-				base_dir        = "~/Desktop/notes",                -- Your notes directory
+				base_dir        = "~/Desktop/worknotes",            -- Your notes directory
 				journal_path    = "Journal",                        -- Subdirectory for daily notes
-				template_path   = "~/Desktop/notes/templates/daily.md", -- Optional templatea
+				template_path   = "~/Desktop/worknotes/templates/daily.md", -- Optional template
 				ignored_headers = { "Notes", "Logs" },
 			})
 	end,
