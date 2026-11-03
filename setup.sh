@@ -90,6 +90,14 @@ for target in "${targets[@]}"; do
     fi
 done
 
+# Free Alt+0-9 in Ptyxis so they reach the tmux window binds
+if command -v gsettings &> /dev/null && gsettings list-schemas 2> /dev/null | grep -qx "org.gnome.Ptyxis.Shortcuts"; then
+    echo "⌨️  Clearing Ptyxis Alt+0-9 tab shortcuts..."
+    for i in {1..10}; do
+        gsettings set org.gnome.Ptyxis.Shortcuts "focus-tab-$i" ''
+    done
+fi
+
 echo
 echo "🎉 Setup complete!"
 echo
