@@ -1,4 +1,4 @@
-# Dotfiles for Neovim, iTerm, Zsh and Tmux
+# Dotfiles for Neovim, iTerm, Zsh, Bash and Tmux
 
 ## Install
 
@@ -29,10 +29,17 @@ cd dotfiles
 # You can also run individual steps:
 brew install stow  # Install GNU Stow
 git clone --depth=1 https://github.com/romkatv/powerlevel10k.git zsh/powerlevel10k
-stow nvim iterm zsh tmux lazygit alacritty
+stow nvim iterm zsh bash tmux lazygit alacritty
 ```
 
 After installation, restart your terminal and run `p10k configure` to set up Powerlevel10k.
+
+## Bash
+
+`bash/` is a port of the zsh setup: `bash/.bashrc`, `bash/monitor.sh` and
+`alacritty/.config/alacritty_theme.bash`. `setup.sh` installs zsh on macOS only,
+and bash everywhere. Keep changes to either version in sync. Powerlevel10k has
+no bash version, and `.zshrc` doesn't load it either.
 
 ## Uninstall
 
