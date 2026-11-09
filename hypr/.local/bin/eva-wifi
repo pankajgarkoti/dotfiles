@@ -41,6 +41,14 @@ if __name__ == "__main__" and "--daemon" not in sys.argv[1:] and poke_resident()
 # The cairo renderer skips GL/Vulkan setup: ~100 ms faster to first frame for a UI this simple.
 os.environ.setdefault("GSK_RENDERER", "cairo")
 
+# layer-shell overlay when gtk4-layer-shell is installed (must load before GTK/libwayland)
+sys.dont_write_bytecode = True
+try:
+    import eva_layer
+    eva_layer.preload()
+except ImportError:
+    eva_layer = None
+
 import gi
 
 gi.require_version("Gtk", "4.0")
@@ -231,6 +239,10 @@ class Picker(Gtk.ApplicationWindow):
         self.add_css_class("eva")
         self.set_default_size(520, 600)
         self.set_decorated(False)
+        # top-right under the bar; falls back to the Hyprland window rule without layer shell
+        self.layer = eva_layer and eva_layer.attach(
+            self, APP_ID, anchor="top right", margins={"top": 6, "right": 6},
+            on_outside=self.dismiss)
 
         self.radio = None          # True / False / None (unknown)
         self.iface = None

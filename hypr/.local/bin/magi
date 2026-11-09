@@ -50,6 +50,14 @@ import signal  # noqa: E402
 import threading  # noqa: E402
 import warnings  # noqa: E402
 
+# layer-shell overlay when gtk4-layer-shell is installed (must load before GTK/libwayland)
+sys.dont_write_bytecode = True
+try:
+    import eva_layer  # noqa: E402
+    eva_layer.preload()
+except ImportError:
+    eva_layer = None
+
 import gi  # noqa: E402
 
 gi.require_version("Gtk", "4.0")
@@ -529,6 +537,8 @@ class Magi(Gtk.ApplicationWindow):
         self.add_css_class("magi")
         self.set_default_size(880, 600)
         self.set_decorated(False)
+        # centred overlay; falls back to the Hyprland window rule without layer shell
+        self.layer = eva_layer and eva_layer.attach(self, APP_ID, on_outside=self.hide_panel)
         self.focus_pane = False
         self.armed = None
         self.arm_timer = None
@@ -1471,8 +1481,8 @@ class Magi(Gtk.ApplicationWindow):
                   activate=lambda: self.launch(["nautilus", "--new-window"])))
         self.tfm = next((t for t in ("yazi", "lf", "ranger", "nnn") if GLib.find_program_in_path(t)), None)
         if self.tfm:
-            p.add(Row(self, "tfm", "󰙅", "TERMINAL FILES", "%s in Alacritty · SUPER+SHIFT+E" % self.tfm,
-                      activate=lambda: self.launch(["alacritty", "--class", "magi-files", "-e", self.tfm])))
+            p.add(Row(self, "tfm", "󰙅", "TERMINAL FILES", "%s in Alacritty · SUPER+R" % self.tfm,
+                      activate=lambda: self.launch(["alacritty", "--class", "eva-files", "-e", self.tfm])))
         else:
             p.add(lbl("TERMINAL FILE MANAGER NOT INSTALLED · sudo dnf install yazi", "note"))
         p.add(Row(self, "downloads", "󰉍", "DOWNLOADS", "~/Downloads in Nautilus",
@@ -1492,7 +1502,8 @@ class Magi(Gtk.ApplicationWindow):
         sw_css = []
         self.theme_rows = {}
         for key, name, meta in (("nerv", "NERV", "red · orange · black · command centre"),
-                                ("unit01", "EVA UNIT-01", "purple · green · test type")):
+                                ("unit01", "EVA UNIT-01", "purple · green · test type"),
+                                ("blue", "BLUE", "blue · mauve · slate · the original")):
             r = p.add(Row(self, "theme:" + key, "󰏘", name, meta, activate=lambda k=key: self.set_theme(k)))
             pal = palette(key)
             for slot in ("accent", "accent2", "surface", "text"):
@@ -1552,7 +1563,7 @@ class Magi(Gtk.ApplicationWindow):
             c.set_visible(on)
             for k in ("acc",):
                 (c.add_css_class if on else c.remove_css_class)(k)
-        self.tab_tags["theme"].set_label("NERV" if cur == "nerv" else "UNIT-01")
+        self.tab_tags["theme"].set_label({"nerv": "NERV", "unit01": "UNIT-01"}.get(cur, "BLUE"))
         wall = read(WALL_STATE)
         for path, r in self.thumb_rows.items():
             on = path == wall

@@ -40,6 +40,14 @@ def single_instance():
 
 PIDFILE = single_instance()
 
+# layer-shell overlay when gtk4-layer-shell is installed (must load before GTK/libwayland)
+sys.dont_write_bytecode = True
+try:
+    import eva_layer  # noqa: E402
+    eva_layer.preload()
+except ImportError:
+    eva_layer = None
+
 import gi  # noqa: E402
 
 gi.require_version("Gtk", "4.0")
@@ -209,6 +217,10 @@ class Picker:
         win.set_default_size(520, 600)
         win.add_css_class("eva")
         self.win = win
+        # top-right under the bar; falls back to the Hyprland window rule without layer shell
+        self.layer = eva_layer and eva_layer.attach(
+            win, APP_ID, anchor="top right", margins={"top": 6, "right": 6},
+            on_outside=self.quit)
 
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         win.set_child(root)
@@ -451,8 +463,12 @@ class Picker:
         self.busy[key] = "PAIRING"
         self.set_status(f"PAIRING · {name}", "busy")
         self.render()
+        if self.layer:  # blueman's agent may need the keyboard for a PIN prompt
+            self.layer.release()
 
         def paired(e, dry=False):
+            if self.layer:
+                self.layer.grab()
             if e and "AlreadyExists" not in str(e):
                 return self._done(key, e, "")
             self.set_status(f"TRUSTING · {name}", "busy")

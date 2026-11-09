@@ -1,8 +1,8 @@
 font=IosevkaTerm Nerd Font Mono 11
-background-color=#0b0b0fdd
-text-color=#e6e6ea
-border-color=#e5322d
-progress-color=over #1c1c24
+background-color=#24273add
+text-color=#cad3f5
+border-color=#8aadf4
+progress-color=over #363a4f
 border-size=2
 border-radius=0
 padding=10

@@ -24,6 +24,8 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("systemctl --user start gnome-keyring-daemon.socket gnome-keyring-daemon.service hyprpolkitagent.service")
     hl.exec_cmd("blueman-applet")
     hl.exec_cmd("nm-applet --indicator")
+    -- GTK settings (EVA theme, icons, cursor, fonts, dark) for X11/XWayland apps; eva-theme rewrites + SIGHUPs it
+    hl.exec_cmd("xsettingsd -c " .. HOME .. "/.config/xsettingsd/xsettingsd.conf")
     -- eva-wifi stays resident (hidden) so SUPER+SHIFT+W / the bar open it in ~100 ms
     hl.exec_cmd("eva-wifi --daemon")
     hl.exec_cmd("wl-paste --watch cliphist store")
@@ -177,6 +179,8 @@ hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(settings .. " sound"))
 hl.bind(mod .. " + SHIFT + Space", hl.dsp.exec_cmd("magi"))
 hl.bind(mod .. " + E",             hl.dsp.exec_cmd("nautilus --new-window"))
 hl.bind(mod .. " + O",             hl.dsp.exec_cmd("magi-overview"))
+-- ranger in Alacritty (SUPER+SHIFT+E stays "exit Hyprland")
+hl.bind(mod .. " + R",             hl.dsp.exec_cmd(terminal .. " --class eva-files -e ranger"))
 
 -- Wallpapers, theme, clipboard
 hl.bind(mod .. " + W",         hl.dsp.exec_cmd("wall-next"))
@@ -206,15 +210,16 @@ hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = tr
 hl.window_rule({ name = "suppress-maximize", match = { class = ".*" }, suppress_event = "maximize" })
 -- Settings windows float, centred
 hl.window_rule({ name = "float-settings", match = { class = "^(org.gnome.Settings|blueman-manager|nm-connection-editor)$" }, float = true, center = true, size = "60% 70%" })
--- eva-wifi picker: floats top-right under the bar; it draws its own 1px accent frame
-hl.window_rule({ name = "eva-wifi", match = { class = "^eva-wifi$" }, float = true, pin = true, size = "520 600", move = "monitor_w-526 32", border_size = 0, no_anim = true, no_shadow = true })
--- eva-bluetooth picker: same slot as eva-wifi, own 1px accent frame
-hl.window_rule({ name = "eva-bluetooth", match = { class = "^eva-bluetooth$" }, float = true, pin = true, size = "520 600", move = "monitor_w-526 32", border_size = 0, no_anim = true, no_shadow = true })
-
--- MAGI control centre: floats centred over everything, draws its own 1px accent frame
+-- eva-wifi / eva-bluetooth / magi / magi-overview are layer-shell overlays (gtk4-layer-shell,
+-- see eva_layer.py and the layer rules below). These three window rules only apply in the
+-- fallback, when gtk4-layer-shell is missing or EVA_NO_LAYER=1 makes them plain windows.
+-- Pickers: top-right under the bar; they draw their own 1px accent frame
+hl.window_rule({ name = "eva-pickers", match = { class = "^(eva-wifi|eva-bluetooth)$" }, float = true, pin = true, size = "520 600", move = "monitor_w-526 32", border_size = 0, no_anim = true, no_shadow = true })
+-- MAGI control centre centred; overview a large centred panel
 hl.window_rule({ name = "magi", match = { class = "^magi$" }, float = true, pin = true, center = true, size = "880 600", border_size = 0, no_anim = true })
--- MAGI overview / window switcher: a large centred panel, own 1px frame
 hl.window_rule({ name = "magi-overview", match = { class = "^magi-overview$" }, float = true, pin = true, center = true, size = "monitor_w*0.8 monitor_h*0.84", border_size = 0, no_anim = true })
+-- ranger (SUPER+R, magi TOOLS): a floating, centred terminal file manager
+hl.window_rule({ name = "eva-files", match = { class = "^eva-files$" }, float = true, center = true, size = "monitor_w*0.62 monitor_h*0.66" })
 -- Nautilus tiles like any app; its small dialogs (properties, rename, compress) float
 hl.window_rule({ name = "nautilus-tile", match = { class = "^org.gnome.Nautilus$" }, tile = true })
 hl.window_rule({ name = "nautilus-dialogs", match = { class = "^org.gnome.Nautilus$", title = "^(Properties|.* Properties|Rename.*|Compress.*|Confirm.*|Create New Folder)$" }, float = true, center = true })
@@ -224,3 +229,7 @@ hl.window_rule({ name = "file-chooser", match = { class = "^(xdg-desktop-portal-
 -- Blur the bar and notifications
 hl.layer_rule({ name = "blur-bar",  match = { namespace = "^waybar$" }, blur = true, ignore_alpha = 0.2 })
 hl.layer_rule({ name = "blur-mako", match = { namespace = "^notifications$" }, blur = true, ignore_alpha = 0.2 })
+-- EVA overlays: blurred glass behind their 93-95% backgrounds; no slide-in (they toggle
+-- instantly and draw their own frame). Their click-outside "scrim" (1% alpha) stays unblurred.
+hl.layer_rule({ name = "eva-overlays", match = { namespace = "^(eva-wifi|eva-bluetooth|magi|magi-overview)$" }, blur = true, ignore_alpha = 0.2, no_anim = true })
+hl.layer_rule({ name = "eva-scrims",   match = { namespace = "^(eva-wifi|eva-bluetooth|magi|magi-overview)-scrim$" }, no_anim = true })
