@@ -78,8 +78,14 @@ for theme in "${themes[@]}"; do
   fi
 done
 
+# Evangelion desktop: "bg fg accent [accent2]" from ~/.config/hypr/themes/current/tmux.conf
+eva_colors=$(get_tmux_option "@eva-colors" "")
+if [[ -n "$eva_colors" ]]; then
+  selected_theme="$eva_colors"
+fi
+
 if [[ -n "$selected_theme" ]]; then
-  IFS=' ' read -r bg fg accent <<< "$selected_theme"
+  IFS=' ' read -r bg fg accent accent2 <<< "$selected_theme"
 fi
 
   gray=$bg
@@ -92,7 +98,7 @@ fi
   orange=$accent
   red=$bg
   pink=$accent
-  yellow=$accent
+  yellow=${accent2:-$accent}
 
   # Handle left icon configuration
   case $show_left_icon in

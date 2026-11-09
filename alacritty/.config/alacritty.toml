@@ -1,5 +1,5 @@
 [general]
-import = ["~/.config/alacritty/themes/themes/argonaut.toml"]
+import = ["~/.config/hypr/themes/current/alacritty.toml"]
 live_config_reload = true
 
 [font]
@@ -25,22 +25,22 @@ style = "Medium"
 hide_when_typing = false
 
 [window]
-decorations = "Full"
+decorations = "None"
+padding = { x = 10, y = 8 }
 dynamic_padding = true
 resize_increments = false
 option_as_alt = "OnlyLeft"
-opacity = 0.7
+opacity = 0.80
 blur = true
 
 [window.dimensions]
 lines = 72
 columns = 300
 
-[colors.primary]
-# background = '#000000'
-
 [keyboard]
 bindings = [
+	# Toggle fullscreen
+	{ key = "F11", action = "ToggleFullscreen" },
 	# Remap Option+Key to Ctrl-b + Key for common tmux shortcuts
 	# New window (Option + c → Ctrl-b + c)
 	{ key = "C", mods = "Alt", chars = "\u0002c" },

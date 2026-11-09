@@ -15,7 +15,7 @@ hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
 
 hl.on("hyprland.start", function()
     -- Tell systemd this is a graphical session: portals (dark mode, screen share, file pickers) need it
-    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE && systemctl --user start hyprland-session.target")
+    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE XCURSOR_THEME XCURSOR_SIZE QT_QPA_PLATFORMTHEME &&systemctl --user start hyprland-session.target")
     hl.exec_cmd("waybar")
     hl.exec_cmd("mako")
     hl.exec_cmd("hyprpaper")
@@ -24,13 +24,23 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("systemctl --user start gnome-keyring-daemon.socket gnome-keyring-daemon.service hyprpolkitagent.service")
     hl.exec_cmd("blueman-applet")
     hl.exec_cmd("nm-applet --indicator")
+    -- eva-wifi stays resident (hidden) so SUPER+SHIFT+W / the bar open it in ~100 ms
+    hl.exec_cmd("eva-wifi --daemon")
     hl.exec_cmd("wl-paste --watch cliphist store")
+    -- MAGI control centre and overview stay resident (hidden) so they open instantly
+    hl.exec_cmd("magi --daemon")
+    hl.exec_cmd("magi-overview --daemon")
     -- The MAGI scratchpad terminal waits, hidden, on its special workspace
     hl.exec_cmd(terminal .. " --class magi-scratch -e tmux new-session -A -s magi")
 end)
 
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
+-- one cursor everywhere: Hyprland, GTK (gsettings), XWayland and Qt all use Adwaita
+hl.env("XCURSOR_THEME", "Adwaita")
+hl.env("HYPRCURSOR_THEME", "Adwaita")
+-- Qt apps take their palette and fonts from the EVA GTK theme
+hl.env("QT_QPA_PLATFORMTHEME", "gtk3")
 
 hl.config({
     general = {
@@ -118,6 +128,8 @@ for i = 1, 9 do
     hl.bind(mod .. " + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
 end
 hl.bind(mod .. " + Tab", hl.dsp.focus({ workspace = "previous" }))
+-- Double-tap SUPER on its own: back to the previous workspace (like Alt+L in tmux)
+hl.bind("Super_L", hl.dsp.exec_cmd("super-double-tap"), { release = true })
 
 -- MAGI scratchpad: SUPER + ` drops it down over everything, again to hide.
 -- SUPER + SHIFT + ` sends the focused window into it.
@@ -156,10 +168,15 @@ end)
 hl.bind(mod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
--- Settings GNOME used to show; blueman for Bluetooth
-hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd("blueman-manager"))
-hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd(settings .. " wifi"))
+-- Settings GNOME used to show; eva-bluetooth picker for Bluetooth (blueman-applet stays for pairing prompts)
+hl.bind(mod .. " + SHIFT + B", hl.dsp.exec_cmd("eva-bluetooth"))
+hl.bind(mod .. " + SHIFT + W", hl.dsp.exec_cmd("eva-wifi"))
 hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(settings .. " sound"))
+
+-- MAGI control centre (network, bluetooth, sound, display, power, theme); files
+hl.bind(mod .. " + SHIFT + Space", hl.dsp.exec_cmd("magi"))
+hl.bind(mod .. " + E",             hl.dsp.exec_cmd("nautilus --new-window"))
+hl.bind(mod .. " + O",             hl.dsp.exec_cmd("magi-overview"))
 
 -- Wallpapers, theme, clipboard
 hl.bind(mod .. " + W",         hl.dsp.exec_cmd("wall-next"))
@@ -189,6 +206,20 @@ hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = tr
 hl.window_rule({ name = "suppress-maximize", match = { class = ".*" }, suppress_event = "maximize" })
 -- Settings windows float, centred
 hl.window_rule({ name = "float-settings", match = { class = "^(org.gnome.Settings|blueman-manager|nm-connection-editor)$" }, float = true, center = true, size = "60% 70%" })
+-- eva-wifi picker: floats top-right under the bar; it draws its own 1px accent frame
+hl.window_rule({ name = "eva-wifi", match = { class = "^eva-wifi$" }, float = true, pin = true, size = "520 600", move = "monitor_w-526 32", border_size = 0, no_anim = true, no_shadow = true })
+-- eva-bluetooth picker: same slot as eva-wifi, own 1px accent frame
+hl.window_rule({ name = "eva-bluetooth", match = { class = "^eva-bluetooth$" }, float = true, pin = true, size = "520 600", move = "monitor_w-526 32", border_size = 0, no_anim = true, no_shadow = true })
+
+-- MAGI control centre: floats centred over everything, draws its own 1px accent frame
+hl.window_rule({ name = "magi", match = { class = "^magi$" }, float = true, pin = true, center = true, size = "880 600", border_size = 0, no_anim = true })
+-- MAGI overview / window switcher: a large centred panel, own 1px frame
+hl.window_rule({ name = "magi-overview", match = { class = "^magi-overview$" }, float = true, pin = true, center = true, size = "monitor_w*0.8 monitor_h*0.84", border_size = 0, no_anim = true })
+-- Nautilus tiles like any app; its small dialogs (properties, rename, compress) float
+hl.window_rule({ name = "nautilus-tile", match = { class = "^org.gnome.Nautilus$" }, tile = true })
+hl.window_rule({ name = "nautilus-dialogs", match = { class = "^org.gnome.Nautilus$", title = "^(Properties|.* Properties|Rename.*|Compress.*|Confirm.*|Create New Folder)$" }, float = true, center = true })
+-- GTK portal file chooser (Chrome / Electron upload and save dialogs): float, centred, roomy
+hl.window_rule({ name = "file-chooser", match = { class = "^(xdg-desktop-portal-gtk|xdg-desktop-portal-gnome)$" }, float = true, center = true, size = "1000 680" })
 
 -- Blur the bar and notifications
 hl.layer_rule({ name = "blur-bar",  match = { namespace = "^waybar$" }, blur = true, ignore_alpha = 0.2 })

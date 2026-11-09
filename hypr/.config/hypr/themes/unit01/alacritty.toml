@@ -1,0 +1,59 @@
+# EVA Unit-01: purple armour, green trim. Imported by alacritty.toml
+# through ~/.config/hypr/themes/current, so `eva-theme` swaps it live.
+[colors.primary]
+background = "#0d0a14"
+foreground = "#ece6f7"
+dim_foreground = "#8f86a3"
+bright_foreground = "#ffffff"
+
+[colors.cursor]
+text = "#0d0a14"
+cursor = "#9be564"
+
+[colors.vi_mode_cursor]
+text = "#0d0a14"
+cursor = "#ff8c1a"
+
+[colors.selection]
+text = "#0d0a14"
+background = "#9d6ff0"
+
+[colors.search.matches]
+foreground = "#0d0a14"
+background = "#9be564"
+
+[colors.search.focused_match]
+foreground = "#0d0a14"
+background = "#ff8c1a"
+
+[colors.hints.start]
+foreground = "#0d0a14"
+background = "#9be564"
+
+[colors.hints.end]
+foreground = "#0d0a14"
+background = "#b9a6f2"
+
+[colors.footer_bar]
+foreground = "#0d0a14"
+background = "#9d6ff0"
+
+[colors.normal]
+black   = "#1c1a26"
+red     = "#e5322d"
+green   = "#9be564"
+yellow  = "#ffb347"
+blue    = "#8a9cf0"
+magenta = "#9d6ff0"
+cyan    = "#64d8c8"
+white   = "#cfc8de"
+
+[colors.bright]
+black   = "#4d4760"
+red     = "#ff5a4f"
+green   = "#b8f08a"
+yellow  = "#ff8c1a"
+blue    = "#aab8ff"
+magenta = "#b996ff"
+cyan    = "#8cf0e0"
+white   = "#ffffff"

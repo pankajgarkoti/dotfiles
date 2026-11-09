@@ -37,7 +37,8 @@
     "format-ethernet": "󰈀 wired",
     "format-disconnected": "󰖪 offline",
     "tooltip-format": "{ifname} {ipaddr}",
-    "on-click": "env XDG_CURRENT_DESKTOP=GNOME gnome-control-center wifi"
+    "on-click": "eva-wifi",
+    "on-click-right": "env XDG_CURRENT_DESKTOP=GNOME gnome-control-center wifi"
   },
   "pulseaudio": {
     "format": "{icon} {volume}%",
@@ -80,7 +81,7 @@
     "format-connected": "󰂱 {device_alias}",
     "tooltip-format-connected": "{device_enumerate}",
     "tooltip-format-enumerate-connected": "{device_alias}",
-    "on-click": "blueman-manager"
+    "on-click": "eva-bluetooth"
   },
   "hyprland/submap": {
     "format": " ⬢ {} MODE ",
@@ -89,7 +90,8 @@
   },
   "custom/magi": {
     "format": "MAGI",
-    "tooltip-format": "MELCHIOR-1 · BALTHASAR-2 · CASPER-3",
-    "on-click": "eva-theme toggle"
+    "tooltip-format": "MAGI CONTROL · left-click: open panel · right-click: NERV / UNIT-01",
+    "on-click": "magi",
+    "on-click-right": "eva-theme toggle"
   }
 }

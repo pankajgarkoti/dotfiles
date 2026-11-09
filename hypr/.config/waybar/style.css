@@ -56,3 +56,11 @@ tooltip { background: @base; border: 1px solid @accent; }
 #battery.warning  { color: @warn; }
 #battery.critical { color: @base; background: @bad; }
 #tray { padding-right: 10px; }
+
+/* tray menus (nm-applet, blueman): the EVA GTK theme styles them, but the
+   `*` reset above strips their border, separators and check boxes */
+menu { border: 1px solid @accent; padding: 4px 0; }
+menu menuitem { min-height: 18px; padding: 5px 14px; }
+menu separator { min-height: 1px; margin: 3px 0; background: @surface1; }
+menu check, menu radio { min-width: 14px; min-height: 14px; border: 1px solid @dim; }
+menu check:checked, menu radio:checked { background-color: @accent2; border-color: @accent2; }
