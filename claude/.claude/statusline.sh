@@ -55,9 +55,16 @@ fi
 # ── session uptime + idle ─────────────────────────────────────────────────────
 elapsed=0; idle_secs=9999
 if [ -n "$transcript" ] && [ -f "$transcript" ]; then
-    start=$(stat -f %B "$transcript" 2>/dev/null || echo "")
+    if stat -c %Y "$transcript" >/dev/null 2>&1; then
+        # GNU stat. %W is 0 where the filesystem doesn't record a birth time.
+        start=$(stat -c %W "$transcript" 2>/dev/null || echo "")
+        [ "$start" = "0" ] && start=""
+        last_touch=$(stat -c %Y "$transcript" 2>/dev/null || echo 0)
+    else
+        start=$(stat -f %B "$transcript" 2>/dev/null || echo "")
+        last_touch=$(stat -f %m "$transcript" 2>/dev/null || echo 0)
+    fi
     [ -n "$start" ] && elapsed=$(( $(date +%s) - start ))
-    last_touch=$(stat -f %m "$transcript" 2>/dev/null || echo 0)
     idle_secs=$(( $(date +%s) - last_touch ))
 fi
 uptime_str=""
