@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Next wallpaper from ~/Pictures/wallpapers/eva (or the one given), via hyprpaper.
 dir=~/Pictures/wallpapers/eva; state=~/.local/state/wall-current
+mkdir -p ~/.config/hypr
 mapfile -t walls < <(find "$dir" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | sort)
 [ ${#walls[@]} -gt 0 ] || exit 1
 if [ -n "${1:-}" ]; then next="$1"; else
@@ -17,4 +18,8 @@ wallpaper {
     fit_mode = cover
 }
 CONF
-pkill -x hyprpaper; sleep 0.3; setsid hyprpaper >/dev/null 2>&1 &
+# restart hyprpaper only inside a Hyprland session (eva-theme also runs from the installer)
+if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+  pkill -x hyprpaper; sleep 0.3; setsid hyprpaper >/dev/null 2>&1 &
+fi
+exit 0

@@ -8,8 +8,14 @@ wall=[l.split('"')[1] for l in open(os.path.join(th,'theme.lua')) if 'wallpaper'
 src=os.path.join(home,'Pictures/wallpapers/eva',wall)
 hexc=lambda h:tuple(int(h.lstrip('#')[i:i+2],16) for i in (0,2,4))
 W,H=1920,1080
-img=Image.open(src).convert('RGB'); s=max(W/img.width,H/img.height)
-img=img.resize((int(img.width*s)+1,int(img.height*s)+1)); img=img.crop(((img.width-W)//2,(img.height-H)//2,(img.width-W)//2+W,(img.height-H)//2+H))
+if not os.path.isfile(src):  # wallpaper not downloaded (offline install): plain theme base
+    alt=os.path.join(home,'Pictures/wallpapers/eva','catppuccin-blue.png')
+    src=alt if os.path.isfile(alt) else None
+if src:
+    img=Image.open(src).convert('RGB'); s=max(W/img.width,H/img.height)
+    img=img.resize((int(img.width*s)+1,int(img.height*s)+1)); img=img.crop(((img.width-W)//2,(img.height-H)//2,(img.width-W)//2+W,(img.height-H)//2+H))
+else:
+    img=Image.new('RGB',(W,H),hexc(pal['base']))
 img=img.filter(ImageFilter.GaussianBlur(8)); img=Image.blend(img,Image.new('RGB',(W,H),hexc(pal['base'])),0.62)
 lay=Image.new('RGBA',(W,H),(0,0,0,0)); d=ImageDraw.Draw(lay); r=46; acc=hexc(pal['accent'])
 w=math.sqrt(3)*r

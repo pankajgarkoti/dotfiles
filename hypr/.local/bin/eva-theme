@@ -10,7 +10,17 @@ case "${1:-toggle}" in
 esac
 ln -sfn "$new" $T/current
 . $T/current/palette
+W=~/Pictures/wallpapers/eva
 wall=$(grep -o '"[^"]*\.\(png\|jpg\)"' $T/current/theme.lua | tr -d '"')
+# the EVA wallpapers are downloaded at install time and may be missing (offline install):
+# fall back to the generated blue one, then to anything in the folder
+[ -f "$W/$wall" ] || wall=catppuccin-blue.png
+[ -f "$W/$wall" ] || wall=$(cd "$W" 2>/dev/null && ls | grep -iE '\.(png|jpg)$' | head -1)
+# live = running inside a Hyprland session (not the installer, a tty or ssh)
+live=; [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] && live=1
+mkdir -p ~/.config/mako ~/.config/wofi ~/.config/hypr ~/.cache
+# (waybar/colors.css is a tracked relative symlink to themes/current here; the MAGI repo,
+# stowed with --no-folding, generates an absolute one instead)
 
 # notifications (mako has no include, so it is generated)
 cat > ~/.config/mako/config <<CONF
@@ -44,7 +54,7 @@ window { background-color: alpha($base, 0.92); border: 2px solid $accent; }
 CSS
 
 # lock screen: hex lattice over the theme wallpaper
-eva-lock-image >/dev/null
+eva-lock-image >/dev/null || echo "eva-theme: lock image not generated" >&2
 case "$new" in nerv) label="NERV · AUTHORISATION REQUIRED" ;; unit01) label="EVA UNIT-01 · PILOT AUTHORISATION" ;; *) label="MAGI · AUTHORISATION REQUIRED" ;; esac
 cat > ~/.config/hypr/hyprlock.conf <<CONF
 general {
@@ -204,21 +214,24 @@ CONF
 }
 # flip the GTK theme so running GTK 3 apps reload their CSS with the new colours
 gs gtk-theme Adwaita; xsettings Adwaita; sleep 0.2; gs gtk-theme EVA; xsettings EVA
-systemctl --user try-restart hyprpolkitagent.service 2>/dev/null || true
+[ -n "$live" ] && { systemctl --user try-restart hyprpolkitagent.service 2>/dev/null || true; }
 # libadwaita apps read their colours once at start. Nautilus stays resident
 # after its last window closes, so quit it (only if no window is open) to
 # have the next SUPER+E come up in the new colours.
-hyprctl clients -j 2>/dev/null | grep -q '"org.gnome.Nautilus"' || nautilus -q 2>/dev/null || true
+[ -n "$live" ] && { hyprctl clients -j 2>/dev/null | grep -q '"org.gnome.Nautilus"' || nautilus -q 2>/dev/null || true; }
 
 # terminals: alacritty imports themes/current/alacritty.toml; touching the
 # config makes it reload and re-follow the symlink. tmux re-reads its colours.
 touch ~/.config/alacritty.toml 2>/dev/null || true
 tmux source-file ~/.tmux.conf 2>/dev/null || true
 
+# wallpaper (wall-next only restarts hyprpaper inside a session)
+[ -n "$wall" ] && wall-next "$W/$wall"
 # apply live
-wall-next ~/Pictures/wallpapers/eva/$wall
-hyprctl reload >/dev/null 2>&1 || true
-pkill -SIGUSR2 waybar || true
-makoctl reload 2>/dev/null || true
-notify-send "MAGI" "Theme: $new" 2>/dev/null || true
+if [ -n "$live" ]; then
+  hyprctl reload >/dev/null 2>&1 || true
+  pkill -SIGUSR2 waybar || true
+  makoctl reload 2>/dev/null || true
+  notify-send "MAGI" "Theme: $new" 2>/dev/null || true
+fi
 echo "theme: $new"

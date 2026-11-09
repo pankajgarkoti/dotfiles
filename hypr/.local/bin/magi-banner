@@ -22,5 +22,5 @@ printf "%s%s%s\n" "$(c $acc)" "$line" "$R"
 row() { printf "  %s%-12s%s %s%-32s%s %s\n" "$(c $acc2)" "$1" "$R" "$(c $dim)" "$2" "$R" "$(vote x $3)"; }
 row MELCHIOR-1  "mem ${mem}M free · load ${load}" $m
 row BALTHASAR-2 "network $( [ $net = ok ] && echo online || echo offline )" $net
-row CASPER-3    "battery ${bat:-?}% ${st,,}" $b
+if [ -n "$bat" ]; then row CASPER-3 "battery ${bat}% ${st,,}" $b; else row CASPER-3 "on AC power (no battery)" ok; fi
 printf "%s%s%s\n\n" "$(c $acc)" "$line" "$R"

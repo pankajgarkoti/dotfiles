@@ -1,9 +1,16 @@
 -- Hyprland 0.57 (Lua config), riced Evangelion-style. Lives in ~/dotfiles/hypr (stowed).
 -- SUPER is the WM key. Alt is left alone: tmux owns Alt binds (M-c, M-n, M-p, M-w...).
--- Colours come from themes/current (nerv or unit01); switch with `eva-theme nerv|unit01`.
+-- Colours come from themes/current (blue, nerv or unit01); switch with `eva-theme <name>`.
 
 local HOME = os.getenv("HOME")
-local theme = dofile(HOME .. "/.config/hypr/themes/current/theme.lua")
+local THEMES = HOME .. "/.config/hypr/themes/"
+-- themes/current is a symlink eva-theme flips; fall back to blue if it is ever missing
+local function load_theme()
+    local f = io.open(THEMES .. "current/theme.lua", "r")
+    if f then f:close(); return dofile(THEMES .. "current/theme.lua") end
+    return dofile(THEMES .. "blue/theme.lua")
+end
+local theme = load_theme()
 
 local mod      = "SUPER"
 local terminal = "alacritty"
@@ -36,6 +43,8 @@ hl.on("hyprland.start", function()
     hl.exec_cmd(terminal .. " --class magi-scratch -e tmux new-session -A -s magi")
 end)
 
+-- GDM starts the session without ~/.local/bin on PATH; magi, eva-* and wall-next live there
+hl.env("PATH", HOME .. "/.local/bin:" .. (os.getenv("PATH") or "/usr/local/bin:/usr/bin"))
 hl.env("XCURSOR_SIZE", "24")
 hl.env("HYPRCURSOR_SIZE", "24")
 -- one cursor everywhere: Hyprland, GTK (gsettings), XWayland and Qt all use Adwaita
@@ -69,6 +78,8 @@ hl.config({
         blur = { enabled = true, size = 6, passes = 2, new_optimizations = true, xray = false, noise = 0.02, vibrancy = 0.2 },
     },
     animations = { enabled = true },
+    -- no "Hyprland updated" news window or donation prompt on login
+    ecosystem = { no_update_news = true, no_donation_nag = true },
     dwindle = { preserve_split = true },
     misc = {
         force_default_wallpaper = 0,
