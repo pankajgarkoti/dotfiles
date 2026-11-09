@@ -33,6 +33,7 @@
     "tooltip-format": "{:%A %d %B %Y}"
   },
   "network": {
+    "interface": "wl*",
     "format-wifi": "  {essid}",
     "format-ethernet": "󰈀 wired",
     "format-disconnected": "󰖪 offline",
