@@ -1,0 +1,6 @@
+* { font-family: "IosevkaTerm Nerd Font Mono"; font-size: 14px; border-radius: 0; }
+window { background-color: alpha(#0b0b0f, 0.92); border: 2px solid #e5322d; }
+#input { margin: 8px; padding: 6px 10px; color: #e6e6ea; background-color: #1c1c24; border: 1px solid #1c1c24; }
+#entry { padding: 6px 10px; color: #e6e6ea; }
+#entry:selected { background-color: #e5322d; }
+#entry:selected #text { color: #0b0b0f; font-weight: bold; }

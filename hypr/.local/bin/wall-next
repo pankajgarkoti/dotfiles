@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Next wallpaper from ~/Pictures/wallpapers/eva (or the one given), via hyprpaper.
+dir=~/Pictures/wallpapers/eva; state=~/.local/state/wall-current
+mapfile -t walls < <(find "$dir" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | sort)
+[ ${#walls[@]} -gt 0 ] || exit 1
+if [ -n "${1:-}" ]; then next="$1"; else
+  cur=$(cat "$state" 2>/dev/null); next=${walls[0]}
+  for i in "${!walls[@]}"; do [ "${walls[$i]}" = "$cur" ] && next=${walls[$(( (i+1) % ${#walls[@]} ))]}; done
+fi
+mkdir -p "$(dirname "$state")"; echo "$next" > "$state"
+cat > ~/.config/hypr/hyprpaper.conf <<CONF
+splash = false
+
+wallpaper {
+    monitor =
+    path = $next
+    fit_mode = cover
+}
+CONF
+pkill -x hyprpaper; sleep 0.3; setsid hyprpaper >/dev/null 2>&1 &

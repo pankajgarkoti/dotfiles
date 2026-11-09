@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# MAGI SYSTEM boot banner. Three "votes" from real, fast local checks.
+c() { printf '\033[38;2;%sm' "$1"; }; R=$'\033[0m'; B=$'\033[1m'
+pal=~/.config/hypr/themes/current/palette; acc="229;50;45"; acc2="255;140;26"
+if [ -r "$pal" ]; then
+  hex() { local h=${1#\#}; printf '%d;%d;%d' 0x${h:0:2} 0x${h:2:2} 0x${h:4:2}; }
+  acc=$(hex "$(grep ^accent= $pal | cut -d= -f2)"); acc2=$(hex "$(grep ^accent2= $pal | cut -d= -f2)")
+fi
+green="155;229;100"; red="229;50;45"; dim="138;138;153"
+vote() { if [ "$2" = ok ]; then printf "%s%s承認 APPROVED%s" "$(c $green)" "$B" "$R"; else printf "%s%s否決 REJECTED%s" "$(c $red)" "$B" "$R"; fi; }
+mem=$(awk '/MemAvailable/{printf "%d",$2/1024}' /proc/meminfo); load=$(cut -d' ' -f1 /proc/loadavg)
+m=ok; [ "$mem" -lt 2000 ] && m=no
+net=no; nmcli -t -f STATE general 2>/dev/null | grep -q '^connected' && net=ok
+bat=$(cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -1); st=$(cat /sys/class/power_supply/BAT*/status 2>/dev/null | head -1)
+b=ok; [ -n "$bat" ] && [ "$bat" -lt 20 ] && [ "$st" != Charging ] && b=no
+w=$(( $(tput cols 2>/dev/null || echo 80) < 72 ? $(tput cols 2>/dev/null || echo 80) : 72 ))
+line=$(printf '━%.0s' $(seq 1 $w))
+echo
+printf "%s%s%s\n" "$(c $acc)" "$line" "$R"
+printf "  %s%sMAGI SYSTEM%s  %s%s%s\n" "$(c $acc)" "$B" "$R" "$(c $dim)" "$(date '+%a %d %b · %H:%M')  ·  $(hostname -s)" "$R"
+printf "%s%s%s\n" "$(c $acc)" "$line" "$R"
+row() { printf "  %s%-12s%s %s%-32s%s %s\n" "$(c $acc2)" "$1" "$R" "$(c $dim)" "$2" "$R" "$(vote x $3)"; }
+row MELCHIOR-1  "mem ${mem}M free · load ${load}" $m
+row BALTHASAR-2 "network $( [ $net = ok ] && echo online || echo offline )" $net
+row CASPER-3    "battery ${bat:-?}% ${st,,}" $b
+printf "%s%s%s\n\n" "$(c $acc)" "$line" "$R"

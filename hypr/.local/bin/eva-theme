@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# Switch the Evangelion desktop theme: eva-theme nerv | unit01 | toggle
+set -e
+T=~/.config/hypr/themes
+cur=$(basename "$(readlink -f $T/current)")
+case "${1:-toggle}" in
+  toggle) [ "$cur" = nerv ] && new=unit01 || new=nerv ;;
+  nerv|unit01) new=$1 ;;
+  *) echo "usage: eva-theme nerv|unit01|toggle"; exit 2 ;;
+esac
+ln -sfn "$new" $T/current
+. $T/current/palette
+wall=$(grep -o '"[^"]*\.\(png\|jpg\)"' $T/current/theme.lua | tr -d '"')
+
+# notifications (mako has no include, so it is generated)
+cat > ~/.config/mako/config <<CONF
+font=IosevkaTerm Nerd Font Mono 11
+background-color=${base}dd
+text-color=$text
+border-color=$accent
+progress-color=over $surface
+border-size=2
+border-radius=0
+padding=10
+default-timeout=6000
+anchor=top-right
+[urgency=high]
+background-color=#1a0f00ee
+text-color=#ffb347
+border-color=#ff8c1a
+border-size=4
+format=<b>⚠ 警告 · %s</b>\n%b
+default-timeout=0
+CONF
+
+# launcher
+cat > ~/.config/wofi/style.css <<CSS
+* { font-family: "IosevkaTerm Nerd Font Mono"; font-size: 14px; border-radius: 0; }
+window { background-color: alpha($base, 0.92); border: 2px solid $accent; }
+#input { margin: 8px; padding: 6px 10px; color: $text; background-color: $surface; border: 1px solid $surface; }
+#entry { padding: 6px 10px; color: $text; }
+#entry:selected { background-color: $accent; }
+#entry:selected #text { color: $base; font-weight: bold; }
+CSS
+
+# lock screen: hex lattice over the theme wallpaper
+eva-lock-image >/dev/null
+label=$([ "$new" = nerv ] && echo "NERV · AUTHORISATION REQUIRED" || echo "EVA UNIT-01 · PILOT AUTHORISATION")
+cat > ~/.config/hypr/hyprlock.conf <<CONF
+general {
+    hide_cursor = true
+}
+background {
+    path = ~/.cache/eva-lock.png
+}
+label {
+    text = \$TIME
+    font_family = IosevkaTerm Nerd Font Mono
+    font_size = 84
+    color = rgb(${accent2#\#})
+    position = 0, 140
+    halign = center
+    valign = center
+}
+label {
+    text = $label
+    font_family = IosevkaTerm Nerd Font Mono
+    font_size = 13
+    color = rgb(${accent#\#})
+    position = 0, 50
+    halign = center
+    valign = center
+}
+input-field {
+    size = 340, 46
+    rounding = 0
+    outline_thickness = 2
+    outer_color = rgb(${accent#\#})
+    inner_color = rgba(0,0,0,0.75)
+    font_color = rgb(${text#\#})
+    check_color = rgb(9be564)
+    fail_color = rgb(ff8c1a)
+    placeholder_text = password
+    position = 0, -30
+    halign = center
+    valign = center
+}
+CONF
+
+# apply live
+wall-next ~/Pictures/wallpapers/eva/$wall
+hyprctl reload >/dev/null 2>&1 || true
+pkill -SIGUSR2 waybar || true
+makoctl reload 2>/dev/null || true
+notify-send "MAGI" "Theme: $new" 2>/dev/null || true
+echo "theme: $new"
