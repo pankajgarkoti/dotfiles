@@ -18,7 +18,16 @@ wallpaper {
     fit_mode = cover
 }
 CONF
-# restart hyprpaper only inside a Hyprland session (eva-theme also runs from the installer)
+# Restart hyprpaper whenever a Hyprland session is running, even when called from outside it
+# (a tmux shell or an agent has a stale environment). Otherwise the saved wallpaper and the one
+# on screen drift apart and the change only shows up after the next reboot.
+# With no session at all (the installer), only the config is written.
+if [ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] && pgrep -x Hyprland >/dev/null; then
+  export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
+  HYPRLAND_INSTANCE_SIGNATURE=$(ls -t "$XDG_RUNTIME_DIR/hypr/" 2>/dev/null | head -1)
+  WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-$(cd "$XDG_RUNTIME_DIR" && ls wayland-[0-9] 2>/dev/null | head -1)}
+  export HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY
+fi
 if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
   pkill -x hyprpaper; sleep 0.3; setsid hyprpaper >/dev/null 2>&1 &
 fi
