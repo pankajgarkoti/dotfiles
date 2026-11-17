@@ -3,7 +3,7 @@ import = ["~/.config/hypr/themes/current/alacritty.toml"]
 live_config_reload = true
 
 [font]
-size = 16
+size = 12
 
 [font.bold]
 family = "IosevkaTerm Nerd Font Mono"

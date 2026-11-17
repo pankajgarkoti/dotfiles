@@ -1,5 +1,7 @@
 {
-  "model": "opus",
+  "permissions": {
+    "defaultMode": "auto"
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -7,6 +9,15 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/update-state.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.local/bin/orchestrator-plan-hook",
+            "timeout": 10
           }
         ]
       }
@@ -39,6 +50,15 @@
             "command": "~/.claude/hooks/update-state.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.local/bin/orch-agent-hook",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "Stop": [
@@ -47,6 +67,15 @@
           {
             "type": "command",
             "command": "~/.claude/hooks/update-state.sh"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.local/bin/orch-agent-hook",
+            "timeout": 10
           }
         ]
       }
@@ -62,19 +91,27 @@
       }
     ]
   },
+  "worktree": {
+    "baseRef": "fresh"
+  },
   "statusLine": {
     "type": "command",
     "command": "~/.claude/statusline.sh",
     "padding": 0,
     "refreshInterval": 1
   },
+  "enabledPlugins": {
+    "vercel@claude-plugins-official": true
+  },
   "tui": "fullscreen",
-  "skipDangerousModePermissionPrompt": true,
-  "theme": "dark",
-  "switchModelsOnFlag": true,
-  "voiceEnabled": true,
   "voice": {
     "enabled": true,
     "mode": "hold"
-  }
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "theme": "dark",
+  "verbose": false,
+  "switchModelsOnFlag": true,
+  "crossSessionInbound": "accept",
+  "voiceEnabled": true
 }

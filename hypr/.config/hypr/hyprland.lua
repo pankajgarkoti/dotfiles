@@ -117,7 +117,8 @@ hl.bind(mod .. " + F",      hl.dsp.window.fullscreen({ action = "toggle" }))
 hl.bind(mod .. " + V",      hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mod .. " + P",      hl.dsp.window.pseudo())
 hl.bind(mod .. " + S",      hl.dsp.layout("togglesplit"))
-hl.bind(mod .. " + Escape", hl.dsp.exec_cmd("hyprlock"))
+hl.bind(mod .. " + Escape", hl.dsp.exec_cmd("systemctl suspend"))  -- hypridle locks before sleep
+hl.bind(mod .. " + L",      hl.dsp.exec_cmd("loginctl lock-session"))  -- lock only, stays awake
 hl.bind(mod .. " + SHIFT + E", hl.dsp.exit())
 
 -- Focus with hjkl and arrows; move windows with SHIFT
@@ -190,6 +191,8 @@ hl.bind(mod .. " + SHIFT + S", hl.dsp.exec_cmd(settings .. " sound"))
 hl.bind(mod .. " + SHIFT + Space", hl.dsp.exec_cmd("magi"))
 hl.bind(mod .. " + E",             hl.dsp.exec_cmd("nautilus --new-window"))
 hl.bind(mod .. " + O",             hl.dsp.exec_cmd("magi-overview"))
+-- status panel (tmux window magi-status): select it and raise its terminal, creating either if missing
+hl.bind("ALT + M",                 hl.dsp.exec_cmd("magi-status-show"))
 -- ranger in Alacritty (SUPER+SHIFT+E stays "exit Hyprland")
 hl.bind(mod .. " + R",             hl.dsp.exec_cmd(terminal .. " --class eva-files -e ranger"))
 

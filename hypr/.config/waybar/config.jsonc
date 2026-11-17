@@ -59,6 +59,11 @@
     "format": "󰃠 {percent}%"
   },
   "battery": {
+    "bat": "BAT0",
+    "adapter": "AC",
+    "interval": 30,
+    "on-click": "eva-power",
+    "tooltip-format": "{capacity}% · {timeTo} · click: power mode",
     "states": {
       "warning": 25,
       "critical": 12
