@@ -1,0 +1,890 @@
+#!/usr/bin/env python3
+"""eva-bluetooth: MAGI Bluetooth link picker for Hyprland.
+
+GTK 4 + BlueZ over D-Bus (all calls async, never blocks the UI).
+Colours come from ~/.config/hypr/themes/current/colors.css (eva-theme).
+
+Keys: Up/Down or j/k move, Enter acts, typing (or /) filters, Backspace edits
+the filter, Esc clears the filter then closes. Ctrl+S scan, Ctrl+P power.
+Running it again while open closes it (toggle). EVA_BT_DRY=1 = dry run:
+actions are logged and simulated, nothing is sent to BlueZ.
+"""
+import os
+import signal
+import time
+
+T0 = time.time()
+import sys
+
+APP_ID = "eva-bluetooth"
+DRY = os.environ.get("EVA_BT_DRY") == "1"
+COLORS = os.environ.get("EVA_BT_COLORS") or os.path.expanduser("~/.config/hypr/themes/current/colors.css")
+
+
+def single_instance():
+    """Second launch closes the open picker instead of stacking another one."""
+    pidf = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), APP_ID + ".pid")
+    try:
+        with open(pidf) as f:
+            pid = int(f.read().strip())
+        with open(f"/proc/{pid}/cmdline", "rb") as f:
+            if APP_ID.encode() in f.read() and pid != os.getpid():
+                os.kill(pid, signal.SIGTERM)
+                sys.exit(0)
+    except (OSError, ValueError):
+        pass
+    with open(pidf, "w") as f:
+        f.write(str(os.getpid()))
+    return pidf
+
+
+PIDFILE = single_instance()
+
+# layer-shell overlay when gtk4-layer-shell is installed (must load before GTK/libwayland)
+sys.dont_write_bytecode = True
+try:
+    import eva_layer  # noqa: E402
+    eva_layer.preload()
+except ImportError:
+    eva_layer = None
+
+import gi  # noqa: E402
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
+from gi.repository import Gdk, Gio, GLib, GLibUnix, Gtk, Pango  # noqa: E402
+
+BLUEZ = "org.bluez"
+DEV = "org.bluez.Device1"
+ADP = "org.bluez.Adapter1"
+BAT = "org.bluez.Battery1"
+PROPS = "org.freedesktop.DBus.Properties"
+
+# Nerd Font Material Design glyphs
+G = {
+    "bt": "\U000f00af", "bt_off": "\U000f00b2", "bt_on": "\U000f00b1", "bt_scan": "\U000f00b0",
+    "headset": "\U000f02ce", "headphones": "\U000f02cb", "speaker": "\U000f04c3",
+    "mouse": "\U000f037d", "keyboard": "\U000f030c", "phone": "\U000f03f2",
+    "computer": "\U000f0322", "gamepad": "\U000f0eb5", "tablet": "\U000f04f7",
+    "watch": "\U000f0897", "unknown": "\U000f00af",
+}
+TYPES = {  # bluez Icon -> (glyph, label)
+    "audio-headset": ("headset", "HEADSET"),
+    "audio-headphones": ("headphones", "HEADPHONES"),
+    "audio-card": ("speaker", "AUDIO"),
+    "audio-speakers": ("speaker", "SPEAKER"),
+    "input-mouse": ("mouse", "MOUSE"),
+    "input-keyboard": ("keyboard", "KEYBOARD"),
+    "input-gaming": ("gamepad", "GAMEPAD"),
+    "input-tablet": ("tablet", "TABLET"),
+    "phone": ("phone", "PHONE"),
+    "computer": ("computer", "COMPUTER"),
+    "multimedia-player": ("speaker", "PLAYER"),
+    "video-display": ("computer", "DISPLAY"),
+}
+SCAN_SECONDS = 30
+
+CSS = """
+@import url("file://%s");
+
+* {
+  font-family: "IosevkaTerm Nerd Font Mono";
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+  outline: none;
+}
+window.eva {
+  background: alpha(@base, 0.93);
+  color: @text;
+  border: 1px solid @accent;
+}
+.header { background: @accent; color: @base; padding: 5px 12px 5px 12px; }
+.header .title { font-size: 12px; font-weight: 800; letter-spacing: 3px; }
+.header .aux { font-size: 10px; font-weight: 800; letter-spacing: 2px; }
+.hazard {
+  min-height: 4px;
+  background-image: repeating-linear-gradient(135deg, alpha(@accent, 0.55) 0px, alpha(@accent, 0.55) 6px, transparent 6px, transparent 12px);
+}
+.readout { padding: 7px 14px 2px 14px; font-size: 10px; letter-spacing: 2px; color: @dim; }
+.readout .v { color: @c1; }
+
+.filter { padding: 6px 14px; margin: 6px 12px 0 12px; border: 1px solid @accent; background: alpha(@accent, 0.07); }
+.filter .p { color: @accent; font-weight: 800; letter-spacing: 2px; font-size: 10px; }
+.filter .q { color: @text; font-size: 13px; }
+
+scrolledwindow, viewport, list { background: transparent; }
+list > row { padding: 0; background: transparent; border-left: 3px solid transparent; transition: none; }
+list > row.sel { background: alpha(@accent, 0.15); border-left-color: @accent; }
+list > row.sel .name { color: @text; }
+list > row.sel .chip { border-color: alpha(@dim, 0.55); }
+list > row.sel .chip.on, list > row.sel .chip.busy { border-color: transparent; }
+list > row.sel .chip.acc { border-color: @accent; }
+list > row.sel .chip.new { border-color: @accent2; }
+list > row:focus, list > row:focus-visible { outline: none; }
+
+.section { padding: 12px 14px 5px 14px; }
+.section .lbl { font-size: 10px; letter-spacing: 3px; color: @dim; font-weight: bold; }
+.section .cnt { font-size: 10px; letter-spacing: 2px; color: @accent; font-weight: bold; }
+.section .rule { min-height: 1px; background: @surface1; }
+
+.item { padding: 7px 14px 7px 11px; }
+.icon { font-size: 20px; color: @dim; min-width: 30px; }
+.name { font-size: 13px; color: alpha(@text, 0.88); }
+.meta { font-size: 10px; letter-spacing: 1px; color: @dim; }
+.item.linked .icon { color: @good; }
+.item.busy .icon { color: @warn; }
+.item.ctl .icon { color: @accent; }
+.item.dimmed { opacity: 0.4; }
+
+.chip { font-size: 10px; font-weight: 800; letter-spacing: 2px; padding: 1px 7px; border: 1px solid @surface1; color: @dim; }
+.chip.on { color: @base; background: @good; border-color: @good; }
+.chip.off { color: @bad; border-color: @bad; }
+.chip.busy { color: @base; background: @warn; border-color: @warn; }
+.chip.acc { color: @accent; border-color: @accent; }
+.chip.new { color: @accent2; border-color: alpha(@accent2, 0.6); }
+.batt { font-size: 10px; letter-spacing: 1px; color: @good; }
+.batt.low { color: @warn; }
+.batt.crit { color: @bad; }
+.sig { font-size: 10px; color: @c1; letter-spacing: 1px; }
+
+.empty { padding: 18px 14px; font-size: 10px; letter-spacing: 2px; color: @dim; }
+
+.footer { border-top: 1px solid @surface1; padding: 6px 12px; }
+.status { font-size: 10px; letter-spacing: 2px; color: @c1; font-weight: bold; }
+.status.err { color: @bad; }
+.status.ok { color: @good; }
+.status.busy { color: @warn; }
+.key { font-size: 9px; font-weight: 800; color: @base; background: @surface1; color: @text; padding: 0 4px; }
+.hint { font-size: 9px; letter-spacing: 1px; color: @dim; }
+""" % COLORS
+
+
+def lbl(text="", css=(), xalign=0.0, ellipsize=False, hexpand=False):
+    w = Gtk.Label(label=text, xalign=xalign, hexpand=hexpand)
+    for c in css:
+        w.add_css_class(c)
+    if ellipsize:
+        w.set_ellipsize(Pango.EllipsizeMode.END)
+    return w
+
+
+def short_err(e):
+    msg = e.message if isinstance(e, GLib.Error) else str(e)
+    if "GDBus.Error:" in msg:
+        msg = msg.split("GDBus.Error:", 1)[1]
+    msg = msg.replace("org.bluez.Error.", "").replace("org.freedesktop.DBus.Error.", "")
+    return msg.split(":", 1)[-1].strip().upper()[:46] or "FAILED"
+
+
+def bars(n, total, on="▰", off="▱"):
+    return on * n + off * (total - n)
+
+
+class Picker:
+    def __init__(self, app):
+        self.app = app
+        self.bus = None
+        self.adapter_path = None
+        self.adapter = {}
+        self.devices = {}      # path -> Device1 props
+        self.battery = {}      # path -> percent
+        self.busy = {}         # path -> "LINKING" | "UNLINKING" | "PAIRING"
+        self.loaded = False
+        self.scanning_by_us = False
+        self.scan_left = 0
+        self.scan_timer = None
+        self.filter = ""
+        self.filter_mode = False
+        self.sel_key = None
+        self.keys = []         # selectable keys in display order
+        self.rows = {}         # key -> ListBoxRow
+        self.refresh_pending = False
+        self.was_active = False
+        self.tick = 0
+        self.build_ui()
+        GLib.idle_add(self.connect_bus)
+
+    # ---------------------------------------------------------------- UI
+    def build_ui(self):
+        prov = Gtk.CssProvider()
+        prov.load_from_string(CSS)
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+
+        win = Gtk.Window(title="MAGI · Bluetooth")
+        win.set_decorated(False)
+        win.set_default_size(520, 600)
+        win.add_css_class("eva")
+        self.win = win
+        # top-right under the bar; falls back to the Hyprland window rule without layer shell
+        self.layer = eva_layer and eva_layer.attach(
+            win, APP_ID, anchor="top right", margins={"top": 6, "right": 6},
+            on_outside=self.quit)
+
+        root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        win.set_child(root)
+
+        head = Gtk.Box(spacing=8)
+        head.add_css_class("header")
+        head.append(lbl("MAGI · BLUETOOTH LINK", ["title"], hexpand=True))
+        self.head_aux = lbl("SYNC…", ["aux"], xalign=1)
+        head.append(self.head_aux)
+        root.append(head)
+        haz = Gtk.Box()
+        haz.add_css_class("hazard")
+        root.append(haz)
+
+        ro = Gtk.Box(spacing=0)
+        ro.add_css_class("readout")
+        self.readout = lbl("", [], ellipsize=True, hexpand=True)
+        ro.append(self.readout)
+        root.append(ro)
+
+        self.filter_box = Gtk.Box(spacing=10)
+        self.filter_box.add_css_class("filter")
+        self.filter_box.append(lbl("FILTER ▸", ["p"]))
+        self.filter_lbl = lbl("", ["q"], hexpand=True, ellipsize=True)
+        self.filter_box.append(self.filter_lbl)
+        self.filter_box.set_visible(False)
+        root.append(self.filter_box)
+
+        self.list = Gtk.ListBox()
+        self.list.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.list.set_activate_on_single_click(True)
+        self.list.set_can_focus(False)
+        self.list.connect("row-activated", lambda _l, r: self.activate(getattr(r, "key", None)))
+        # hover selects, but only on real pointer movement: re-rendering rows under a
+        # still pointer must not steal the keyboard selection
+        self.last_ptr = None
+        mo = Gtk.EventControllerMotion()
+        mo.connect("motion", self.on_motion)
+        self.list.add_controller(mo)
+        self.scroller = Gtk.ScrolledWindow(vexpand=True)
+        self.scroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.scroller.set_child(self.list)
+        root.append(self.scroller)
+
+        foot = Gtk.Box(spacing=6)
+        foot.add_css_class("footer")
+        self.status = lbl("SCANNING BUS…", ["status", "busy"], hexpand=True, ellipsize=True)
+        foot.append(self.status)
+        for k, h in (("⏎", "ACT"), ("/", "FILTER"), ("^S", "SCAN"), ("^P", "POWER"), ("ESC", "CLOSE")):
+            foot.append(lbl(k, ["key"]))
+            foot.append(lbl(h, ["hint"]))
+        root.append(foot)
+
+        keys = Gtk.EventControllerKey()
+        keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        keys.connect("key-pressed", self.on_key)
+        win.add_controller(keys)
+        win.connect("notify::is-active", self.on_active)
+        win.connect("close-request", lambda *_: self.quit() or True)
+
+        self.render()
+        win.present()
+        GLib.timeout_add(110, self.animate)
+
+    def on_active(self, win, _p):
+        if os.environ.get("EVA_BT_DEBUG"):
+            print(f"[debug] active={win.is_active()} t={time.time():.3f} since_start_ms={(time.time() - T0) * 1000:.0f}", file=sys.stderr, flush=True)
+        if win.is_active():
+            self.was_active = True
+        elif self.was_active:
+            # focus left: close, unless a pairing may be waiting on an agent dialog
+            GLib.timeout_add(120, self._maybe_close_on_blur)
+
+    def _maybe_close_on_blur(self):
+        if os.environ.get("EVA_BT_STAY"):  # testing: keep open when focus moves
+            return False
+        if not self.win.is_active() and "PAIRING" not in self.busy.values():
+            self.quit()
+        return False
+
+    def on_motion(self, _ctl, x, y):
+        if self.last_ptr is not None and abs(x - self.last_ptr[0]) + abs(y - self.last_ptr[1]) < 2:
+            return
+        first = self.last_ptr is None
+        self.last_ptr = (x, y)
+        if first:  # the window opening under the pointer is not a hover
+            return
+        row = self.list.get_row_at_y(int(y))
+        if row is not None and getattr(row, "key", None) in self.rows:
+            self.select(row.key, scroll=False)
+
+    def set_status(self, text, kind=""):
+        self.status.set_label(text)
+        for c in ("err", "ok", "busy"):
+            self.status.remove_css_class(c)
+        if kind:
+            self.status.add_css_class(kind)
+
+    # ---------------------------------------------------------------- D-Bus
+    def connect_bus(self):
+        Gio.bus_get(Gio.BusType.SYSTEM, None, self._on_bus)
+        return False
+
+    def _on_bus(self, _src, res):
+        try:
+            self.bus = Gio.bus_get_finish(res)
+        except GLib.Error as e:
+            self.set_status("SYSTEM BUS OFFLINE · " + short_err(e), "err")
+            return
+        sub = self.bus.signal_subscribe
+        sub(BLUEZ, PROPS, "PropertiesChanged", None, None, Gio.DBusSignalFlags.NONE, self._on_props)
+        sub(BLUEZ, "org.freedesktop.DBus.ObjectManager", "InterfacesAdded", None, None,
+            Gio.DBusSignalFlags.NONE, self._on_added)
+        sub(BLUEZ, "org.freedesktop.DBus.ObjectManager", "InterfacesRemoved", None, None,
+            Gio.DBusSignalFlags.NONE, self._on_removed)
+        self.bus.call(BLUEZ, "/", "org.freedesktop.DBus.ObjectManager", "GetManagedObjects",
+                      None, None, Gio.DBusCallFlags.NONE, 5000, None, self._on_objects)
+
+    def _on_objects(self, bus, res):
+        try:
+            objs = bus.call_finish(res).unpack()[0]
+        except GLib.Error as e:
+            self.set_status("BLUEZ UNREACHABLE · " + short_err(e), "err")
+            return
+        for path, ifaces in objs.items():
+            self._absorb(path, ifaces)
+        self.loaded = True
+        if self.sel_key in (None, "power"):  # first open: land on the first paired unit
+            paired = self.sorted_paired()
+            self.sel_key = paired[0] if paired else "scan"
+        self.set_status("STANDING BY" if self.adapter_path else "NO ADAPTER FOUND",
+                        "" if self.adapter_path else "err")
+        self.render()
+
+    def _absorb(self, path, ifaces):
+        if ADP in ifaces and (self.adapter_path is None or path == self.adapter_path):
+            self.adapter_path = path
+            self.adapter.update(ifaces[ADP])
+        if DEV in ifaces:
+            self.devices.setdefault(path, {}).update(ifaces[DEV])
+        if BAT in ifaces and "Percentage" in ifaces[BAT]:
+            self.battery[path] = ifaces[BAT]["Percentage"]
+
+    def _on_added(self, _c, _s, _p, _i, _sig, params):
+        path, ifaces = params.unpack()
+        self._absorb(path, ifaces)
+        self.queue_render()
+
+    def _on_removed(self, _c, _s, _p, _i, _sig, params):
+        path, ifaces = params.unpack()
+        if DEV in ifaces:
+            self.devices.pop(path, None)
+        if BAT in ifaces:
+            self.battery.pop(path, None)
+        if ADP in ifaces and path == self.adapter_path:
+            self.adapter_path, self.adapter = None, {}
+        self.queue_render()
+
+    def _on_props(self, _c, _s, path, _i, _sig, params):
+        iface, changed, invalidated = params.unpack()
+        if iface == DEV and path in self.devices:
+            self.devices[path].update(changed)
+            for k in invalidated:
+                self.devices[path].pop(k, None)
+        elif iface == DEV:
+            self.devices[path] = dict(changed)
+        elif iface == ADP and path == self.adapter_path:
+            self.adapter.update(changed)
+            if changed.get("Discovering") is False and self.scanning_by_us:
+                self.scanning_by_us = False
+        elif iface == BAT and "Percentage" in changed:
+            self.battery[path] = changed["Percentage"]
+        else:
+            return
+        self.queue_render()
+
+    def call(self, path, iface, method, params, timeout_ms, done, what=""):
+        if DRY:
+            print(f"[dry-run] {method} {iface} {path} {params}", file=sys.stderr, flush=True)
+            GLib.timeout_add(700, lambda: done(None, dry=True) or False)
+            return
+        if not self.bus:
+            done(RuntimeError("bus not ready"))
+            return
+
+        def cb(bus, res):
+            try:
+                bus.call_finish(res)
+                done(None)
+            except GLib.Error as e:
+                done(e)
+        self.bus.call(BLUEZ, path, iface, method, params, None, Gio.DBusCallFlags.NONE,
+                      timeout_ms, None, cb)
+
+    def set_prop(self, path, iface, name, variant, done):
+        self.call(path, PROPS, "Set", GLib.Variant("(ssv)", (iface, name, variant)), 10000, done)
+
+    # ---------------------------------------------------------------- actions
+    def activate(self, key):
+        if key is None:
+            return
+        if key == "power":
+            return self.toggle_power()
+        if key == "scan":
+            return self.toggle_scan()
+        d = self.devices.get(key)
+        if not d or key in self.busy:
+            return
+        name = self.dev_name(key)
+        if not self.powered():
+            self.set_status("ADAPTER OFFLINE · POWER UP FIRST", "err")
+            return
+        if not d.get("Paired"):
+            return self.pair(key, name)
+        if d.get("Connected"):
+            self.busy[key] = "UNLINKING"
+            self.set_status(f"SEVERING LINK · {name}", "busy")
+            self.call(key, DEV, "Disconnect", None, 20000,
+                      lambda e, dry=False: self._done(key, e, f"LINK SEVERED · {name}", dry))
+        else:
+            self.busy[key] = "LINKING"
+            self.set_status(f"ESTABLISHING LINK · {name}", "busy")
+            self.call(key, DEV, "Connect", None, 30000,
+                      lambda e, dry=False: self._done(key, e, f"LINK ESTABLISHED · {name}", dry))
+        self.render()
+
+    def _done(self, key, err, ok_msg, dry=False):
+        state = self.busy.pop(key, None)
+        if err and isinstance(err, GLib.Error) and err.matches(Gio.io_error_quark(), Gio.IOErrorEnum.TIMED_OUT):
+            if state == "LINKING":  # stop bluez retrying a unit that never answered
+                self.call(key, DEV, "Disconnect", None, 5000, lambda e, dry=False: None)
+            self.set_status("NO RESPONSE · UNIT OFF OR OUT OF RANGE", "err")
+        elif err:
+            self.set_status(f"FAILED · {short_err(err)}", "err")
+        else:
+            self.set_status(("DRY RUN · " if dry else "") + ok_msg, "ok")
+        self.render()
+
+    def pair(self, key, name):
+        self.busy[key] = "PAIRING"
+        self.set_status(f"PAIRING · {name}", "busy")
+        self.render()
+        if self.layer:  # blueman's agent may need the keyboard for a PIN prompt
+            self.layer.release()
+
+        def paired(e, dry=False):
+            if self.layer:
+                self.layer.grab()
+            if e and "AlreadyExists" not in str(e):
+                return self._done(key, e, "")
+            self.set_status(f"TRUSTING · {name}", "busy")
+            self.set_prop(key, DEV, "Trusted", GLib.Variant("b", True), trusted)
+
+        def trusted(e, dry=False):
+            if e:
+                return self._done(key, e, "")
+            self.busy[key] = "LINKING"
+            self.set_status(f"ESTABLISHING LINK · {name}", "busy")
+            self.render()
+            self.call(key, DEV, "Connect", None, 30000,
+                      lambda e2, dry=False: self._done(key, e2, f"PAIRED + LINKED · {name}", dry))
+
+        self.call(key, DEV, "Pair", None, 60000, paired)
+
+    def toggle_power(self):
+        if not self.adapter_path:
+            return
+        want = not self.powered()
+        self.set_status("POWERING UP ADAPTER" if want else "POWERING DOWN ADAPTER", "busy")
+
+        def done(e, dry=False):
+            if e:
+                self.set_status(f"POWER FAILED · {short_err(e)}", "err")
+            else:
+                self.set_status(("DRY RUN · " if dry else "") +
+                                ("ADAPTER ONLINE" if want else "ADAPTER OFFLINE"), "ok")
+            self.render()
+        self.set_prop(self.adapter_path, ADP, "Powered", GLib.Variant("b", want), done)
+
+    def toggle_scan(self):
+        if not self.adapter_path:
+            return
+        if not self.powered():
+            self.set_status("ADAPTER OFFLINE · POWER UP FIRST", "err")
+            return
+        if self.scanning():
+            self.stop_scan()
+            return
+
+        def done(e, dry=False):
+            if e and "InProgress" not in str(e):
+                self.set_status(f"SCAN FAILED · {short_err(e)}", "err")
+                return
+            self.scanning_by_us = True
+            self.scan_left = SCAN_SECONDS
+            if self.scan_timer:
+                GLib.source_remove(self.scan_timer)
+            self.scan_timer = GLib.timeout_add_seconds(1, self._scan_tick)
+            self.set_status(("DRY RUN · " if dry else "") + "SWEEPING FOR NEARBY UNITS", "busy")
+            self.render()
+        self.call(self.adapter_path, ADP, "StartDiscovery", None, 10000, done)
+
+    def _scan_tick(self):
+        self.scan_left -= 1
+        if self.scan_left <= 0 or not self.scanning_by_us:
+            self.stop_scan()
+            return False
+        self.update_scan_row()
+        return True
+
+    def stop_scan(self):
+        if self.scan_timer:
+            GLib.source_remove(self.scan_timer)
+            self.scan_timer = None
+        if self.scanning_by_us and self.adapter_path:
+            self.call(self.adapter_path, ADP, "StopDiscovery", None, 5000, lambda e, dry=False: None)
+        self.scanning_by_us = False
+        n = len(self.nearby()[0])
+        self.set_status(f"SWEEP COMPLETE · {n} UNIT{'S' if n != 1 else ''} IN RANGE", "ok")
+        self.render()
+
+    def quit(self):
+        if self.scanning_by_us and self.adapter_path and self.bus and not DRY:
+            try:  # best effort; bluez also drops our discovery session when we exit
+                self.bus.call_sync(BLUEZ, self.adapter_path, ADP, "StopDiscovery", None, None,
+                                   Gio.DBusCallFlags.NONE, 300, None)
+            except GLib.Error:
+                pass
+        try:
+            with open(PIDFILE) as f:
+                if f.read().strip() == str(os.getpid()):
+                    os.unlink(PIDFILE)
+        except OSError:
+            pass
+        self.app.quit()
+
+    # ---------------------------------------------------------------- model
+    def powered(self):
+        return bool(self.adapter.get("Powered"))
+
+    def scanning(self):
+        return self.scanning_by_us or (DRY and self.scan_timer is not None)
+
+    def dev_name(self, path):
+        d = self.devices.get(path, {})
+        return d.get("Alias") or d.get("Name") or d.get("Address", "?")
+
+    def has_name(self, path):
+        d = self.devices.get(path, {})
+        return bool(d.get("Name"))
+
+    def matches(self, path):
+        if not self.filter:
+            return True
+        d = self.devices.get(path, {})
+        hay = " ".join(str(x) for x in (self.dev_name(path), d.get("Address", ""),
+                                        TYPES.get(d.get("Icon", ""), ("", ""))[1])).lower()
+        return all(tok in hay for tok in self.filter.lower().split())
+
+    def sorted_paired(self):
+        ps = [p for p, d in self.devices.items() if d.get("Paired") and self.matches(p)]
+        return sorted(ps, key=lambda p: (not self.devices[p].get("Connected"), self.dev_name(p).lower()))
+
+    def nearby(self):
+        """Unpaired units in range -> (rows to show, count of unnamed ones hidden).
+
+        Unnamed BLE beacons are noise, so they stay hidden unless the filter is
+        used (type part of a MAC to reach one) or one is mid-pairing."""
+        seen = [p for p, d in self.devices.items()
+                if not d.get("Paired") and ("RSSI" in d or p in self.busy)]
+        if not (self.scanning() or self.filter):
+            seen = [p for p in seen if "RSSI" in self.devices[p]]
+        shown = [p for p in seen if self.matches(p) and
+                 (self.has_name(p) or self.filter or p in self.busy)]
+        hidden = 0 if self.filter else sum(1 for p in seen if not self.has_name(p) and p not in self.busy)
+        shown.sort(key=lambda p: (not self.has_name(p), -self.devices[p].get("RSSI", -999)))
+        return shown, hidden
+
+    # ---------------------------------------------------------------- render
+    def queue_render(self):
+        if not self.refresh_pending:
+            self.refresh_pending = True
+            GLib.timeout_add(120, self._flush)
+
+    def _flush(self):
+        self.refresh_pending = False
+        self.render()
+        return False
+
+    def render(self):
+        a = self.adapter
+        paired = self.sorted_paired() if self.loaded else []
+        allpaired = [p for p, d in self.devices.items() if d.get("Paired")]
+        linked = sum(1 for p in allpaired if self.devices[p].get("Connected"))
+        self.head_aux.set_label(f"LINKS {linked:02d}/{len(allpaired):02d}" if self.loaded else "SYNC…")
+        if self.adapter_path:
+            self.readout.set_label(
+                f"HOST {str(a.get('Alias', '?')).upper()}"
+                f"  ·  {a.get('Address', '')}  ·  POWER {'ON' if self.powered() else 'OFF'}"
+                + ("  ·  DRY RUN" if DRY else ""))
+        else:
+            self.readout.set_label("HOST —  ·  NO CONTROLLER" if self.loaded else "READING MAGI BUS…")
+
+        while (child := self.list.get_first_child()) is not None:
+            self.list.remove(child)
+        self.rows = {}
+        self.keys = []
+
+        if not self.filter:
+            self.add_section("CONTROL", None)
+            self.add_row("power", self.make_power())
+            self.add_row("scan", self.make_scan())
+
+        self.add_section("PAIRED UNITS", len(paired) if self.loaded else None)
+        if not self.loaded:
+            self.add_empty("READING BLUEZ OBJECT TREE…")
+        elif not paired:
+            self.add_empty("NO MATCH" if self.filter else "NO PAIRED UNITS · RUN A SCAN")
+        for p in paired:
+            self.add_row(p, self.make_device(p))
+
+        near, hidden = self.nearby() if self.loaded else ([], 0)
+        if near or hidden or self.scanning():
+            self.add_section("NEARBY UNITS", len(near))
+            if not near and not hidden:
+                self.add_empty("SWEEPING… NO SIGNALS YET")
+            for p in near:
+                self.add_row(p, self.make_device(p))
+            if hidden:
+                self.add_empty(f"+{hidden} UNNAMED SIGNAL{'S' if hidden != 1 else ''} · TYPE A MAC TO REACH")
+
+        if self.sel_key not in self.keys:
+            self.sel_key = next((k for k in self.keys if k not in ("power", "scan")),
+                                self.keys[0] if self.keys else None)
+        self.paint_selection()
+
+    def add_section(self, text, count):
+        row = Gtk.ListBoxRow(selectable=False, activatable=False)
+        row.set_can_focus(False)
+        b = Gtk.Box(spacing=8)
+        b.add_css_class("section")
+        b.append(lbl(text, ["lbl"]))
+        rule = Gtk.Box(hexpand=True, valign=Gtk.Align.CENTER)
+        rule.add_css_class("rule")
+        b.append(rule)
+        if count is not None:
+            b.append(lbl(f"{count:02d}", ["cnt"]))
+        row.set_child(b)
+        self.list.append(row)
+
+    def add_empty(self, text):
+        row = Gtk.ListBoxRow(selectable=False, activatable=False)
+        row.set_can_focus(False)
+        row.set_child(lbl(text, ["empty"]))
+        self.list.append(row)
+
+    def add_row(self, key, child):
+        row = Gtk.ListBoxRow()
+        row.set_can_focus(False)
+        row.key = key
+        row.set_child(child)
+        self.list.append(row)
+        self.rows[key] = row
+        self.keys.append(key)
+
+    def item(self, glyph, name, meta, right, classes=()):
+        b = Gtk.Box(spacing=12)
+        b.add_css_class("item")
+        for c in classes:
+            b.add_css_class(c)
+        b.append(lbl(glyph, ["icon"], xalign=0.5))
+        mid = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True, valign=Gtk.Align.CENTER)
+        mid.append(lbl(name, ["name"], ellipsize=True))
+        mid.append(lbl(meta, ["meta"], ellipsize=True))
+        b.append(mid)
+        rb = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3, valign=Gtk.Align.CENTER)
+        for w in right:
+            w.set_halign(Gtk.Align.END)
+            rb.append(w)
+        b.append(rb)
+        return b
+
+    def make_power(self):
+        on = self.powered()
+        if not self.adapter_path:
+            return self.item(G["bt_off"], "ADAPTER POWER", "NO CONTROLLER PRESENT",
+                             [lbl("ABSENT", ["chip", "off"])], ["ctl"])
+        return self.item(G["bt"] if on else G["bt_off"], "ADAPTER POWER",
+                         "ENTER TO " + ("POWER DOWN" if on else "POWER UP"),
+                         [lbl("ONLINE" if on else "OFFLINE", ["chip", "on" if on else "off"])], ["ctl"])
+
+    def make_scan(self):
+        self.scan_chip = lbl("", ["chip"])
+        self.scan_name = lbl("", ["name"])
+        w = self.item(G["bt_scan"], "", "NEW UNITS: ENTER PAIRS + TRUSTS + LINKS",
+                      [self.scan_chip], ["ctl"] + ([] if self.powered() else ["dimmed"]))
+        # swap the name label for one we can animate
+        mid = w.get_first_child().get_next_sibling()
+        mid.remove(mid.get_first_child())
+        mid.prepend(self.scan_name)
+        self.update_scan_row()
+        return w
+
+    def update_scan_row(self):
+        if not getattr(self, "scan_chip", None):
+            return
+        if self.scanning():
+            frame = self.tick % 4
+            self.scan_name.set_label("SWEEPING " + bars(frame + 1, 4))
+            self.scan_chip.set_label(f"{self.scan_left:02d}S · STOP")
+            self.scan_chip.remove_css_class("acc")
+            self.scan_chip.add_css_class("busy")
+        else:
+            self.scan_name.set_label("SCAN FOR NEARBY UNITS")
+            self.scan_chip.set_label("SWEEP")
+            self.scan_chip.remove_css_class("busy")
+            self.scan_chip.add_css_class("acc")
+
+    def make_device(self, p):
+        d = self.devices[p]
+        glyph_key, tlabel = TYPES.get(d.get("Icon", ""), ("unknown", "DEVICE"))
+        name = self.dev_name(p) if (d.get("Paired") or self.has_name(p)) else "UNIDENTIFIED UNIT"
+        addr = d.get("Address", "")
+        meta = [tlabel, addr]
+        if d.get("Paired") and not d.get("Trusted"):
+            meta.append("UNTRUSTED")
+        right, classes = [], []
+        state = self.busy.get(p)
+        if state:
+            frame = "▰" * (self.tick % 3 + 1)
+            right.append(lbl(f"{state} {frame:<3}", ["chip", "busy"]))
+            classes.append("busy")
+        elif not d.get("Paired"):
+            right.append(lbl("PAIR", ["chip", "new"]))
+        elif d.get("Connected"):
+            right.append(lbl("LINKED", ["chip", "on"]))
+            classes.append("linked")
+        else:
+            right.append(lbl("STANDBY", ["chip"]))
+        if p in self.battery:
+            pct = int(self.battery[p])
+            css = ["batt"] + (["crit"] if pct <= 15 else ["low"] if pct <= 35 else [])
+            right.append(lbl(f"{bars(min(5, (pct + 10) // 20), 5)} {pct:3d}%", css))
+        elif not d.get("Paired") and "RSSI" in d:
+            r = d["RSSI"]
+            n = 4 if r > -60 else 3 if r > -70 else 2 if r > -80 else 1
+            right.append(lbl(f"{bars(n, 4)} {r}dBm", ["sig"]))
+        if not self.powered():
+            classes.append("dimmed")
+        return self.item(G[glyph_key], name, " · ".join(meta), right, classes)
+
+    def animate(self):
+        self.tick += 1
+        if self.scanning():
+            self.update_scan_row()
+        if self.busy:
+            for p in list(self.busy):
+                if p in self.rows:
+                    self.rows[p].set_child(self.make_device(p))
+        return True
+
+    # ---------------------------------------------------------------- selection
+    def paint_selection(self):
+        for k, r in self.rows.items():
+            if k == self.sel_key:
+                r.add_css_class("sel")
+            else:
+                r.remove_css_class("sel")
+
+    def select(self, key, scroll=True):
+        if key not in self.rows:
+            return
+        self.sel_key = key
+        self.paint_selection()
+        if scroll:
+            GLib.idle_add(self.ensure_visible, self.rows[key])
+
+    def ensure_visible(self, row):
+        ok, bounds = row.compute_bounds(self.list)
+        if not ok:
+            return False
+        adj = self.scroller.get_vadjustment()
+        top, h = bounds.get_y(), bounds.get_height()
+        # keep a section header above the first row visible
+        if self.keys and row is self.rows.get(self.keys[0]):
+            adj.set_value(0)
+        elif top < adj.get_value():
+            adj.set_value(top - 4)
+        elif top + h > adj.get_value() + adj.get_page_size():
+            adj.set_value(top + h - adj.get_page_size() + 4)
+        return False
+
+    def move(self, step):
+        if not self.keys:
+            return
+        i = self.keys.index(self.sel_key) if self.sel_key in self.keys else -1
+        i = max(0, min(len(self.keys) - 1, i + step))
+        self.select(self.keys[i])
+
+    def on_key(self, _ctl, keyval, _code, state):
+        ctrl = bool(state & Gdk.ModifierType.CONTROL_MASK)
+        alt = bool(state & Gdk.ModifierType.ALT_MASK)
+        name = Gdk.keyval_name(keyval) or ""
+        typing = self.filter or self.filter_mode
+        if name == "Escape":
+            if typing:
+                self.set_filter("", False)
+            else:
+                self.quit()
+        elif name in ("Down", "KP_Down") or (ctrl and name in ("n", "j")) or (name == "j" and not typing and not ctrl):
+            self.move(1)
+        elif name in ("Up", "KP_Up") or (ctrl and name == "k") or (name == "k" and not typing and not ctrl):
+            self.move(-1)
+        elif name in ("Page_Down",):
+            self.move(5)
+        elif name in ("Page_Up",):
+            self.move(-5)
+        elif name == "Home":
+            self.move(-999)
+        elif name == "End":
+            self.move(999)
+        elif name in ("Return", "KP_Enter", "space") and not (name == "space" and typing):
+            self.activate(self.sel_key)
+        elif ctrl and name == "s":
+            self.toggle_scan()
+        elif ctrl and name == "p":
+            self.toggle_power()
+        elif ctrl and name == "u":
+            self.set_filter("", self.filter_mode)
+        elif name == "BackSpace":
+            if self.filter:
+                self.set_filter(self.filter[:-1], self.filter_mode)
+            elif self.filter_mode:
+                self.set_filter("", False)
+        elif name == "slash" and not typing:
+            self.set_filter("", True)
+        elif not ctrl and not alt:
+            ch = chr(Gdk.keyval_to_unicode(keyval) or 0)
+            if ch.isprintable() and ch != "\x00":
+                self.set_filter(self.filter + ch, True)
+            else:
+                return False
+        else:
+            return False
+        return True
+
+    def set_filter(self, text, mode):
+        self.filter, self.filter_mode = text, mode
+        self.filter_box.set_visible(mode or bool(text))
+        self.filter_lbl.set_label(text + "█")
+        self.render()
+        if self.keys and (self.sel_key in ("power", "scan") or self.sel_key not in self.keys):
+            self.select(self.keys[0])
+
+
+def main():
+    # plain window + main loop: no Gtk.Application, so no session-bus round trip at startup
+    GLib.set_prgname(APP_ID)
+    loop = GLib.MainLoop()
+    picker = Picker(loop)
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, sig, lambda: picker.quit() or False)
+    loop.run()
+
+
+if __name__ == "__main__":
+    main()

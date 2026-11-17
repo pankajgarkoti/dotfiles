@@ -1,0 +1,953 @@
+#!/usr/bin/env python3
+"""eva-wifi: MAGI network link, a keyboard-first Wi-Fi picker (GTK 4 + nmcli).
+
+Colours come only from ~/.config/hypr/themes/current/colors.css, so `eva-theme toggle`
+restyles it on the next open. Running it again while it is open closes it (toggle).
+
+Resident: the first run stays alive with the window hidden and listens on
+$XDG_RUNTIME_DIR/eva-wifi.sock; later runs only poke that socket (no GTK import), so the
+picker opens in a few tens of ms. `eva-wifi --daemon` starts it hidden (used at login).
+
+Keys: Up/Down or j/k move, Enter acts, type to filter (Backspace edits, Ctrl+U clears),
+Ctrl+R / F5 rescan, Esc clears the filter / cancels the password field / closes.
+
+EVA_WIFI_DRY_RUN=1 prints actions instead of running them (passwords are redacted).
+"""
+import os
+import signal
+import socket
+import sys
+import warnings
+
+RUNTIME = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+SOCK = os.path.join(RUNTIME, "eva-wifi.sock")
+
+
+def poke_resident(msg=b"toggle"):
+    """Send msg to a running instance (toggle | ping). True if one answered."""
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as c:
+            c.settimeout(0.5)
+            c.connect(SOCK)
+            c.sendall(msg + b"\n")
+        return True
+    except OSError:
+        return False
+
+
+if __name__ == "__main__" and "--daemon" not in sys.argv[1:] and poke_resident():
+    sys.exit(0)
+
+# The cairo renderer skips GL/Vulkan setup: ~100 ms faster to first frame for a UI this simple.
+os.environ.setdefault("GSK_RENDERER", "cairo")
+
+# layer-shell overlay when gtk4-layer-shell is installed (must load before GTK/libwayland)
+sys.dont_write_bytecode = True
+try:
+    import eva_layer
+    eva_layer.preload()
+except ImportError:
+    eva_layer = None
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
+from gi.repository import Gdk, Gio, GLib, Gtk, Pango  # noqa: E402
+
+APP_ID = "eva-wifi"
+DRY_RUN = os.environ.get("EVA_WIFI_DRY_RUN") == "1"
+COLORS = os.path.expanduser("~/.config/hypr/themes/current/colors.css")
+
+CSS = """
+@import url("file://%s");
+
+* {
+  font-family: "IosevkaTerm Nerd Font Mono";
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+  outline: none;
+}
+window.eva { background: alpha(@base, 0.93); color: @text; border: 1px solid @accent; }
+
+/* header readout, same skeleton as eva-bluetooth */
+.header { background: @accent; color: @base; padding: 5px 12px; }
+.header .title { font-size: 12px; font-weight: 800; letter-spacing: 3px; }
+.header .aux { font-size: 10px; font-weight: 800; letter-spacing: 2px; }
+.hazard {
+  min-height: 4px;
+  background-image: repeating-linear-gradient(135deg, alpha(@accent, 0.55) 0px, alpha(@accent, 0.55) 6px, transparent 6px, transparent 12px);
+}
+.readout { padding: 7px 14px 2px 14px; }
+.readout label { font-size: 10px; letter-spacing: 2px; color: @dim; }
+.readout label.v { color: @c1; }
+.readout label.warn { color: @warn; font-weight: bold; }
+.readout label.bad { color: @bad; font-weight: bold; }
+
+.filter { padding: 6px 14px; margin: 6px 12px 0 12px; border: 1px solid @accent; background: alpha(@accent, 0.07); }
+.filter .p { color: @accent; font-weight: 800; letter-spacing: 2px; font-size: 10px; }
+.filter .q { color: @text; font-size: 13px; }
+
+scrolledwindow, viewport, list { background: transparent; }
+list > row { padding: 0; background: transparent; border-left: 3px solid transparent; transition: none; }
+list > row:hover { background: alpha(@surface1, 0.35); }
+list > row:selected, list > row:selected:hover { background: alpha(@accent, 0.15); border-left-color: @accent; }
+list > row:focus, list > row:focus-visible { outline: none; }
+list > row.section, list > row.section:hover { background: transparent; border-left-color: transparent; }
+
+.section { padding: 12px 14px 5px 14px; }
+.section .lbl { font-size: 10px; letter-spacing: 3px; color: @dim; font-weight: bold; }
+.section .cnt { font-size: 10px; letter-spacing: 2px; color: @accent; font-weight: bold; }
+.section .rule { min-height: 1px; background: @surface1; }
+
+.item { padding: 7px 14px 7px 11px; }
+.item.net { padding: 5px 14px 5px 11px; }
+.item.net .glyph { font-size: 17px; }
+.glyph { font-size: 20px; color: @dim; min-width: 30px; }
+.glyph.live { color: @good; }
+.glyph.ctl { color: @accent; }
+.glyph.lock { color: @c1; }
+.name { font-size: 13px; color: alpha(@text, 0.88); }
+.meta { font-size: 10px; letter-spacing: 1px; color: @dim; }
+.meta.v { color: @text; }
+list > row:selected .name { color: @text; }
+.item.current .name { color: @text; font-weight: bold; }
+
+.chip { font-size: 10px; font-weight: 800; letter-spacing: 2px; padding: 1px 7px; border: 1px solid @surface1; color: @dim; }
+.chip.on { color: @base; background: @good; border-color: @good; }
+.chip.off { color: @bad; border-color: @bad; }
+.chip.acc { color: @accent; border-color: @accent; }
+.chip.saved { color: @accent2; border-color: alpha(@accent2, 0.6); }
+.chip.ent { color: @warn; border-color: alpha(@warn, 0.7); }
+
+/* signal bars */
+.bar { background: alpha(@dim, 0.25); min-width: 3px; }
+.bar.lit { background: @good; }
+.bar.lit.weak { background: @warn; }
+.bar.lit.poor { background: @bad; }
+.sig { font-size: 10px; color: @c1; letter-spacing: 1px; min-width: 26px; }
+
+/* inline password / enterprise prompt */
+.prompt-box { padding: 2px 14px 10px 51px; }
+.prompt-box label { font-size: 10px; letter-spacing: 2px; color: @warn; font-weight: bold; }
+.prompt-box label.hint { color: @dim; font-weight: normal; letter-spacing: 1px; font-size: 9px; }
+.prompt-box entry {
+  background: alpha(@surface0, 0.95); color: @text;
+  border: 1px solid @accent; padding: 2px 8px; min-height: 26px;
+}
+.prompt-box entry:focus-within { border-color: @accent2; }
+.prompt-box entry text { color: @text; caret-color: @accent2; font-size: 13px; }
+.prompt-box entry text placeholder { color: alpha(@dim, 0.7); }
+.prompt-box entry image { color: @dim; }
+
+.empty { padding: 18px 14px; font-size: 10px; letter-spacing: 2px; color: @dim; }
+
+.footer { border-top: 1px solid @surface1; padding: 6px 12px; }
+.status { font-size: 10px; letter-spacing: 2px; color: @c1; font-weight: bold; }
+.status.err { color: @bad; }
+.status.ok { color: @good; }
+.status.busy { color: @warn; }
+.key { font-size: 9px; font-weight: 800; background: @surface1; color: @text; padding: 0 4px; }
+.hint { font-size: 9px; letter-spacing: 1px; color: @dim; }
+""" % COLORS
+
+
+# ----------------------------------------------------------------- helpers
+
+def split_terse(line):
+    """Split one line of `nmcli -t` output, honouring \\: and \\\\ escapes."""
+    out, cur, esc = [], [], False
+    for ch in line:
+        if esc:
+            cur.append(ch)
+            esc = False
+        elif ch == "\\":
+            esc = True
+        elif ch == ":":
+            out.append("".join(cur))
+            cur = []
+        else:
+            cur.append(ch)
+    out.append("".join(cur))
+    return out
+
+
+def run_async(argv, callback, stdin_text=None):
+    """Run argv without blocking the UI; callback(ok, stdout, stderr)."""
+    flags = Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+    if stdin_text is not None:
+        flags |= Gio.SubprocessFlags.STDIN_PIPE
+    env_argv = ["env", "LC_ALL=C"] + argv
+    try:
+        proc = Gio.Subprocess.new(env_argv, flags)
+    except GLib.Error as e:
+        GLib.idle_add(lambda: callback(False, "", e.message) and False)
+        return
+
+    def done(p, res):
+        try:
+            _, out, err = p.communicate_utf8_finish(res)
+            callback(p.get_successful(), out or "", err or "")
+        except GLib.Error as e:
+            callback(False, "", e.message)
+
+    proc.communicate_utf8_async(stdin_text, None, done)
+
+
+def signal_class(sig):
+    return "" if sig >= 60 else ("weak" if sig >= 35 else "poor")
+
+
+def make_bars(sig):
+    box = Gtk.Box(spacing=2, valign=Gtk.Align.CENTER)
+    box.add_css_class("bars")
+    lit = 0 if sig <= 0 else 1 + (sig >= 35) + (sig >= 55) + (sig >= 75)
+    for i, h in enumerate((4, 7, 10, 13)):
+        b = Gtk.Box(valign=Gtk.Align.END)
+        b.set_size_request(3, h)
+        b.add_css_class("bar")
+        if i < lit:
+            b.add_css_class("lit")
+            if signal_class(sig):
+                b.add_css_class(signal_class(sig))
+        box.append(b)
+    wrap = Gtk.Box(valign=Gtk.Align.CENTER)
+    wrap.set_size_request(-1, 13)
+    wrap.append(box)
+    return wrap
+
+
+def lbl(text, *classes, xalign=0.0, hexpand=False, ellipsize=False):
+    w = Gtk.Label(label=text, xalign=xalign, hexpand=hexpand)
+    for c in classes:
+        w.add_css_class(c)
+    if ellipsize:
+        w.set_ellipsize(Pango.EllipsizeMode.END)
+    return w
+
+
+def is_enterprise(sec):
+    return "802.1X" in sec or "EAP" in sec
+
+
+# ----------------------------------------------------------------- window
+
+class Picker(Gtk.ApplicationWindow):
+    def __init__(self, app):
+        super().__init__(application=app, title="MAGI · NETWORK LINK")
+        self.add_css_class("eva")
+        self.set_default_size(520, 600)
+        self.set_decorated(False)
+        # top-right under the bar; falls back to the Hyprland window rule without layer shell
+        self.layer = eva_layer and eva_layer.attach(
+            self, APP_ID, anchor="top right", margins={"top": 6, "right": 6},
+            on_outside=self.dismiss)
+
+        self.radio = None          # True / False / None (unknown)
+        self.iface = None
+        self.current = None        # dict(ssid, signal, ip, uuid)
+        self.networks = []         # list of dicts
+        self.saved = {}            # ssid -> uuid
+        self.filter = ""
+        self.scanning = False
+        self.busy = False
+        self.prompt_row = None     # row with an open inline prompt
+        self.was_active = False
+        self.user_moved = False  # keep the user's selection across refreshes
+        self.loaded = {"radio": False, "dev": False, "list": False, "saved": False}
+
+        root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.set_child(root)
+
+        head = Gtk.Box(spacing=8)
+        head.add_css_class("header")
+        head.append(lbl("MAGI · NETWORK LINK", "title", hexpand=True))
+        self.lbl_state = lbl("SYNC…", "aux", xalign=1)
+        head.append(self.lbl_state)
+        root.append(head)
+        haz = Gtk.Box()
+        haz.add_css_class("hazard")
+        root.append(haz)
+
+        ro = Gtk.Box(spacing=6)
+        ro.add_css_class("readout")
+        ro.append(lbl("IFACE"))
+        self.lbl_iface = lbl("----", "v")
+        ro.append(self.lbl_iface)
+        ro.append(lbl("·"))
+        ro.append(lbl("CONTACTS"))
+        self.lbl_count = lbl("--", "v")
+        ro.append(self.lbl_count)
+        ro.append(lbl("·"))
+        ro.append(lbl("RADIO"))
+        self.lbl_radio = lbl("--", "v")
+        ro.append(self.lbl_radio)
+        if DRY_RUN:
+            ro.append(lbl("·"))
+            ro.append(lbl("DRY RUN", "warn"))
+        root.append(ro)
+
+        self.filter_box = Gtk.Box(spacing=10)
+        self.filter_box.add_css_class("filter")
+        self.filter_box.append(lbl("FILTER ▸", "p"))
+        self.lbl_filter = lbl("", "q", hexpand=True, ellipsize=True)
+        self.filter_box.append(self.lbl_filter)
+        self.filter_box.set_visible(False)
+        root.append(self.filter_box)
+
+        self.list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
+        self.list.set_activate_on_single_click(True)
+        self.list.connect("row-activated", self.on_row_activated)
+        self.list.set_focusable(False)  # not set_can_focus: that would block the password entry too
+        sw = Gtk.ScrolledWindow(vexpand=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
+        sw.set_child(self.list)
+        self.scroller = sw
+        root.append(sw)
+
+        foot = Gtk.Box(spacing=6)
+        foot.add_css_class("footer")
+        self.status = lbl("STANDING BY", "status", hexpand=True, ellipsize=True)
+        foot.append(self.status)
+        for k, h in (("⏎", "LINK"), ("^R", "RESCAN"), ("ESC", "CLOSE")):
+            foot.append(lbl(k, "key"))
+            foot.append(lbl(h, "hint"))
+        root.append(foot)
+
+        keys = Gtk.EventControllerKey()
+        keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        keys.connect("key-pressed", self.on_key)
+        self.add_controller(keys)
+        self.connect("notify::is-active", self.on_active)
+        # a compositor close (SUPER+Q) hides instead of destroying the resident window
+        self.connect("close-request", lambda *_: self.dismiss() or True)
+
+        self.spin_i = 0
+        GLib.timeout_add(120, self.tick)
+        self.render()
+        self.refresh(rescan=False)
+
+    # ------------------------------------------------------------- focus
+
+    def on_active(self, *_):
+        if self.is_active():
+            self.was_active = True
+        elif self.was_active:
+            # nm-connection-editor / polkit dialogs steal focus: closing is intended
+            self.dismiss()
+
+    def dismiss(self):
+        """Hide (the process stays resident); forget anything typed."""
+        self.close_prompt()
+        self.filter = ""
+        self.lbl_filter.set_text("")
+        self.filter_box.set_visible(False)
+        self.was_active = False
+        self.set_visible(False)
+
+    def summon(self):
+        load_css()  # re-read colors.css: eva-theme may have switched since last open
+        self.user_moved = False
+        self.show_status("", "info")
+        self.render()
+        self.refresh(rescan=False)
+        self.present()
+
+    def toggle(self):
+        if self.get_visible():
+            self.dismiss()
+        else:
+            self.summon()
+
+    # ------------------------------------------------------------- data
+
+    def refresh(self, rescan):
+        for k in self.loaded:
+            self.loaded[k] = False
+        run_async(["nmcli", "-t", "radio", "wifi"], self.got_radio)
+        run_async(["nmcli", "-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "dev"], self.got_dev)
+        run_async(["nmcli", "-t", "-f", "NAME,UUID,TYPE", "con", "show"], self.got_cons)
+        if rescan:
+            self.start_scan()
+        else:
+            self.list_networks("no")
+
+    def start_scan(self):
+        self.scanning = True
+        self.update_state()
+        # `--rescan yes` blocks until the scan is done, in the subprocess, not here
+        self.list_networks("yes")
+
+    def list_networks(self, rescan):
+        run_async(["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY",
+                   "dev", "wifi", "list", "--rescan", rescan],
+                  lambda ok, out, err: self.got_list(ok, out, err, rescan))
+
+    def got_radio(self, ok, out, err):
+        self.radio = out.strip() == "enabled" if ok else None
+        self.loaded["radio"] = True
+        self.render()
+
+    def got_dev(self, ok, out, err):
+        self.iface, conn = None, None
+        for line in out.splitlines():
+            f = split_terse(line)
+            if len(f) >= 4 and f[1] == "wifi":
+                self.iface = f[0]
+                if f[2] == "connected":
+                    conn = f[3]
+                break
+        self.lbl_iface.set_text((self.iface or "NONE").upper())
+        self.loaded["dev"] = True
+        if self.iface and conn:
+            run_async(["nmcli", "-t", "-g", "IP4.ADDRESS,GENERAL.CONNECTION",
+                       "dev", "show", self.iface], self.got_ip)
+        else:
+            self.current = None
+            self.render()
+
+    def got_ip(self, ok, out, err):
+        lines = [l for l in out.splitlines()]
+        ip = lines[0].split(" | ")[0] if lines and lines[0] else "NO ADDRESS"
+        cur = self.current or {}
+        cur["ip"] = ip
+        cur["conn"] = lines[1] if len(lines) > 1 else ""
+        self.current = cur
+        self.render()
+
+    def got_cons(self, ok, out, err):
+        uuids = []
+        for line in out.splitlines():
+            f = split_terse(line)
+            if len(f) >= 3 and f[2] == "802-11-wireless":
+                uuids.append(f[1])
+        if not uuids:
+            self.saved = {}
+            self.loaded["saved"] = True
+            self.render()
+            return
+        argv = ["nmcli", "-t", "-g", "connection.uuid,802-11-wireless.ssid", "con", "show"]
+        for u in uuids:
+            argv += ["uuid", u]
+        run_async(argv, self.got_ssids)
+
+    def got_ssids(self, ok, out, err):
+        saved = {}
+        lines = out.split("\n")
+        i = 0
+        while i + 1 < len(lines):
+            u, s = lines[i].strip(), lines[i + 1]
+            if u and len(u) == 36:
+                saved.setdefault(s, u)
+                i += 2
+            else:
+                i += 1
+        self.saved = saved
+        self.loaded["saved"] = True
+        self.render()
+
+    def got_list(self, ok, out, err, rescan):
+        if rescan == "yes":
+            self.scanning = False
+        best = {}
+        for line in out.splitlines():
+            f = split_terse(line)
+            if len(f) < 4 or not f[1]:
+                continue
+            inuse, ssid, sig, sec = f[0] == "*", f[1], int(f[2] or 0), f[3].strip()
+            n = best.get(ssid)
+            if n is None:
+                best[ssid] = n = {"ssid": ssid, "signal": sig, "sec": sec, "inuse": inuse}
+            else:
+                n["inuse"] = n["inuse"] or inuse
+                if sig > n["signal"]:
+                    n["signal"], n["sec"] = sig, sec
+        self.networks = sorted(best.values(), key=lambda n: (-n["signal"], n["ssid"].lower()))
+        self.loaded["list"] = True
+        if not ok and rescan == "yes":
+            self.show_status("SCAN FAILED · " + (err.strip() or "nmcli error"), "err")
+        # first open with an empty cache: scan once on our own
+        if rescan == "no" and len(self.networks) <= 1 and self.radio is not False:
+            self.start_scan()
+        self.render()
+
+    # ------------------------------------------------------------- view
+
+    def tick(self):
+        self.spin_i += 1
+        if self.scanning or self.busy:
+            self.update_state()
+        return True
+
+    def update_state(self):
+        st = self.lbl_state
+        for c in ("scan", "err", "val"):
+            st.remove_css_class(c)
+        frames = "▮▯▯▯ ▮▮▯▯ ▮▮▮▯ ▮▮▮▮ ▯▮▮▮ ▯▯▮▮ ▯▯▯▮ ▯▯▯▯".split()
+        if self.scanning:
+            st.set_text("SCANNING " + frames[self.spin_i % len(frames)])
+            st.add_css_class("scan")
+        elif self.busy:
+            st.set_text("LINKING " + frames[self.spin_i % len(frames)])
+            st.add_css_class("scan")
+        elif self.radio is False:
+            st.set_text("RADIO SILENT")
+            st.add_css_class("err")
+        elif not all(self.loaded.values()):
+            st.set_text("SYNC " + frames[self.spin_i % len(frames)])
+            st.add_css_class("scan")
+        else:
+            st.set_text("LINK NOMINAL" if self.current else "NO LINK")
+            st.add_css_class("val" if self.current else "err")
+
+    def show_status(self, text, kind="info"):
+        s = self.status
+        for c in ("err", "ok", "busy", "info"):
+            s.remove_css_class(c)
+        s.add_css_class(kind)
+        s.set_text(text or "STANDING BY")
+
+    def section(self, title, count=None):
+        row = Gtk.ListBoxRow(selectable=False, activatable=False)
+        row.add_css_class("section")
+        box = Gtk.Box(spacing=10)
+        box.append(lbl(title, "lbl"))
+        rule = Gtk.Box(hexpand=True, valign=Gtk.Align.CENTER)
+        rule.add_css_class("rule")
+        box.append(rule)
+        if count is not None:
+            box.append(lbl("%02d" % count, "cnt"))
+        row.set_child(box)
+        return row
+
+    def ctl_row(self, key, glyph, name, meta, chip=None, glyph_cls="ctl"):
+        r = Gtk.ListBoxRow()
+        r.key = key
+        box = Gtk.Box(spacing=10)
+        box.add_css_class("item")
+        box.append(lbl(glyph, "glyph", glyph_cls))
+        txt = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1, hexpand=True,
+                      valign=Gtk.Align.CENTER)
+        txt.append(lbl(name, "name", ellipsize=True))
+        if meta:
+            txt.append(meta if isinstance(meta, Gtk.Widget) else lbl(meta, "meta", ellipsize=True))
+        box.append(txt)
+        if chip is not None:
+            chip.set_valign(Gtk.Align.CENTER)
+            box.append(chip)
+        r.set_child(box)
+        return r
+
+    def render(self, keep_key=None):
+        if self.prompt_row is not None:
+            return  # don't rebuild under the user's fingers while they type a password
+        sel = self.list.get_selected_row()
+        if keep_key is None and self.user_moved and sel is not None:
+            keep_key = getattr(sel, "key", None)
+
+        while (child := self.list.get_first_child()) is not None:
+            self.list.remove(child)
+
+        q = self.filter.lower()
+        cur_ssid = self.current.get("conn") if self.current else None
+        # the in-use SSID is the real one; the connection name may differ
+        for n in self.networks:
+            if n["inuse"]:
+                cur_ssid = n["ssid"]
+
+        if not q:
+            self.list.append(self.section("CONTROL"))
+            if self.radio is None:
+                chip, meta = lbl("····", "chip"), "READING RADIO STATE"
+            elif self.radio:
+                chip, meta = lbl("ONLINE", "chip", "on"), "ENTER TO SILENCE THE RADIO"
+            else:
+                chip, meta = lbl("SILENT", "chip", "off"), "ENTER TO POWER UP"
+            self.list.append(self.ctl_row(("radio",), "\U000f05a9" if self.radio else "\U000f05aa",
+                                          "WI-FI RADIO", meta, chip))
+            self.list.append(self.ctl_row(("rescan",), "\U000f0450", "RESCAN SPECTRUM",
+                                          "SWEEP FOR ACCESS POINTS IN RANGE",
+                                          lbl("SWEEP", "chip", "acc")))
+
+        if self.current and cur_ssid and not q:
+            self.list.append(self.section("CURRENT LINK"))
+            curnet = next((n for n in self.networks if n["ssid"] == cur_ssid), None)
+            sig = curnet["signal"] if curnet else 0
+            sec = curnet["sec"].replace("802.1X", "EAP") if curnet and curnet["sec"] else "OPEN"
+            meta = Gtk.Box(spacing=6)
+            meta.append(lbl("IPV4", "meta"))
+            meta.append(lbl(self.current.get("ip", "…"), "meta", "v"))
+            meta.append(lbl("·  " + sec, "meta"))
+            right = Gtk.Box(spacing=8)
+            right.append(lbl("LINKED", "chip", "on"))
+            right.append(lbl("%d%%" % sig, "sig", xalign=1))
+            right.append(make_bars(sig))
+            r = self.ctl_row(("current", cur_ssid), "\U000f0928", cur_ssid, meta, right, "live")
+            r.get_child().add_css_class("current")
+            r.net = curnet or {"ssid": cur_ssid, "signal": 0, "sec": "", "inuse": True}
+            self.list.append(r)
+
+        avail = [n for n in self.networks if n["ssid"] != cur_ssid]
+        if q:
+            avail = [n for n in self.networks if q in n["ssid"].lower()]
+        if self.radio is not False:
+            self.list.append(self.section("MATCHES" if q else "IN RANGE", len(avail)))
+            for n in avail:
+                self.list.append(self.net_row(n))
+            if not avail:
+                e = Gtk.ListBoxRow(selectable=False, activatable=False)
+                e.set_child(lbl("SCANNING FOR CONTACTS…" if self.scanning or not self.loaded["list"]
+                                else "NO CONTACT", "empty"))
+                self.list.append(e)
+
+        self.lbl_count.set_text("%02d" % len(self.networks) if self.loaded["list"] else "--")
+        self.lbl_radio.set_text("--" if self.radio is None else ("ON" if self.radio else "OFF"))
+        self.update_state()
+
+        # restore selection: the user's row, else the first network, else the first row
+        target, first, first_net = None, None, None
+        row = self.list.get_first_child()
+        while row is not None:
+            key = getattr(row, "key", None)
+            if key and row.get_selectable():
+                first = first or row
+                if key[0] == "net" and first_net is None:
+                    first_net = row
+                if keep_key and key == keep_key:
+                    target = row
+            row = row.get_next_sibling()
+        target = target or first_net or first
+        if target is not None:
+            self.list.select_row(target)
+
+    def net_row(self, n):
+        r = Gtk.ListBoxRow()
+        r.key = ("net", n["ssid"])
+        r.net = n
+        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        box = Gtk.Box(spacing=10)
+        box.add_css_class("item")
+        box.add_css_class("net")
+        secured = bool(n["sec"])
+        box.append(lbl("\U000f033e" if secured else "\U000f0fc6", "glyph", "lock" if secured else "open"))
+        box.append(lbl(n["ssid"], "name", hexpand=True, ellipsize=True))
+        if is_enterprise(n["sec"]):
+            t = lbl("ENTERPRISE", "chip", "ent")
+            t.set_valign(Gtk.Align.CENTER)
+            box.append(t)
+        if n["ssid"] in self.saved:
+            t = lbl("SAVED", "chip", "saved")
+            t.set_valign(Gtk.Align.CENTER)
+            box.append(t)
+        sec = n["sec"].replace("802.1X", "EAP") if secured else "OPEN"
+        box.append(lbl(sec, "meta", xalign=1))
+        box.append(lbl("%d" % n["signal"], "sig", xalign=1))
+        box.append(make_bars(n["signal"]))
+        outer.append(box)
+        r.set_child(outer)
+        r.outer = outer
+        return r
+
+    # ------------------------------------------------------------- actions
+
+    def on_row_activated(self, _lb, row):
+        key = getattr(row, "key", None)
+        if not key or self.busy:
+            return
+        if key[0] == "radio":
+            if self.radio is None:
+                return
+            want = "off" if self.radio else "on"
+            self.do(["nmcli", "radio", "wifi", want], "RADIO %s" % want.upper(),
+                    after=lambda ok: self.refresh(rescan=want == "on"))
+        elif key[0] == "rescan":
+            self.start_scan()
+            self.render()
+        elif key[0] == "current":
+            self.show_status("ALREADY LINKED · %s" % key[1], "info")
+        elif key[0] == "net":
+            self.connect_net(row)
+
+    def connect_net(self, row):
+        n = row.net
+        ssid = n["ssid"]
+        if ssid in self.saved:
+            self.do(["nmcli", "con", "up", "uuid", self.saved[ssid]], "LINKING · " + ssid)
+        elif is_enterprise(n["sec"]):
+            self.open_prompt(row, enterprise=True)
+        elif not n["sec"]:
+            self.do(self.wifi_connect_argv(ssid), "LINKING · " + ssid)
+        else:
+            self.open_prompt(row, enterprise=False)
+
+    def wifi_connect_argv(self, ssid, password=None):
+        argv = ["nmcli", "dev", "wifi", "connect", ssid]
+        if password is not None:
+            argv += ["password", password]
+        if self.iface:
+            argv += ["ifname", self.iface]
+        return argv
+
+    def open_prompt(self, row, enterprise):
+        self.close_prompt()
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        box.add_css_class("prompt-box")
+        if enterprise:
+            box.append(lbl("WPA-ENTERPRISE · CONFIGURE IN NM-CONNECTION-EDITOR"))
+            box.append(lbl("⏎ OPEN EDITOR    ESC CANCEL", "hint"))
+            row.prompt = ("enterprise", None)
+        else:
+            box.append(lbl("PASSPHRASE REQUIRED · %s" % row.net["sec"]))
+            pe = Gtk.PasswordEntry(show_peek_icon=True, hexpand=True)
+            pe.set_property("placeholder-text", "passphrase")
+            pe.connect("activate", lambda e: self.submit_password(row, e))
+            box.append(pe)
+            box.append(lbl("⏎ LINK    ESC CANCEL", "hint"))
+            row.prompt = ("password", pe)
+        row.outer.append(box)
+        row.prompt_box = box
+        self.prompt_row = row
+        self.list.select_row(row)
+        if not enterprise:
+            row.prompt[1].grab_focus()
+
+    def close_prompt(self):
+        row = self.prompt_row
+        if row is None:
+            return
+        if row.prompt[0] == "password":
+            row.prompt[1].set_text("")
+            self.set_focus(None)  # drop focus before the entry goes away
+        row.outer.remove(row.prompt_box)
+        row.prompt = None
+        self.prompt_row = None
+
+    def submit_password(self, row, entry):
+        pw = entry.get_text()
+        if len(pw) < 8 and "WEP" not in row.net["sec"]:
+            self.show_status("PASSPHRASE TOO SHORT · 8 CHARACTERS MINIMUM", "err")
+            return
+        ssid = row.net["ssid"]
+        argv = self.wifi_connect_argv(ssid, pw)
+        entry.set_text("")
+        pw = None
+        self.close_prompt()
+        self.do(argv, "LINKING · " + ssid, secret=True)
+
+    def open_editor(self):
+        self.close_prompt()
+        if DRY_RUN:
+            print("[dry-run] nm-connection-editor --create --type=wifi", flush=True)
+            self.show_status("DRY RUN · WOULD OPEN NM-CONNECTION-EDITOR", "info")
+            return
+        try:
+            Gio.Subprocess.new(["nm-connection-editor", "--create", "--type=wifi"],
+                               Gio.SubprocessFlags.NONE)
+        except GLib.Error as e:
+            self.show_status("EDITOR FAILED · " + e.message, "err")
+            return
+        self.dismiss()
+
+    def do(self, argv, label, after=None, secret=False):
+        shown = list(argv)
+        if secret and "password" in shown:
+            shown[shown.index("password") + 1] = "********"
+        if DRY_RUN:
+            print("[dry-run] " + " ".join(repr(a) if " " in a else a for a in shown), flush=True)
+            self.show_status("DRY RUN · " + label, "info")
+            return
+        self.busy = True
+        self.show_status(label + " …", "busy")
+        self.update_state()
+
+        def done(ok, out, err):
+            self.busy = False
+            if ok:
+                self.show_status("LINK ESTABLISHED" if "LINKING" in label else label + " · OK", "ok")
+            else:
+                msg = (err or out).strip().splitlines()
+                msg = msg[-1] if msg else "nmcli failed"
+                msg = msg.replace("Error: ", "")
+                self.show_status("FAILED · " + msg.upper(), "err")
+            if after:
+                after(ok)
+            else:
+                self.refresh(rescan=False)
+
+        run_async(argv, done)
+
+    # ------------------------------------------------------------- keys
+
+    def move(self, step):
+        rows = []
+        row = self.list.get_first_child()
+        while row is not None:
+            if row.get_selectable() and hasattr(row, "key"):
+                rows.append(row)
+            row = row.get_next_sibling()
+        if not rows:
+            return
+        sel = self.list.get_selected_row()
+        i = rows.index(sel) if sel in rows else -1
+        i = max(0, min(len(rows) - 1, i + step))
+        self.user_moved = True
+        self.list.select_row(rows[i])
+        # keep it in view
+        ok, rect = rows[i].compute_bounds(self.list)
+        if ok:
+            adj = self.scroller.get_vadjustment()
+            top, bot = rect.get_y(), rect.get_y() + rect.get_height()
+            if i == 0:
+                adj.set_value(0)
+            elif top < adj.get_value():
+                adj.set_value(top - 24)
+            elif bot > adj.get_value() + adj.get_page_size():
+                adj.set_value(bot - adj.get_page_size() + 4)
+
+    def set_filter(self, text):
+        self.filter = text
+        self.lbl_filter.set_text(text + "▏")
+        self.filter_box.set_visible(bool(text))
+        self.user_moved = False
+        self.render()
+
+    def on_key(self, _ctl, keyval, _code, state):
+        ctrl = state & Gdk.ModifierType.CONTROL_MASK
+        name = Gdk.keyval_name(keyval) or ""
+
+        if self.prompt_row is not None:
+            kind = self.prompt_row.prompt[0]
+            if name == "Escape":
+                self.close_prompt()
+                self.show_status("", "info")
+                self.render()
+                return True
+            if kind == "enterprise" and name in ("Return", "KP_Enter"):
+                self.open_editor()
+                return True
+            if kind == "enterprise" and name in ("Up", "Down", "j", "k"):
+                self.close_prompt()
+                self.render()
+            else:
+                return False  # let the password entry have it
+
+        if name == "Escape":
+            if self.filter:
+                self.set_filter("")
+            else:
+                self.dismiss()
+            return True
+        if name in ("Down",) or (name == "j" and not self.filter and not ctrl) or (ctrl and name == "n"):
+            self.move(1)
+            return True
+        if name in ("Up",) or (name == "k" and not self.filter and not ctrl) or (ctrl and name == "p"):
+            self.move(-1)
+            return True
+        if name in ("Page_Down",):
+            self.move(6)
+            return True
+        if name in ("Page_Up",):
+            self.move(-6)
+            return True
+        if name in ("Return", "KP_Enter"):
+            row = self.list.get_selected_row()
+            if row is not None:
+                self.on_row_activated(self.list, row)
+            return True
+        if name == "F5" or (ctrl and name == "r"):
+            if not self.scanning:
+                self.start_scan()
+                self.render()
+            return True
+        if ctrl and name == "u":
+            self.set_filter("")
+            return True
+        if name == "BackSpace":
+            if self.filter:
+                self.set_filter(self.filter[:-1])
+            return True
+        if not ctrl:
+            ch = chr(Gdk.keyval_to_unicode(keyval) or 0)
+            if ch and ch.isprintable() and ch != "\x00":
+                self.set_filter(self.filter + ch)
+                return True
+        return False
+
+
+# ----------------------------------------------------------------- main
+
+_provider = None
+
+
+def load_css():
+    global _provider
+    display = Gdk.Display.get_default()
+    if _provider is not None:
+        Gtk.StyleContext.remove_provider_for_display(display, _provider)
+    _provider = Gtk.CssProvider()
+    _provider.load_from_string(CSS)
+    Gtk.StyleContext.add_provider_for_display(display, _provider,
+                                              Gtk.STYLE_PROVIDER_PRIORITY_USER)
+
+
+def main():
+    start_hidden = "--daemon" in sys.argv[1:]
+    if start_hidden and poke_resident(b"ping"):
+        return 0  # already resident
+    try:
+        os.unlink(SOCK)  # stale socket from a crashed instance
+    except OSError:
+        pass
+
+    GLib.set_prgname(APP_ID)
+    GLib.set_application_name("MAGI · NETWORK LINK")
+    # no application id: the Wayland app_id then comes from prgname ("eva-wifi")
+    app = Gtk.Application(flags=Gio.ApplicationFlags.NON_UNIQUE)
+    state = {}
+
+    def on_conn(_svc, conn, _src):
+        stream = conn.get_input_stream()
+
+        def got(st, res):
+            try:
+                data = st.read_bytes_finish(res).get_data() or b""
+            except GLib.Error:
+                data = b""
+            if data.startswith(b"toggle") and "win" in state:
+                state["win"].toggle()
+            conn.close(None)
+
+        stream.read_bytes_async(64, GLib.PRIORITY_DEFAULT, None, got)
+        return True
+
+    def activate(a):
+        a.hold()  # stay alive while the window is hidden
+        load_css()
+        w = Picker(a)
+        state["win"] = w
+        svc = Gio.SocketService()
+        svc.add_address(Gio.UnixSocketAddress.new(SOCK), Gio.SocketType.STREAM,
+                        Gio.SocketProtocol.DEFAULT, None)
+        svc.connect("incoming", on_conn)
+        svc.start()
+        state["svc"] = svc
+        if start_hidden:
+            w.set_visible(False)
+        else:
+            w.present()
+
+    app.connect("activate", activate)
+    warnings.simplefilter("ignore", DeprecationWarning)
+    for sig in (signal.SIGTERM, signal.SIGINT):
+        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, sig, lambda: app.quit() or False)
+    try:
+        return app.run([sys.argv[0]])
+    finally:
+        try:
+            os.unlink(SOCK)
+        except OSError:
+            pass
+
+
+if __name__ == "__main__":
+    sys.exit(main())

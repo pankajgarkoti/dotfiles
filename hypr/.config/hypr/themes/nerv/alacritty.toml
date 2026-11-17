@@ -1,0 +1,59 @@
+# NERV: warning red, alert orange, Rei blue on black. Imported by alacritty.toml
+# through ~/.config/hypr/themes/current, so `eva-theme` swaps it live.
+[colors.primary]
+background = "#0b0b0f"
+foreground = "#e6e6ea"
+dim_foreground = "#8a8a99"
+bright_foreground = "#ffffff"
+
+[colors.cursor]
+text = "#0b0b0f"
+cursor = "#ff8c1a"
+
+[colors.vi_mode_cursor]
+text = "#0b0b0f"
+cursor = "#abbcda"
+
+[colors.selection]
+text = "#0b0b0f"
+background = "#e5322d"
+
+[colors.search.matches]
+foreground = "#0b0b0f"
+background = "#ff8c1a"
+
+[colors.search.focused_match]
+foreground = "#0b0b0f"
+background = "#9be564"
+
+[colors.hints.start]
+foreground = "#0b0b0f"
+background = "#ff8c1a"
+
+[colors.hints.end]
+foreground = "#0b0b0f"
+background = "#abbcda"
+
+[colors.footer_bar]
+foreground = "#0b0b0f"
+background = "#e5322d"
+
+[colors.normal]
+black   = "#1c1c24"
+red     = "#e5322d"
+green   = "#9be564"
+yellow  = "#ffb347"
+blue    = "#7f9cd4"
+magenta = "#9d6ff0"
+cyan    = "#6fc3df"
+white   = "#c8c8d0"
+
+[colors.bright]
+black   = "#4a4a57"
+red     = "#ff5a4f"
+green   = "#b8f08a"
+yellow  = "#ff8c1a"
+blue    = "#abbcda"
+magenta = "#b996ff"
+cyan    = "#9be0f0"
+white   = "#ffffff"

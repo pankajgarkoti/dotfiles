@@ -1,0 +1,66 @@
+/* Evangelion. Hard edges, black glass. Colours from colors.css (themes/current: nerv or unit01). */
+@import "colors.css";
+
+* {
+  font-family: "IosevkaTerm Nerd Font Mono";
+  font-size: 13px;
+  border: none;
+  border-radius: 0;
+  min-height: 0;
+}
+window#waybar {
+  background: alpha(@base, 0.70);
+  color: @text;
+  border-bottom: 2px solid @accent;
+}
+tooltip { background: @base; border: 1px solid @accent; }
+
+#custom-magi {
+  padding: 0 10px;
+  color: @base;
+  background: @accent;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+#workspaces button {
+  padding: 0 10px;
+  color: @dim;
+  background: transparent;
+}
+#workspaces button:hover { color: @text; background: alpha(@surface1, 0.7); }
+#workspaces button.active { color: @accent; background: alpha(@accent, 0.14); border-bottom: 2px solid @accent; font-weight: bold; }
+#workspaces button.urgent { color: @base; background: @warn; }
+
+/* WINDOW MODE: loud, so you always know plain keys are captured */
+#submap {
+  padding: 0 10px;
+  color: @base;
+  background: @accent2;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+#window { padding: 0 14px; color: @dim; }
+#clock { padding: 0 16px; color: @accent2; font-weight: bold; letter-spacing: 1px; }
+
+#network, #bluetooth, #pulseaudio, #backlight, #battery, #tray {
+  padding: 0 11px;
+  background: transparent;
+  border-left: 1px solid alpha(@accent, 0.35);
+}
+#network    { color: @c1; }
+#bluetooth  { color: @c2; }
+#pulseaudio { color: @c1; }
+#backlight  { color: @accent2; }
+#battery    { color: @good; }
+#battery.warning  { color: @warn; }
+#battery.critical { color: @base; background: @bad; }
+#tray { padding-right: 10px; }
+
+/* tray menus (nm-applet, blueman): the EVA GTK theme styles them, but the
+   `*` reset above strips their border, separators and check boxes */
+menu { border: 1px solid @accent; padding: 4px 0; }
+menu menuitem { min-height: 18px; padding: 5px 14px; }
+menu separator { min-height: 1px; margin: 3px 0; background: @surface1; }
+menu check, menu radio { min-width: 14px; min-height: 14px; border: 1px solid @dim; }
+menu check:checked, menu radio:checked { background-color: @accent2; border-color: @accent2; }

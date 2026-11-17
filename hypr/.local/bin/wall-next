@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Next wallpaper from ~/Pictures/wallpapers/eva (or the one given), via hyprpaper.
+dir=~/Pictures/wallpapers/eva; state=~/.local/state/wall-current
+mkdir -p ~/.config/hypr
+mapfile -t walls < <(find "$dir" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpg' \) | sort)
+[ ${#walls[@]} -gt 0 ] || exit 1
+if [ -n "${1:-}" ]; then next="$1"; else
+  cur=$(cat "$state" 2>/dev/null); next=${walls[0]}
+  for i in "${!walls[@]}"; do [ "${walls[$i]}" = "$cur" ] && next=${walls[$(( (i+1) % ${#walls[@]} ))]}; done
+fi
+mkdir -p "$(dirname "$state")"; echo "$next" > "$state"
+cat > ~/.config/hypr/hyprpaper.conf <<CONF
+splash = false
+
+wallpaper {
+    monitor =
+    path = $next
+    fit_mode = cover
+}
+CONF
+# Restart hyprpaper whenever a Hyprland session is running, even when called from outside it
+# (a tmux shell or an agent has a stale environment). Otherwise the saved wallpaper and the one
+# on screen drift apart and the change only shows up after the next reboot.
+# With no session at all (the installer), only the config is written.
+if [ -z "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] && pgrep -x Hyprland >/dev/null; then
+  export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
+  HYPRLAND_INSTANCE_SIGNATURE=$(ls -t "$XDG_RUNTIME_DIR/hypr/" 2>/dev/null | head -1)
+  WAYLAND_DISPLAY=${WAYLAND_DISPLAY:-$(cd "$XDG_RUNTIME_DIR" && ls wayland-[0-9] 2>/dev/null | head -1)}
+  export HYPRLAND_INSTANCE_SIGNATURE WAYLAND_DISPLAY
+fi
+if [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]; then
+  pkill -x hyprpaper; sleep 0.3; setsid hyprpaper >/dev/null 2>&1 &
+fi
+exit 0

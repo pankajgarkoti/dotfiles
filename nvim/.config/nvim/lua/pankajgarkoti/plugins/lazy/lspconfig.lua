@@ -50,7 +50,12 @@ return {
 			map("n", "<leader>d", vim.diagnostic.open_float, "Show line diagnostics")
 			map("n", "K", vim.lsp.buf.hover, "Show documentation for what is under cursor")
 			map("n", "gD", vim.lsp.buf.declaration, "Go to declaration")
-			map("n", "gd", vim.lsp.buf.definition, "Go to definition")
+			if vim.bo[bufnr].filetype == "markdown" then
+				map("n", "gd", require("pankajgarkoti.core.markdown_gd").definition,
+					"Go to definition (filtered by filename/heading)")
+			else
+				map("n", "gd", vim.lsp.buf.definition, "Go to definition")
+			end
 			map("n", "gi", vim.lsp.buf.implementation, "Go to implementation")
 			map("n", "gr", vim.lsp.buf.references, "Show references")
 			map("n", "gs", vim.lsp.buf.signature_help, "Show signature help")

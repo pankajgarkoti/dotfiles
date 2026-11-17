@@ -17,6 +17,8 @@ backup_dirs=(
 
 backup_files=(
     "$HOME/.zshrc"
+    "$HOME/.bashrc"
+    "$HOME/.claude/settings.json"
     "$HOME/.tmux.conf"
     "$HOME/.p10k.zsh"
     "$HOME/.zshenv"
@@ -31,9 +33,11 @@ for dir in "${backup_dirs[@]}"; do
 done
 
 for file in "${backup_files[@]}"; do
-    if [ -f "$file" ]; then
+    # Move rather than copy: stow refuses to replace a real file. Symlinks are
+    # skipped because they're from an earlier run of this script.
+    if [ -f "$file" ] && [ ! -L "$file" ]; then
         echo "  Backing up $file to $file.bak"
-        cp "$file" "$file.bak"
+        mv "$file" "$file.bak"
     fi
 done
 
@@ -49,6 +53,7 @@ if ! command -v stow &> /dev/null; then
         echo "    - macOS: brew install stow"
         echo "    - Ubuntu/Debian: sudo apt install stow"
         echo "    - Arch: sudo pacman -S stow"
+        echo "    - Fedora: sudo dnf install stow"
         exit 1
     fi
     
@@ -73,13 +78,17 @@ fi
 echo "📦 Installing dotfiles..."
 targets=(
     "nvim"
-    "iterm"
-    "zsh"
+    "bash"
     "tmux"
     "lazygit"
     "alacritty"
     "claude"
+    "agents"
 )
+# macOS only: iTerm, and zsh (Linux machines use bash)
+if [ "$(uname)" = "Darwin" ]; then
+    targets+=("iterm" "zsh")
+fi
 
 for target in "${targets[@]}"; do
     if [ -d "$target" ]; then
@@ -90,12 +99,20 @@ for target in "${targets[@]}"; do
     fi
 done
 
+# Free Alt+0-9 in Ptyxis so they reach the tmux window binds
+if command -v gsettings &> /dev/null && gsettings list-schemas 2> /dev/null | grep -qx "org.gnome.Ptyxis.Shortcuts"; then
+    echo "⌨️  Clearing Ptyxis Alt+0-9 tab shortcuts..."
+    for i in {1..10}; do
+        gsettings set org.gnome.Ptyxis.Shortcuts "focus-tab-$i" ''
+    done
+fi
+
 echo
 echo "🎉 Setup complete!"
 echo
 echo "📝 Next steps:"
 echo "  1. Restart your terminal"
 echo "  2. Run 'p10k configure' to set up Powerlevel10k"
-echo "  3. Or reload your shell: source ~/.zshrc"
+echo "  3. Or reload your shell: source ~/.zshrc (zsh) or source ~/.bashrc (bash)"
 echo
 echo "💡 If you encounter any issues, check the backup files created above."

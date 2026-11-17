@@ -1,0 +1,29 @@
+#!/usr/bin/python3 -I
+# Hexagon-grid lock screen for the current EVA theme: wallpaper, darkened, with a glowing hex lattice.
+import sys, os, math
+from PIL import Image, ImageDraw, ImageFilter
+home=os.path.expanduser('~'); th=os.path.join(home,'.config/hypr/themes/current')
+pal=dict(l.strip().split('=',1) for l in open(os.path.join(th,'palette')) if '=' in l)
+wall=[l.split('"')[1] for l in open(os.path.join(th,'theme.lua')) if 'wallpaper' in l][0]
+src=os.path.join(home,'Pictures/wallpapers/eva',wall)
+hexc=lambda h:tuple(int(h.lstrip('#')[i:i+2],16) for i in (0,2,4))
+W,H=1920,1080
+if not os.path.isfile(src):  # wallpaper not downloaded (offline install): plain theme base
+    alt=os.path.join(home,'Pictures/wallpapers/eva','catppuccin-blue.png')
+    src=alt if os.path.isfile(alt) else None
+if src:
+    img=Image.open(src).convert('RGB'); s=max(W/img.width,H/img.height)
+    img=img.resize((int(img.width*s)+1,int(img.height*s)+1)); img=img.crop(((img.width-W)//2,(img.height-H)//2,(img.width-W)//2+W,(img.height-H)//2+H))
+else:
+    img=Image.new('RGB',(W,H),hexc(pal['base']))
+img=img.filter(ImageFilter.GaussianBlur(8)); img=Image.blend(img,Image.new('RGB',(W,H),hexc(pal['base'])),0.62)
+lay=Image.new('RGBA',(W,H),(0,0,0,0)); d=ImageDraw.Draw(lay); r=46; acc=hexc(pal['accent'])
+w=math.sqrt(3)*r
+for row in range(-1,int(H/(1.5*r))+2):
+    for col in range(-1,int(W/w)+2):
+        cx=col*w+(w/2 if row%2 else 0); cy=row*1.5*r
+        pts=[(cx+r*math.cos(math.radians(60*k+30)),cy+r*math.sin(math.radians(60*k+30))) for k in range(6)]
+        dist=math.hypot(cx-W/2,cy-H/2)/math.hypot(W/2,H/2); a=int(150*max(0.0,1-dist)**1.6)+12
+        d.polygon(pts,outline=acc+(a,),width=2)
+glow=lay.filter(ImageFilter.GaussianBlur(3)); img=Image.alpha_composite(img.convert('RGBA'),glow); img=Image.alpha_composite(img,lay)
+out=os.path.join(home,'.cache/eva-lock.png'); os.makedirs(os.path.dirname(out),exist_ok=True); img.convert('RGB').save(out); print(out)

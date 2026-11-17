@@ -1,0 +1,103 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 26,
+  "spacing": 0,
+  "modules-left": [
+    "custom/magi",
+    "hyprland/workspaces",
+    "hyprland/submap",
+    "hyprland/window"
+  ],
+  "modules-center": [
+    "clock"
+  ],
+  "modules-right": [
+    "network",
+    "bluetooth",
+    "pulseaudio",
+    "backlight",
+    "battery",
+    "tray"
+  ],
+  "hyprland/workspaces": {
+    "format": "{id}",
+    "on-click": "activate"
+  },
+  "hyprland/window": {
+    "max-length": 60,
+    "separate-outputs": true
+  },
+  "clock": {
+    "format": "{:%a %d %b  %H:%M}",
+    "tooltip-format": "{:%A %d %B %Y}"
+  },
+  "network": {
+    "interface": "wl*",
+    "format-wifi": "  {essid}",
+    "format-ethernet": "󰈀 wired",
+    "format-disconnected": "󰖪 offline",
+    "tooltip-format": "{ifname} {ipaddr}",
+    "on-click": "eva-wifi",
+    "on-click-right": "env XDG_CURRENT_DESKTOP=GNOME gnome-control-center wifi"
+  },
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-muted": "󰝟 muted",
+    "format-icons": {
+      "default": [
+        "󰕿",
+        "󰖀",
+        "󰕾"
+      ],
+      "headphone": "󰋋"
+    },
+    "on-click": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
+    "on-click-right": "env XDG_CURRENT_DESKTOP=GNOME gnome-control-center sound"
+  },
+  "backlight": {
+    "format": "󰃠 {percent}%"
+  },
+  "battery": {
+    "bat": "BAT0",
+    "adapter": "AC",
+    "interval": 30,
+    "on-click": "eva-power",
+    "tooltip-format": "{capacity}% · {timeTo} · click: power mode",
+    "states": {
+      "warning": 25,
+      "critical": 12
+    },
+    "format": "{icon} {capacity}%",
+    "format-charging": "󰂄 {capacity}%",
+    "format-icons": [
+      "󰁺",
+      "󰁼",
+      "󰁾",
+      "󰂀",
+      "󰁹"
+    ]
+  },
+  "tray": {
+    "spacing": 8
+  },
+  "bluetooth": {
+    "format": "󰂯",
+    "format-off": "󰂲",
+    "format-connected": "󰂱 {device_alias}",
+    "tooltip-format-connected": "{device_enumerate}",
+    "tooltip-format-enumerate-connected": "{device_alias}",
+    "on-click": "eva-bluetooth"
+  },
+  "hyprland/submap": {
+    "format": " ⬢ {} MODE ",
+    "tooltip": false,
+    "max-length": 24
+  },
+  "custom/magi": {
+    "format": "MAGI",
+    "tooltip-format": "MAGI CONTROL · left-click: open panel · right-click: NERV / UNIT-01",
+    "on-click": "magi",
+    "on-click-right": "eva-theme toggle"
+  }
+}

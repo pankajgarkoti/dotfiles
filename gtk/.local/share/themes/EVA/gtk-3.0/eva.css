@@ -1,0 +1,367 @@
+/* EVA: GTK 3 theme for the Evangelion/NERV Hyprland rice: hard edges,
+   black glass, thin accent borders. Loaded by gtk.css, which eva-gtk-theme
+   generates from Adwaita dark with its colours swapped for the names in
+   ~/.config/hypr/themes/current/colors.css, so `eva-theme` restyles every
+   GTK 3 app (blueman, nm-connection-editor, file chooser portal, keyring
+   prompt, LibreOffice, tray menus...).
+
+   This is THEME priority on purpose: apps that bring their own CSS
+   (waybar, wofi, the eva-* pickers) always win over it. */
+
+/* Adwaita's public colour names, remapped for apps that use them */
+@define-color theme_bg_color @base;
+@define-color theme_fg_color @text;
+@define-color theme_base_color @base;
+@define-color theme_text_color @text;
+@define-color theme_selected_bg_color @accent;
+@define-color theme_selected_fg_color @base;
+@define-color insensitive_bg_color @base;
+@define-color insensitive_fg_color @dim;
+@define-color borders @surface1;
+@define-color unfocused_borders @surface1;
+@define-color warning_color @warn;
+@define-color error_color @bad;
+@define-color success_color @good;
+
+* {
+  border-radius: 0;
+  -gtk-outline-radius: 0;
+  outline-color: alpha(@accent, 0.6);
+}
+
+/* ------------------------------------------------------------ surfaces */
+window, .background, dialog, messagedialog, .dialog-vbox, assistant {
+  background-color: @base;
+  color: @text;
+}
+window.csd, window.solid-csd, decoration {
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+}
+.view, iconview, textview text, treeview.view, list, .content-view,
+viewport, scrolledwindow > viewport, placesview, stack {
+  background-color: @base;
+  color: @text;
+}
+row { background-color: transparent; }
+row:hover, treeview.view:hover { background-color: alpha(@accent, 0.10); }
+frame > border, .frame, scrolledwindow.frame, list.frame {
+  border: 1px solid @surface1;
+}
+separator { background-color: @surface1; min-height: 1px; min-width: 1px; }
+
+/* selection: solid accent, dark text */
+*:selected, *:selected:focus, row:selected, row:selected:hover,
+treeview.view:selected, iconview:selected, flowboxchild:selected,
+.view:selected, .view text selection, text selection, entry selection,
+label selection, textview text selection {
+  background-color: @accent;
+  color: @base;
+}
+row:selected label, row:selected image { color: @base; }
+
+/* ------------------------------------------------------------ header bars */
+headerbar, .titlebar, .titlebar:not(headerbar) headerbar,
+headerbar:backdrop, .titlebar:backdrop {
+  background-color: @base;
+  background-image: none;
+  border: none;
+  border-bottom: 1px solid @accent;
+  box-shadow: none;
+  color: @text;
+  min-height: 38px;
+  padding: 0 6px;
+}
+headerbar:backdrop, .titlebar:backdrop { border-bottom-color: @surface1; }
+/* no letter-spacing on titles: GTK doesn't count it when sizing, so they ellipsize */
+headerbar .title, .titlebar .title, headerbar label.title {
+  font-family: "IosevkaTerm Nerd Font Mono";
+  font-weight: bold;
+  color: @accent;
+}
+headerbar .subtitle { font-family: "IosevkaTerm Nerd Font Mono"; color: @dim; }
+menubar, .menubar {
+  background-color: @base;
+  border-bottom: 1px solid @surface1;
+  box-shadow: none;
+  padding: 0;
+}
+menubar > menuitem { padding: 4px 10px; color: @text; }
+menubar > menuitem:hover {
+  background-color: @accent;
+  color: @base;
+  box-shadow: none;
+}
+menubar > menuitem:hover label { color: @base; }
+toolbar, .toolbar, .primary-toolbar, .inline-toolbar, searchbar, searchbar > revealer > box,
+actionbar, actionbar > revealer > box, statusbar {
+  background-color: @base;
+  background-image: none;
+  border-color: @surface1;
+  box-shadow: none;
+}
+statusbar { border-top: 1px solid @surface1; color: @dim; }
+toolbar { border-bottom: 1px solid @surface1; padding: 4px; }
+
+/* ------------------------------------------------------------ buttons */
+button, button.flat:hover, .linked > button, headerbar button,
+spinbutton button, combobox button, filechooser button {
+  background-color: @surface0;
+  background-image: none;
+  border: 1px solid @surface1;
+  box-shadow: none;
+  text-shadow: none;
+  -gtk-icon-shadow: none;
+  color: @text;
+}
+button.flat, headerbar button.flat, toolbar button, .toolbar button,
+button.sidebar-button, headerbar button.titlebutton, popover button.model,
+modelbutton {
+  background-color: transparent;
+  border-color: transparent;
+}
+button:hover, toolbar button:hover, headerbar button:hover, modelbutton:hover {
+  background-color: @surface1;
+  border-color: @accent;
+  color: @text;
+}
+button:active, button:checked, button:checked:hover,
+toolbar button:checked, headerbar button:checked {
+  background-color: @accent;
+  border-color: @accent;
+  color: @base;
+}
+button:checked label, button:checked image, button:active image { color: @base; }
+button:disabled, button:disabled label {
+  background-color: @base;
+  border-color: @surface0;
+  color: @dim;
+}
+button.suggested-action, button.default, .dialog-action-area button.default {
+  background-color: @accent;
+  border-color: @accent;
+  color: @base;
+  font-weight: bold;
+}
+button.suggested-action label { color: @base; }
+button.suggested-action:hover { background-color: shade(@accent, 1.15); }
+button.destructive-action {
+  background-color: transparent;
+  border-color: @bad;
+  color: @bad;
+}
+button.destructive-action:hover { background-color: @bad; color: @base; }
+button.titlebutton { min-width: 24px; min-height: 24px; padding: 2px; }
+button.titlebutton:hover { background-color: @bad; border-color: @bad; color: @base; }
+.linked > button + button { border-left-width: 0; }
+
+/* ------------------------------------------------------------ entries */
+entry, spinbutton:not(.vertical), .entry, searchentry, textview.entry {
+  background-color: @surface0;
+  background-image: none;
+  border: 1px solid @surface1;
+  box-shadow: none;
+  color: @text;
+  caret-color: @accent2;
+}
+entry:focus, spinbutton:focus-within, searchentry:focus {
+  border-color: @accent;
+  box-shadow: inset 0 0 0 1px @accent;
+}
+entry:disabled { background-color: @base; color: @dim; }
+entry image { color: @dim; }
+entry progress { border-bottom: 2px solid @accent; background: none; }
+spinbutton:not(.vertical) entry, spinbutton:not(.vertical) button {
+  border-width: 0;
+  border-left: 1px solid @surface1;
+}
+
+/* ------------------------------------------------------------ toggles */
+switch {
+  background-color: @surface1;
+  border: 1px solid @surface1;
+  background-image: none;
+  box-shadow: none;
+  min-height: 20px;
+}
+switch:checked { background-color: @accent; border-color: @accent; color: @base; }
+switch slider {
+  background-color: @text;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  min-width: 20px;
+  min-height: 20px;
+}
+switch:checked slider { background-color: @base; }
+check, radio {
+  background-color: @surface0;
+  background-image: none;
+  border: 1px solid @dim;
+  box-shadow: none;
+  color: @base;
+  min-width: 14px;
+  min-height: 14px;
+}
+check:hover, radio:hover { border-color: @accent; }
+check:checked, radio:checked, check:indeterminate, radio:indeterminate {
+  background-color: @accent;
+  border-color: @accent;
+  color: @base;
+}
+
+/* ------------------------------------------------------------ meters */
+progressbar trough, scale trough, levelbar trough, levelbar block {
+  background-color: @surface1;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+}
+progressbar progress, scale highlight, levelbar block.filled, levelbar block.high {
+  background-color: @accent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+}
+levelbar block.low { background-color: @warn; }
+scale slider {
+  background-color: @text;
+  background-image: none;
+  border: 1px solid @accent;
+  box-shadow: none;
+}
+spinner { color: @accent; }
+
+/* ------------------------------------------------------------ scrollbars */
+scrollbar, scrollbar.overlay-indicator:not(.dragging):not(.hovering) {
+  background-color: transparent;
+  border: none;
+}
+scrollbar slider {
+  background-color: @surface1;
+  border: none;
+  min-width: 6px;
+  min-height: 6px;
+}
+scrollbar slider:hover, scrollbar slider:active { background-color: @accent; }
+scrollbar.overlay-indicator:not(.dragging):not(.hovering) slider {
+  background-color: @dim;
+  min-width: 3px;
+  min-height: 3px;
+}
+
+/* ------------------------------------------------------------ sidebars, tabs */
+.sidebar, placessidebar, stacksidebar, .navigation-sidebar,
+placessidebar list, stacksidebar list {
+  background-color: shade(@base, 0.80);
+  border-right: 1px solid @surface1;
+  color: @text;
+}
+placessidebar row:selected, stacksidebar row:selected, .sidebar row:selected {
+  background-color: @accent;
+  color: @base;
+  border-left: 3px solid @accent2;
+}
+notebook, notebook > header {
+  background-color: @base;
+  border-color: @surface1;
+}
+notebook > stack:not(:only-child) { background-color: @base; }
+notebook > header tab {
+  border: none;
+  border-bottom: 2px solid transparent;
+  box-shadow: none;
+  color: @dim;
+  font-family: "IosevkaTerm Nerd Font Mono";
+  letter-spacing: 1px;
+}
+notebook > header tab:hover { color: @text; border-bottom-color: @surface1; }
+notebook > header tab:checked { color: @accent; border-bottom-color: @accent; }
+notebook > header.top { box-shadow: inset 0 -1px @surface1; }
+
+/* tree view column headers: small uppercase-ish caps */
+treeview.view header button, columnview header button {
+  background-color: @base;
+  border: none;
+  border-bottom: 1px solid @surface1;
+  border-right: 1px solid @surface0;
+  color: @dim;
+  font-family: "IosevkaTerm Nerd Font Mono";
+  font-size: 9pt;
+  letter-spacing: 2px;
+}
+treeview.view header button:hover { color: @accent; }
+treeview.view { -GtkTreeView-grid-line-pattern: ""; }
+
+/* ------------------------------------------------------------ menus, popovers */
+menu, .menu, .context-menu, popover, popover.background, popover.menu,
+.csd menu, .csd popover {
+  background-color: alpha(@base, 0.97);
+  border: 1px solid @accent;
+  box-shadow: none;
+  color: @text;
+  padding: 4px 0;
+}
+popover > contents, popover.background > contents { background-color: transparent; }
+menuitem, menu menuitem, .menu menuitem {
+  padding: 5px 14px;
+  min-height: 18px;
+  color: @text;
+  text-shadow: none;
+}
+menu menuitem:hover, .menu menuitem:hover, .context-menu menuitem:hover {
+  background-color: @accent;
+  color: @base;
+}
+menu menuitem:hover label, menu menuitem:hover accelerator, menu menuitem:hover arrow,
+menu menuitem:hover check, menu menuitem:hover radio { color: @base; }
+menu menuitem:disabled, menu menuitem:disabled label { color: @dim; }
+menu menuitem accelerator { color: @dim; }
+menu separator, .menu separator { background-color: @surface1; margin: 3px 0; }
+menu check, menu radio, menuitem check, menuitem radio {
+  background-color: transparent;
+  border: 1px solid @dim;
+}
+menu check:checked, menu radio:checked, menuitem check:checked, menuitem radio:checked {
+  background-color: @accent2;
+  border-color: @accent2;
+}
+menu > arrow { background-color: @base; color: @accent; border: none; }
+
+tooltip, tooltip.background, .tooltip {
+  background-color: alpha(@base, 0.96);
+  border: 1px solid @accent;
+  box-shadow: none;
+  color: @text;
+  text-shadow: none;
+}
+tooltip * { color: @text; }
+
+/* ------------------------------------------------------------ dialogs */
+messagedialog .titlebar, messagedialog .dialog-action-area button,
+.dialog-action-box button {
+  border-radius: 0;
+}
+messagedialog, dialog { border: 1px solid @accent; }
+messagedialog .dialog-action-area button { border-top: 1px solid @surface1; }
+messagedialog label.title, dialog .title {
+  font-family: "IosevkaTerm Nerd Font Mono";
+  font-weight: bold;
+  color: @accent;
+}
+infobar, infobar > revealer > box {
+  background-color: @surface0;
+  background-image: none;
+  border-left: 3px solid @accent;
+  color: @text;
+}
+infobar.warning > revealer > box { border-left-color: @warn; }
+infobar.error > revealer > box { border-left-color: @bad; }
+
+/* links */
+*:link, button:link, button:link label { color: @c1; }
+*:visited { color: @c2; }
+
+/* gnome keyring / gcr prompt */
+.prompt-dialog, window.prompt { border: 1px solid @accent; }

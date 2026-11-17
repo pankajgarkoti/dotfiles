@@ -1,0 +1,732 @@
+#!/usr/bin/env python3
+"""magi-overview: MAGI workspace overview and window switcher (GTK 4 + hyprctl + grim).
+
+Every open window, grouped by workspace, with live thumbnails (grim -T captures windows
+on hidden workspaces too). Thumbnails are cached in ~/.cache/magi/overview and refreshed
+in the background each time it opens, so it shows instantly and sharpens a moment later.
+
+Keys
+  arrows, or h j k l while the filter is empty     move
+  type any other letter (or / first)               filter by app, title or workspace
+  Enter                                            go to that window (switches workspace)
+  Shift+Enter                                      bring that window to the current workspace
+  Backspace / Ctrl+U                               edit / clear the filter
+  Esc                                              clear the filter, then close
+
+Stays resident after the first open (or `magi-overview --daemon`); `magi-overview` again hides it.
+`magi-overview --quit` stops the resident process. Colours only from themes/current/colors.css.
+"""
+import os
+import socket
+import sys
+import time
+
+T0 = time.monotonic()
+SOCK = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "magi-overview.sock")
+
+
+def _ask_resident():
+    if __name__ != "__main__" or "--daemon" in sys.argv or "--help" in sys.argv:
+        return
+    try:
+        c = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        c.settimeout(0.5)
+        c.connect(SOCK)
+        c.sendall(("quit" if "--quit" in sys.argv else "toggle").encode())
+        c.close()
+        sys.exit(0)
+    except OSError:
+        pass
+
+
+_ask_resident()
+
+import json  # noqa: E402
+import signal  # noqa: E402
+import warnings  # noqa: E402
+
+# layer-shell overlay when gtk4-layer-shell is installed (must load before GTK/libwayland)
+sys.dont_write_bytecode = True
+try:
+    import eva_layer  # noqa: E402
+    eva_layer.preload()
+except ImportError:
+    eva_layer = None
+
+import gi  # noqa: E402
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
+from gi.repository import Gdk, Gio, GLib, Gtk, Pango  # noqa: E402
+
+APP_ID = "magi-overview"
+TIMING = os.environ.get("MAGI_TIMING") == "1"
+STICKY = os.environ.get("MAGI_STICKY") == "1"  # testing: don't hide on focus loss
+HOME = os.path.expanduser("~")
+COLORS = HOME + "/.config/hypr/themes/current/colors.css"
+CACHE = HOME + "/.cache/magi/overview"
+THUMB_W, THUMB_H = 300, 168
+CAPTURE_SCALE = "0.3"
+PARALLEL = 4
+
+CSS = """
+@import url("file://%s");
+
+* {
+  font-family: "IosevkaTerm Nerd Font Mono";
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+  outline: none;
+}
+window.ov { background: alpha(@base, 0.95); color: @text; border: 1px solid @accent; }
+
+.header { background: @accent; color: @base; padding: 5px 12px; }
+.header .title { font-size: 12px; font-weight: 800; letter-spacing: 3px; }
+.header .aux { font-size: 10px; font-weight: 800; letter-spacing: 2px; }
+.hazard {
+  min-height: 4px;
+  background-image: repeating-linear-gradient(135deg, alpha(@accent, 0.55) 0px, alpha(@accent, 0.55) 6px, transparent 6px, transparent 12px);
+}
+
+.filter { padding: 6px 12px; margin: 10px 16px 2px 16px; border: 1px solid @surface1; background: alpha(@surface0, 0.6); }
+.filter.on { border-color: @accent; background: alpha(@accent, 0.07); }
+.filter .p { color: @accent; font-weight: 800; letter-spacing: 2px; font-size: 10px; }
+.filter .q { color: @text; font-size: 13px; }
+.filter .ph { color: alpha(@dim, 0.8); font-size: 11px; letter-spacing: 1px; }
+
+scrolledwindow, viewport { background: transparent; }
+.groups { padding: 4px 16px 16px 16px; }
+.ws { padding: 14px 0 6px 0; }
+.ws .num { font-size: 18px; font-weight: 800; color: @dim; min-width: 34px; }
+.ws .lbl { font-size: 10px; letter-spacing: 3px; color: @dim; font-weight: bold; }
+.ws .cnt { font-size: 10px; letter-spacing: 2px; color: @accent; font-weight: bold; }
+.ws .rule { min-height: 1px; background: @surface1; }
+.ws.cur .num { color: @accent; }
+.ws.cur .lbl { color: @text; }
+.ws .tag { font-size: 9px; font-weight: 800; letter-spacing: 2px; padding: 0 6px; color: @base; background: @accent; }
+
+.card { padding: 4px; border: 1px solid @surface1; background: alpha(@surface0, 0.55); }
+.card:hover { border-color: alpha(@accent, 0.5); }
+.card.cur { border-color: alpha(@accent, 0.6); }
+.card.sel { border-color: @accent2; background: alpha(@accent2, 0.13); }
+.card .shot { background: alpha(@base, 0.8); }
+.card .ph { font-size: 44px; color: alpha(@dim, 0.35); }
+.card .cls { font-size: 10px; letter-spacing: 2px; font-weight: 800; color: @accent2; }
+.card.sel .cls { color: @accent2; }
+.card .ttl { font-size: 12px; color: alpha(@text, 0.85); }
+.card.sel .ttl { color: @text; }
+.card .meta { font-size: 9px; letter-spacing: 1px; color: @dim; }
+.card .flag { font-size: 9px; font-weight: 800; letter-spacing: 2px; padding: 0 5px; margin: 5px; color: @base; background: @accent; }
+.card .flag.float { background: @c1; }
+.bar { padding: 4px 2px 0 2px; }
+
+.empty { padding: 40px; font-size: 11px; letter-spacing: 3px; color: @dim; }
+
+.footer { border-top: 1px solid @surface1; padding: 6px 12px; }
+.status { font-size: 10px; letter-spacing: 2px; color: @c1; font-weight: bold; }
+.status.err { color: @bad; }
+.key { font-size: 9px; font-weight: 800; background: @surface1; color: @text; padding: 0 4px; }
+.hint { font-size: 9px; letter-spacing: 1px; color: @dim; }
+""" % COLORS
+
+
+def run_async(argv, callback=None):
+    flags = Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+    try:
+        proc = Gio.Subprocess.new(list(argv), flags)
+    except GLib.Error as e:
+        if callback:
+            GLib.idle_add(lambda: callback(False, "", e.message) and False)
+        return
+
+    def done(p, res):
+        try:
+            _, out, err = p.communicate_utf8_finish(res)
+            ok = p.get_successful()
+        except GLib.Error as e:
+            ok, out, err = False, "", e.message
+        if callback:
+            callback(ok, out or "", err or "")
+    proc.communicate_utf8_async(None, None, done)
+
+
+def lbl(text, *classes, xalign=0.0, hexpand=False, ellipsize=False):
+    w = Gtk.Label(label=text, xalign=xalign, hexpand=hexpand)
+    for c in classes:
+        w.add_css_class(c)
+    if ellipsize:
+        w.set_ellipsize(Pango.EllipsizeMode.END)
+    return w
+
+
+_icon_cache = {}
+_all_apps = None
+
+
+def app_icon(cls):
+    """Gio icon for a window class, via its .desktop file (cached)."""
+    if cls in _icon_cache:
+        return _icon_cache[cls]
+    icon = None
+    cands = [cls, cls.lower(), cls.lower().replace(" ", "-")]
+    for c in cands:
+        try:
+            info = Gio.DesktopAppInfo.new(c + ".desktop")
+        except TypeError:
+            info = None
+        if info is not None:
+            icon = info.get_icon()
+            break
+    if icon is None:
+        theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
+        for c in cands:
+            if theme.has_icon(c):
+                icon = Gio.ThemedIcon.new(c)
+                break
+    if icon is None:
+        # last resort: a .desktop whose StartupWMClass matches
+        global _all_apps
+        if _all_apps is None:
+            _all_apps = Gio.AppInfo.get_all()
+        for info in _all_apps:
+            try:
+                if (info.get_string("StartupWMClass") or "").lower() == cls.lower():
+                    icon = info.get_icon()
+                    break
+            except AttributeError:
+                continue
+    _icon_cache[cls] = icon
+    return icon
+
+
+class Thumb(Gtk.Widget):
+    """Fixed-size picture: letterboxed, never asks for more room than THUMB_W x THUMB_H."""
+
+    def __init__(self):
+        super().__init__()
+        self.paintable = None
+        self.set_overflow(Gtk.Overflow.HIDDEN)
+
+    def set_paintable(self, p):
+        self.paintable = p
+        self.queue_draw()
+
+    def do_measure(self, orientation, _for_size):
+        n = THUMB_W if orientation == Gtk.Orientation.HORIZONTAL else THUMB_H
+        return n, n, -1, -1
+
+    def do_snapshot(self, snap):
+        if self.paintable is None:
+            return
+        w, h = self.get_width(), self.get_height()
+        iw, ih = self.paintable.get_intrinsic_width() or w, self.paintable.get_intrinsic_height() or h
+        k = min(w / iw, h / ih)
+        dw, dh = iw * k, ih * k
+        from gi.repository import Graphene
+        snap.save()
+        snap.translate(Graphene.Point().init((w - dw) / 2, (h - dh) / 2))
+        self.paintable.snapshot(snap, dw, dh)
+        snap.restore()
+
+
+class Card(Gtk.Box):
+    def __init__(self, ov, c, current_ws):
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.ov = ov
+        self.c = c
+        self.addr = c["address"]
+        self.add_css_class("card")
+        self.set_halign(Gtk.Align.START)
+        self.set_hexpand(False)
+        ov_ = Gtk.Overlay()
+        self.pic = Thumb()
+        self.pic.add_css_class("shot")
+        ov_.set_child(self.pic)
+        self.ph = lbl("󰖯", "ph", xalign=0.5)
+        self.ph.set_halign(Gtk.Align.CENTER)
+        self.ph.set_valign(Gtk.Align.CENTER)
+        ov_.add_overlay(self.ph)
+        flags = Gtk.Box(spacing=0, halign=Gtk.Align.START, valign=Gtk.Align.START)
+        if c.get("focusHistoryID") == 0:
+            flags.append(lbl("FOCUSED", "flag"))
+        if c.get("floating"):
+            flags.append(lbl("FLOAT", "flag", "float"))
+        if c.get("fullscreen"):
+            flags.append(lbl("FULL", "flag"))
+        ov_.add_overlay(flags)
+        self.append(ov_)
+        bar = Gtk.Box(spacing=6)
+        bar.add_css_class("bar")
+        img = Gtk.Image(pixel_size=16)
+        icon = app_icon(c.get("class") or c.get("initialClass") or "")
+        if icon is not None:
+            img.set_from_gicon(icon)
+        else:
+            img.set_from_icon_name("application-x-executable")
+        bar.append(img)
+        cls = (c.get("class") or c.get("initialClass") or "?").split(".")[-1]
+        bar.append(lbl(cls.upper(), "cls", hexpand=True, ellipsize=True))
+        bar.append(lbl("%dx%d" % tuple(c.get("size", (0, 0))), "meta"))
+        self.append(bar)
+        t = lbl(c.get("title") or "(untitled)", "ttl", ellipsize=True)
+        t.set_max_width_chars(34)
+        t.set_margin_start(2)
+        t.set_margin_bottom(2)
+        self.append(t)
+        self.set_tooltip_text("%s\n%s" % (c.get("class", ""), c.get("title", "")))
+        self.haystack = " ".join(str(x) for x in (c.get("class"), c.get("initialClass"), c.get("title"),
+                                                  c["workspace"].get("name"))).lower()
+        if c["workspace"].get("id") == current_ws:
+            self.add_css_class("cur")
+        g = Gtk.GestureClick()
+        g.connect("released", lambda *_: self.ov.go(self, bring=False))
+        self.add_controller(g)
+
+    def set_thumb(self, path):
+        try:
+            self.pic.set_paintable(Gdk.Texture.new_from_filename(path))
+            self.ph.set_visible(False)
+        except GLib.Error:
+            pass
+
+
+class Overview(Gtk.ApplicationWindow):
+    def __init__(self, app, css):
+        super().__init__(application=app, title="MAGI · OVERVIEW")
+        self.css = css
+        self.add_css_class("ov")
+        self.set_default_size(1440, 860)
+        self.set_decorated(False)
+        # large centred overlay; falls back to the Hyprland window rule without layer shell
+        self.layer = eva_layer and eva_layer.attach(self, APP_ID, on_outside=self.hide_panel)
+        self.cards = []
+        self.sel = None
+        self.filter = ""
+        self.filter_mode = False
+        self.was_active = False
+        self.current_ws = None
+        self.gen = 0
+        self.t_show = T0
+
+        root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.set_child(root)
+        head = Gtk.Box(spacing=8)
+        head.add_css_class("header")
+        head.append(lbl("MAGI · OVERVIEW", "title", hexpand=True))
+        self.lbl_head = lbl("", "aux", xalign=1)
+        head.append(self.lbl_head)
+        root.append(head)
+        haz = Gtk.Box()
+        haz.add_css_class("hazard")
+        root.append(haz)
+
+        self.fbox = Gtk.Box(spacing=10)
+        self.fbox.add_css_class("filter")
+        self.fbox.append(lbl("FILTER ▸", "p"))
+        self.lbl_q = lbl("", "q", ellipsize=True)
+        self.fbox.append(self.lbl_q)
+        self.lbl_ph = lbl("type an app, title or workspace · / to start with h j k l", "ph", hexpand=True)
+        self.fbox.append(self.lbl_ph)
+        root.append(self.fbox)
+
+        self.scroller = Gtk.ScrolledWindow(hscrollbar_policy=Gtk.PolicyType.NEVER, vexpand=True)
+        self.scroller.set_focusable(False)
+        self.groups = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.groups.add_css_class("groups")
+        self.scroller.set_child(self.groups)
+        root.append(self.scroller)
+
+        foot = Gtk.Box(spacing=8)
+        foot.add_css_class("footer")
+        self.lbl_status = lbl("", "status", hexpand=True, ellipsize=True)
+        foot.append(self.lbl_status)
+        for k, h in (("←↓↑→", "MOVE"), ("hjkl", "MOVE"), ("↵", "GO TO"), ("⇧↵", "BRING HERE"), ("TYPE", "FILTER"), ("ESC", "CLOSE")):
+            foot.append(lbl(k, "key"))
+            foot.append(lbl(h, "hint"))
+        root.append(foot)
+
+        keys = Gtk.EventControllerKey()
+        keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        keys.connect("key-pressed", self.on_key)
+        self.add_controller(keys)
+        self.connect("notify::is-active", self.on_active)
+        self.connect("close-request", lambda *_: self.hide_panel() or True)
+        if TIMING:
+            self.connect("map", lambda *_: print("magi-overview: mapped %.0f ms after open" % ((time.monotonic() - self.t_show) * 1000)))
+
+    # ------------------------------------------------------------- show / hide
+
+    def on_active(self, *_):
+        if self.is_active():
+            self.was_active = True
+        elif self.was_active and not STICKY:
+            self.hide_panel()
+
+    def show_panel(self):
+        self.t_show = time.monotonic()
+        self.was_active = False
+        self.css.load_from_string(CSS)  # theme may have changed while hidden
+        self.set_filter("", mode=False)
+        self.gen += 1
+        gen = self.gen
+        got = {}
+
+        def part(key):
+            def cb(ok, out, _e):
+                got[key] = out if ok else ""
+                if len(got) == 2 and gen == self.gen:
+                    t = time.monotonic()
+                    self.render(got)
+                    if TIMING:
+                        print("magi-overview: data %.0f ms, render %.0f ms" % ((t - self.t_show) * 1000, (time.monotonic() - t) * 1000))
+                    if not self.get_visible():
+                        self.fit(got["ws"])
+                        self.present()
+            return cb
+        # windows first, then show: the panel appears already filled
+        run_async(["hyprctl", "clients", "-j"], part("clients"))
+        run_async(["hyprctl", "activeworkspace", "-j"], part("ws"))
+
+    def fit(self, ws_json):
+        """Layer mode: 80% x 84% of the focused monitor (what the window rule did), on it."""
+        if not self.layer:
+            return
+        try:
+            mon = eva_layer.monitor_by_name(eva_layer.forced_monitor() or
+                                            json.loads(ws_json or "{}").get("monitor"))
+        except (ValueError, AttributeError):
+            mon = None
+        if mon is None:
+            return
+        g = mon.get_geometry()
+        self.set_default_size(int(g.width * 0.8), int(g.height * 0.84))
+        self.layer.set_monitor(mon)
+
+    def hide_panel(self):
+        self.gen += 1
+        if self.get_visible():
+            self.set_visible(False)
+
+    def toggle(self):
+        if self.get_visible():
+            self.hide_panel()
+        else:
+            self.show_panel()
+
+    def status(self, text, err=False):
+        self.lbl_status.set_label(text)
+        (self.lbl_status.add_css_class if err else self.lbl_status.remove_css_class)("err")
+
+    # ------------------------------------------------------------- data
+
+    def render(self, got):
+        try:
+            clients = json.loads(got["clients"] or "[]")
+            ws = json.loads(got["ws"] or "{}")
+        except ValueError:
+            clients, ws = [], {}
+        self.current_ws = ws.get("id")
+        clients = [c for c in clients if c.get("mapped") and c.get("class") not in (APP_ID, "magi")
+                   and c.get("workspace", {}).get("id") is not None]
+        groups = {}
+        if self.current_ws is not None:
+            groups[self.current_ws] = []  # always show where you are, even when empty
+        for c in clients:
+            groups.setdefault(c["workspace"]["id"], []).append(c)
+
+        def ws_key(i):
+            return (1, -i) if i < 0 else (0, i)  # normal workspaces first, specials after
+        child = self.groups.get_first_child()
+        while child is not None:
+            nxt = child.get_next_sibling()
+            self.groups.remove(child)
+            child = nxt
+        self.cards = []
+        self.sections = []
+        for wid in sorted(groups, key=ws_key):
+            wins = sorted(groups[wid], key=lambda c: (c.get("floating", False), c["at"][1] // 60, c["at"][0]))
+            name = wins[0]["workspace"].get("name", str(wid)) if wins else ws.get("name", str(wid))
+            head = Gtk.Box(spacing=10)
+            head.add_css_class("ws")
+            cur = wid == self.current_ws
+            if cur:
+                head.add_css_class("cur")
+            special = wid < 0
+            head.append(lbl("%02d" % wid if not special else "󰘔", "num"))
+            head.append(lbl(("SPECIAL · " + name.split(":", 1)[-1].upper()) if special else "WORKSPACE " + name.upper(), "lbl"))
+            head.append(lbl("%02d WINDOW%s" % (len(wins), "" if len(wins) == 1 else "S") if wins else "EMPTY", "cnt"))
+            if cur:
+                head.append(lbl("CURRENT", "tag"))
+            rule = Gtk.Box(hexpand=True, valign=Gtk.Align.CENTER)
+            rule.add_css_class("rule")
+            head.append(rule)
+            self.groups.append(head)
+            flow = Gtk.Grid(column_spacing=10, row_spacing=10)
+            self.groups.append(flow)
+            cards = []
+            for c in wins:
+                card = Card(self, c, self.current_ws)
+                card.shown = True
+                cards.append(card)
+                self.cards.append(card)
+            self.layout(flow, cards)
+            self.sections.append((head, flow, cards))
+        if not self.cards:
+            self.groups.append(lbl("NO WINDOWS · NOTHING TO SWITCH TO", "empty", xalign=0.5))
+        nws = len([g for g, w in groups.items() if g > 0 and w])
+        self.lbl_head.set_label("%02d WINDOWS · %02d WORKSPACES · ON %s" % (
+            len(self.cards), nws, ws.get("name", "?")))
+        # preselect the previously focused window, like alt-tab
+        prev = sorted((c for c in self.cards if c.c.get("focusHistoryID", 99) > 0),
+                      key=lambda c: c.c.get("focusHistoryID", 99))
+        self.select(prev[0] if prev else (self.cards[0] if self.cards else None))
+        self.load_thumbs()
+
+    def columns(self):
+        width = self.get_width() or int(self.get_display().get_monitors().get_item(0).get_geometry().width * 0.8)
+        return max(1, (width - 34) // (THUMB_W + 10 + 10))
+
+    def layout(self, grid, cards):
+        """(Re)place the visible cards in a fixed-width grid; filtering closes the gaps."""
+        for card in cards:
+            if card.get_parent() is not None:
+                grid.remove(card)
+        cols = self.columns()
+        for i, card in enumerate([c for c in cards if c.shown]):
+            grid.attach(card, i % cols, i // cols, 1, 1)
+
+    def load_thumbs(self):
+        os.makedirs(CACHE, exist_ok=True)
+        gen = self.gen
+        queue = []
+        for card in self.cards:
+            sid = card.c.get("stableId")
+            if not sid:
+                continue
+            path = os.path.join(CACHE, "%s.jpg" % sid)
+            if os.path.exists(path):
+                card.set_thumb(path)  # instant: last time's picture
+            queue.append((card, sid, path))
+        # then refresh them all, a few grim captures at a time
+        queue.sort(key=lambda q: q[0].c["workspace"].get("id") != self.current_ws)
+        state = {"i": 0}
+
+        def next_job():
+            if gen != self.gen or state["i"] >= len(queue):
+                return
+            card, sid, path = queue[state["i"]]
+            state["i"] += 1
+            tmp = path + ".tmp.jpg"
+
+            def done(ok, _o, _e):
+                if ok and os.path.exists(tmp):
+                    os.replace(tmp, path)
+                    if gen == self.gen:
+                        card.set_thumb(path)
+                next_job()
+            run_async(["grim", "-T", sid, "-s", CAPTURE_SCALE, "-t", "jpeg", "-q", "75", tmp], done)
+        for _ in range(PARALLEL):
+            next_job()
+
+    # ------------------------------------------------------------- selection
+
+    def visible_cards(self):
+        return [c for c in self.cards if c.shown]
+
+    def select(self, card):
+        if self.sel is not None:
+            self.sel.remove_css_class("sel")
+        self.sel = card
+        if card is None:
+            self.status("")
+            return
+        card.add_css_class("sel")
+        c = card.c
+        self.status("%s · %s · %s" % (c["workspace"].get("name", "?").upper(), (c.get("class") or "?").upper(),
+                                      (c.get("title") or "")[:70]))
+        GLib.idle_add(self.scroll_to, card)
+
+    def scroll_to(self, card):
+        ok, r = card.compute_bounds(self.groups)
+        if not ok:
+            return False
+        adj = self.scroller.get_vadjustment()
+        y, h, top = r.origin.y, r.size.height, adj.get_value()
+        if y - 44 < top:
+            adj.set_value(max(0, y - 44))
+        elif y + h + 12 > top + adj.get_page_size():
+            adj.set_value(y + h + 12 - adj.get_page_size())
+        return False
+
+    def move(self, dx, dy):
+        vis = self.visible_cards()
+        if not vis:
+            return
+        if self.sel not in vis:
+            self.select(vis[0])
+            return
+        if dx:
+            i = vis.index(self.sel) + dx
+            if 0 <= i < len(vis):
+                self.select(vis[i])
+            return
+        geo = {}
+        for c in vis:
+            ok, r = c.compute_bounds(self.groups)
+            if ok:
+                geo[c] = (r.origin.x + r.size.width / 2, r.origin.y)
+        if self.sel not in geo:
+            return
+        cx, cy = geo[self.sel]
+        rows = sorted({y for _x, y in geo.values() if (y > cy + 5 if dy > 0 else y < cy - 5)}, reverse=dy < 0)
+        if not rows:
+            return
+        row = rows[0]
+        best = min((c for c, (x, y) in geo.items() if abs(y - row) < 5), key=lambda c: abs(geo[c][0] - cx))
+        self.select(best)
+
+    def set_filter(self, text, mode=None):
+        self.filter = text
+        if mode is not None:
+            self.filter_mode = mode
+        on = bool(text) or self.filter_mode
+        self.lbl_q.set_label(text + ("▏" if on else ""))
+        self.lbl_ph.set_visible(not text)
+        (self.fbox.add_css_class if on else self.fbox.remove_css_class)("filter-on")
+        (self.fbox.add_css_class if on else self.fbox.remove_css_class)("on")
+        q = text.lower().split()
+        for head, flow, cards in getattr(self, "sections", []):
+            n = 0
+            for card in cards:
+                show = all(t in card.haystack for t in q)
+                card.shown = show
+                n += show
+            self.layout(flow, cards)
+            keep = n > 0 or (not q and not cards)
+            head.set_visible(keep)
+            flow.set_visible(keep)
+        vis = self.visible_cards()
+        if self.sel not in vis:
+            self.select(vis[0] if vis else None)
+
+    # ------------------------------------------------------------- actions
+
+    def go(self, card, bring=False):
+        if card is None:
+            return
+        addr = "address:" + card.addr
+        if bring and self.current_ws is not None and card.c["workspace"].get("id") != self.current_ws:
+            cmd = 'hl.dsp.window.move({ workspace = %d, window = "%s" })' % (self.current_ws, addr)
+            run_async(["hyprctl", "dispatch", cmd],
+                      lambda ok, o, e: run_async(["hyprctl", "dispatch", 'hl.dsp.focus({ window = "%s" })' % addr]))
+        else:
+            run_async(["hyprctl", "dispatch", 'hl.dsp.focus({ window = "%s" })' % addr])
+        self.hide_panel()
+
+    def on_key(self, _ctl, keyval, _code, state):
+        name = Gdk.keyval_name(keyval) or ""
+        ctrl = bool(state & Gdk.ModifierType.CONTROL_MASK)
+        shift = bool(state & Gdk.ModifierType.SHIFT_MASK)
+        typing = bool(self.filter) or self.filter_mode
+        if name == "Escape":
+            if typing:
+                self.set_filter("", mode=False)
+            else:
+                self.hide_panel()
+            return True
+        if name in ("Return", "KP_Enter"):
+            self.go(self.sel, bring=shift)
+            return True
+        if ctrl and name == "u":
+            self.set_filter("", mode=False)
+            return True
+        if ctrl and name in ("q", "w"):
+            self.hide_panel()
+            return True
+        if name == "BackSpace":
+            self.set_filter(self.filter[:-1], mode=bool(self.filter[:-1]) and self.filter_mode)
+            return True
+        arrows = {"Left": (-1, 0), "Right": (1, 0), "Up": (0, -1), "Down": (0, 1)}
+        vim = {"h": (-1, 0), "l": (1, 0), "k": (0, -1), "j": (0, 1)}
+        if name in arrows:
+            self.move(*arrows[name])
+            return True
+        if name in ("Tab", "ISO_Left_Tab"):
+            self.move(-1 if shift or name == "ISO_Left_Tab" else 1, 0)
+            return True
+        if not typing and name in vim and not ctrl:
+            self.move(*vim[name])
+            return True
+        if not typing and name == "slash":
+            self.set_filter("", mode=True)
+            return True
+        ch = chr(Gdk.keyval_to_unicode(keyval)) if Gdk.keyval_to_unicode(keyval) else ""
+        if ch and ch.isprintable() and not ctrl:
+            self.set_filter(self.filter + ch, mode=True)
+            return True
+        return False
+
+
+def main():
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        return 0
+    if "--quit" in sys.argv:
+        return 0
+    daemon = "--daemon" in sys.argv
+    try:
+        os.unlink(SOCK)
+    except OSError:
+        pass
+    GLib.set_prgname(APP_ID)
+    GLib.set_application_name("MAGI · OVERVIEW")
+    app = Gtk.Application(flags=Gio.ApplicationFlags.NON_UNIQUE)
+    state = {}
+
+    def incoming(_svc, conn, _src):
+        try:
+            data = conn.get_input_stream().read_bytes(64, None).get_data().decode(errors="replace").strip()
+        except GLib.Error:
+            return False
+        w = state.get("win")
+        if data == "quit":
+            app.quit()
+        elif data.startswith("key ") and w is not None and w.get_visible():
+            # test hook: inject a key into this process only (never into other windows)
+            k = data[4:]
+            mods = Gdk.ModifierType.SHIFT_MASK if k.startswith("S-") else 0
+            w.on_key(None, Gdk.keyval_from_name(k[2:] if mods else k), 0, mods)
+        elif w is not None:
+            w.toggle()
+        return False
+
+    def activate(a):
+        prov = Gtk.CssProvider()
+        prov.load_from_string(CSS)
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+        w = Overview(a, prov)
+        state["win"] = w
+        a.hold()
+        svc = Gio.SocketService()
+        svc.add_address(Gio.UnixSocketAddress.new(SOCK), Gio.SocketType.STREAM, Gio.SocketProtocol.DEFAULT, None)
+        svc.connect("incoming", incoming)
+        svc.start()
+        state["svc"] = svc
+        if not daemon:
+            w.show_panel()
+
+    app.connect("activate", activate)
+    warnings.simplefilter("ignore", DeprecationWarning)
+    GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, lambda: app.quit() or False)
+    try:
+        return app.run([sys.argv[0]])
+    finally:
+        try:
+            os.unlink(SOCK)
+        except OSError:
+            pass
+
+
+if __name__ == "__main__":
+    sys.exit(main())

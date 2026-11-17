@@ -1,0 +1,5 @@
+[Unit]
+Description=Hyprland session (makes graphical-session.target active, so portals, screen sharing and dark mode work)
+BindsTo=graphical-session.target
+Wants=graphical-session-pre.target
+After=graphical-session-pre.target

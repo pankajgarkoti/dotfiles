@@ -50,6 +50,7 @@ Plus subtle non-mood indicators on the right side:
 - **vim mode** segment when `vim.mode` is in the JSON
 - **`auto-edit`** segment in green when `permission_mode == acceptEdits` (subtle — it's
   an everyday mode that doesn't deserve to hijack the mascot)
+- **`⏵⏵ auto`** (purple) / **`dont-ask`** (orange) segments for those permission modes
 - **`X/Y`** segment shows todo progress (cyan) when not yet at victory
 - **`ctx N%`** is always visible; color tier matches mood thresholds
 
@@ -127,8 +128,9 @@ you to approve the hooks — that's expected, since hooks run shell commands.
   block) and a corresponding branch in the cascade above it.
 - **Change colors**: the Dracula palette is at the top of `statusline.sh` as
   `R;G;B` triples for ANSI 24-bit.
-- **Change the icon entirely**: replace the per-mood `icon=...` lines. The script
-  doesn't care about character widths — anything renders.
+- **Change the icon entirely**: replace the per-mood `frames=(...)` arrays (exactly 4
+  frames each). Every frame is padded to the widest one in its mood, so frames of
+  different lengths don't shift the layout.
 - **Slow down animation**: change `refreshInterval` in `settings.json`. The frame
   index is `(date +%s) % 4`, so frames change every second regardless.
 
@@ -139,8 +141,5 @@ you to approve the hooks — that's expected, since hooks run shell commands.
   hook fires (next prompt, tool call, or notification).
 - Width detection uses `$COLUMNS` → `tput cols` → `120`. If the layout looks misaligned,
   the harness probably isn't propagating `$COLUMNS`.
-- Wide CJK characters in some mascots (e.g., the panic table-flip) are slightly
-  under-counted by the naive char counter, leaving 1–3 extra cells of gap. Not broken,
-  just slightly loose.
 
 [1]: https://code.claude.com/docs/en/statusline

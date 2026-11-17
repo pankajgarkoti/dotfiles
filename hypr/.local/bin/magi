@@ -1,0 +1,1711 @@
+#!/usr/bin/env python3
+"""magi: the MAGI control centre. One keyboard-first panel for the Evangelion Hyprland desktop.
+
+Sections: NETWORK (eva-wifi), BLUETOOTH (eva-bluetooth), SOUND, DISPLAY, POWER, THEME,
+TOOLS (overview, files, clipboard, screenshots).
+Colours come only from ~/.config/hypr/themes/current/colors.css (plus the theme swatches,
+read from each theme's palette file), so `eva-theme` restyles it, live if it is open.
+
+Keys
+  Up/Down, j/k        move              1-7        jump to a section
+  Left/Right, h/l     adjust a slider or option; Left on a plain row goes back to the sections
+  Enter / Space       act (power actions ask once more: Enter again executes, Esc aborts)
+  Tab                 sections <-> panel                 Esc       back / abort / close
+  m                   mute output        r          refresh
+
+`magi sound` opens on a section. Running `magi` while it is open hides it (toggle).
+It stays resident after the first open (or `magi --daemon` at login), so later opens are instant;
+`magi --quit` stops the resident process.
+MAGI_DRY_RUN=1 prints the lock/suspend/log out/reboot/shutdown commands instead of running them.
+"""
+import os
+import socket
+import sys
+import time
+
+T0 = time.monotonic()
+SOCK = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "magi.sock")
+
+
+def _ask_resident():
+    """Fast path: if the resident panel is running, hand it our args and exit before importing GTK."""
+    if __name__ != "__main__" or "--daemon" in sys.argv or "--help" in sys.argv:
+        return
+    try:
+        c = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        c.settimeout(0.5)
+        c.connect(SOCK)
+        c.sendall(("toggle " + " ".join(sys.argv[1:])).strip().encode())
+        c.close()
+        sys.exit(0)
+    except OSError:
+        pass
+
+
+_ask_resident()
+
+import hashlib  # noqa: E402
+import json  # noqa: E402
+import signal  # noqa: E402
+import threading  # noqa: E402
+import warnings  # noqa: E402
+
+# layer-shell overlay when gtk4-layer-shell is installed (must load before GTK/libwayland)
+sys.dont_write_bytecode = True
+try:
+    import eva_layer  # noqa: E402
+    eva_layer.preload()
+except ImportError:
+    eva_layer = None
+
+import gi  # noqa: E402
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
+from gi.repository import Gdk, Gio, GLib, Gtk, Pango  # noqa: E402
+
+T_IMPORT = time.monotonic()
+
+APP_ID = "magi"
+DRY_RUN = os.environ.get("MAGI_DRY_RUN") == "1"
+TIMING = os.environ.get("MAGI_TIMING") == "1"
+STICKY = os.environ.get("MAGI_STICKY") == "1"  # testing: don't hide on focus loss
+HOME = os.path.expanduser("~")
+THEMES = HOME + "/.config/hypr/themes"
+COLORS = THEMES + "/current/colors.css"
+RUNTIME = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
+STATE_DIR = HOME + "/.local/state/magi"
+WALL_DIR = HOME + "/Pictures/wallpapers/eva"
+WALL_STATE = HOME + "/.local/state/wall-current"
+THUMB_DIR = HOME + "/.cache/magi/thumbs"
+SETTINGS = ["env", "XDG_CURRENT_DESKTOP=GNOME", "gnome-control-center"]
+
+SECTIONS = [
+    ("network", "NETWORK", "󰖩"),
+    ("bluetooth", "BLUETOOTH", "󰂯"),
+    ("sound", "SOUND", "󰕾"),
+    ("display", "DISPLAY", "󰃠"),
+    ("power", "POWER", "󰐥"),
+    ("theme", "THEME", "󰸌"),
+    ("tools", "TOOLS", "󰙨"),
+]
+ALIASES = {"net": "network", "wifi": "network", "bt": "bluetooth", "audio": "sound",
+           "volume": "sound", "screen": "display", "brightness": "display", "battery": "power",
+           "session": "power", "wallpaper": "theme", "walls": "theme", "files": "tools", "overview": "tools"}
+
+CSS = """
+@import url("file://%s");
+
+* {
+  font-family: "IosevkaTerm Nerd Font Mono";
+  border-radius: 0;
+  box-shadow: none;
+  text-shadow: none;
+  outline: none;
+  -gtk-icon-shadow: none;
+}
+window.magi { background: alpha(@base, 0.94); color: @text; border: 1px solid @accent; }
+
+/* header strip, same skeleton as eva-wifi / eva-bluetooth */
+.header { background: @accent; color: @base; padding: 5px 12px; }
+.header .title { font-size: 12px; font-weight: 800; letter-spacing: 3px; }
+.header .aux { font-size: 10px; font-weight: 800; letter-spacing: 2px; }
+.hazard {
+  min-height: 4px;
+  background-image: repeating-linear-gradient(135deg, alpha(@accent, 0.55) 0px, alpha(@accent, 0.55) 6px, transparent 6px, transparent 12px);
+}
+
+/* the three MAGI votes */
+.votes { padding: 10px 12px 10px 12px; border-bottom: 1px solid @surface1; }
+.vote { border: 1px solid @surface1; border-left: 3px solid @surface1; padding: 5px 10px; background: alpha(@surface0, 0.45); }
+.vote.ok { border-left-color: @good; }
+.vote.no { border-left-color: @bad; background: alpha(@bad, 0.08); }
+.vote .who { font-size: 11px; font-weight: 800; letter-spacing: 3px; color: @accent2; }
+.vote .what { font-size: 10px; letter-spacing: 1px; color: @dim; }
+.vote .verdict { font-size: 10px; font-weight: 800; letter-spacing: 2px; color: @dim; }
+.vote.ok .verdict { color: @good; }
+.vote.no .verdict { color: @bad; }
+
+/* section list */
+.side { padding: 8px 0; border-right: 1px solid @surface1; }
+.tab { padding: 8px 16px 8px 11px; border-left: 3px solid transparent; }
+.tab:hover { background: alpha(@surface1, 0.35); }
+.tab .num { font-size: 10px; color: alpha(@dim, 0.7); min-width: 22px; }
+.tab .glyph { font-size: 16px; color: @dim; min-width: 26px; }
+.tab .name { font-size: 11px; letter-spacing: 3px; font-weight: bold; color: alpha(@text, 0.62); }
+.tab .tag { font-size: 9px; letter-spacing: 1px; color: alpha(@dim, 0.85); }
+.tab.cur { background: alpha(@surface1, 0.4); border-left-color: alpha(@accent, 0.45); }
+.tab.cur .name { color: @text; }
+.tab.cur .glyph { color: @accent; }
+.side.focus .tab.cur { background: alpha(@accent, 0.17); border-left-color: @accent; }
+.side .tag.no { color: @bad; }
+
+/* pages */
+scrolledwindow, viewport { background: transparent; }
+.page { padding: 0 0 12px 0; }
+.section { padding: 12px 14px 5px 14px; }
+.section .lbl { font-size: 10px; letter-spacing: 3px; color: @dim; font-weight: bold; }
+.section .cnt { font-size: 10px; letter-spacing: 2px; color: @accent; font-weight: bold; }
+.section .rule { min-height: 1px; background: @surface1; }
+
+.kv { padding: 2px 14px 2px 17px; }
+.kv .k { font-size: 10px; letter-spacing: 2px; color: @dim; min-width: 104px; }
+.kv .v { font-size: 12px; color: @c1; }
+.kv .v.good { color: @good; }
+.kv .v.warn { color: @warn; }
+.kv .v.bad { color: @bad; }
+.note { padding: 4px 14px 2px 17px; font-size: 10px; letter-spacing: 1px; color: @dim; }
+
+.item { padding: 7px 14px 7px 11px; border-left: 3px solid transparent; }
+.item:hover { background: alpha(@surface1, 0.3); }
+.item.sel { background: alpha(@surface1, 0.3); border-left-color: alpha(@accent, 0.35); }
+.pane.focus .item.sel { background: alpha(@accent, 0.15); border-left-color: @accent; }
+.item.armed, .pane.focus .item.armed { background: alpha(@bad, 0.2); border-left-color: @bad; }
+.item.armed .name, .item.armed .glyph { color: @bad; font-weight: 800; }
+.item.armed .meta { color: @warn; font-weight: bold; letter-spacing: 2px; }
+.glyph { font-size: 18px; color: @dim; min-width: 30px; }
+.glyph.ctl { color: @accent; }
+.glyph.live { color: @good; }
+.glyph.danger { color: alpha(@bad, 0.8); }
+.name { font-size: 13px; color: alpha(@text, 0.86); }
+.item.sel .name { color: @text; }
+.item.cur .name { color: @text; font-weight: bold; }
+.meta { font-size: 10px; letter-spacing: 1px; color: @dim; }
+.go { font-size: 12px; color: @dim; }
+.pane.focus .item.sel .go { color: @accent; }
+
+.chip { font-size: 10px; font-weight: 800; letter-spacing: 2px; padding: 1px 7px; border: 1px solid @surface1; color: @dim; }
+.chip.on { color: @base; background: @good; border-color: @good; }
+.chip.off { color: @bad; border-color: @bad; }
+.chip.acc { color: @base; background: @accent; border-color: @accent; }
+.chip.ring { color: @accent; border-color: @accent; }
+.chip.warn { color: @warn; border-color: alpha(@warn, 0.7); }
+.opt { font-size: 10px; font-weight: 800; letter-spacing: 2px; padding: 1px 8px; color: @dim; border: 1px solid alpha(@surface1, 0.8); }
+.opt.on { color: @base; background: @accent; border-color: @accent; }
+.pane.focus .item.sel .opt.on { background: @accent2; border-color: @accent2; }
+
+/* sliders: flat trough, hard thumb */
+scale { padding: 6px 0; margin: 0; }
+scale trough { min-height: 6px; background: alpha(@surface1, 0.95); border: none; }
+scale highlight { background: @accent; min-height: 6px; min-width: 2px; margin: 0; border: none; }
+scale slider { min-width: 5px; min-height: 16px; margin: -5px 0; background: @text; border: none; }
+.item.sel scale slider { background: @accent2; }
+.item.muted scale highlight { background: alpha(@dim, 0.5); }
+.val { font-size: 12px; font-weight: bold; color: @text; min-width: 46px; }
+.item.muted .val { color: @bad; }
+
+/* battery cells */
+.cells { padding: 6px 14px 4px 17px; }
+.cell { min-width: 14px; min-height: 18px; background: alpha(@surface1, 0.8); }
+.cell.lit { background: @good; }
+.cell.lit.warn { background: @warn; }
+.cell.lit.bad { background: @bad; }
+.cell.lit.chg { background: @accent2; }
+
+/* theme swatches and wallpaper grid */
+.sw { min-width: 14px; min-height: 14px; }
+.grid { padding: 6px 14px 4px 14px; }
+.item.thumb { padding: 3px; border: 1px solid @surface1; }
+.item.thumb.sel { border-color: alpha(@accent, 0.5); background: transparent; }
+.pane.focus .item.thumb.sel { border: 1px solid @accent2; background: alpha(@accent2, 0.15); }
+.item.thumb.cur { border-color: @accent; }
+.thumbtag { font-size: 9px; font-weight: 800; letter-spacing: 2px; color: @base; background: @accent; padding: 0 5px; margin: 4px; }
+
+/* footer */
+.footer { border-top: 1px solid @surface1; padding: 6px 12px; }
+.status { font-size: 10px; letter-spacing: 2px; color: @c1; font-weight: bold; }
+.status.err { color: @bad; }
+.status.ok { color: @good; }
+.status.warn { color: @warn; }
+.key { font-size: 9px; font-weight: 800; background: @surface1; color: @text; padding: 0 4px; }
+.hint { font-size: 9px; letter-spacing: 1px; color: @dim; }
+""" % COLORS
+
+
+# ----------------------------------------------------------------- helpers
+
+def run_async(argv, callback=None):
+    """Run argv without blocking the UI; callback(ok, stdout, stderr)."""
+    flags = Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+    try:
+        proc = Gio.Subprocess.new(["env", "LC_ALL=C"] + list(argv), flags)
+    except GLib.Error as e:
+        if callback:
+            GLib.idle_add(lambda: callback(False, "", e.message) and False)
+        return
+
+    def done(p, res):
+        try:
+            _, out, err = p.communicate_utf8_finish(res)
+            ok = p.get_successful()
+        except GLib.Error as e:
+            ok, out, err = False, "", e.message
+        if callback:
+            callback(ok, out or "", err or "")
+
+    proc.communicate_utf8_async(None, None, done)
+
+
+def spawn(argv):
+    """Start something that outlives the panel."""
+    run_async(["setsid", "-f"] + list(argv))
+
+
+def lbl(text, *classes, xalign=0.0, hexpand=False, ellipsize=False):
+    w = Gtk.Label(label=text, xalign=xalign, hexpand=hexpand)
+    for c in classes:
+        w.add_css_class(c)
+    if ellipsize:
+        w.set_ellipsize(Pango.EllipsizeMode.END)
+    return w
+
+
+def chip(text, *classes):
+    return lbl(text, "chip", *classes)
+
+
+def read(path, default=""):
+    try:
+        with open(path) as f:
+            return f.read().strip()
+    except OSError:
+        return default
+
+
+def write_state(name, value):
+    try:
+        os.makedirs(STATE_DIR, exist_ok=True)
+        with open(os.path.join(STATE_DIR, name), "w") as f:
+            f.write(str(value))
+    except OSError:
+        pass
+
+
+def palette(theme):
+    out = {}
+    for line in read(os.path.join(THEMES, theme, "palette")).splitlines():
+        if "=" in line:
+            k, v = line.split("=", 1)
+            out[k.strip()] = v.strip()
+    return out
+
+
+def current_theme():
+    return os.path.basename(os.path.realpath(THEMES + "/current"))
+
+
+def clear(box):
+    child = box.get_first_child()
+    while child is not None:
+        nxt = child.get_next_sibling()
+        box.remove(child)
+        child = nxt
+
+
+def battery():
+    for name in sorted(os.listdir("/sys/class/power_supply")) if os.path.isdir("/sys/class/power_supply") else []:
+        if name.startswith("BAT"):
+            base = "/sys/class/power_supply/" + name
+            cap = read(base + "/capacity")
+            if cap.isdigit():
+                return int(cap), read(base + "/status", "Unknown")
+    return None, ""
+
+
+# ----------------------------------------------------------------- rows
+
+class Row(Gtk.Box):
+    """A selectable line in a page. activate() on Enter/click, adjust(+-1) on h/l."""
+
+    def __init__(self, win, key, glyph=None, name="", meta="", activate=None, confirm=None,
+                 glyph_class=None):
+        super().__init__(spacing=10)
+        self.win = win
+        self.key = key
+        self.on_activate = activate
+        self.on_adjust = None
+        self.confirm = confirm      # e.g. "SHUT DOWN": a second Enter is needed
+        self.grid = None            # (cols, index, count) for the wallpaper grid
+        self.add_css_class("item")
+        if glyph is not None:
+            self.glyph = lbl(glyph, "glyph")
+            if glyph_class:
+                self.glyph.add_css_class(glyph_class)
+            self.append(self.glyph)
+        col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
+        self.name = lbl(name, "name", ellipsize=True)
+        self.meta = lbl(meta, "meta", ellipsize=True)
+        self.meta.set_visible(bool(meta))
+        col.append(self.name)
+        col.append(self.meta)
+        self.body = col
+        self.append(col)
+        self.tail = Gtk.Box(spacing=6, valign=Gtk.Align.CENTER)
+        self.append(self.tail)
+        click = Gtk.GestureClick()
+        click.connect("released", self._click)
+        self.add_controller(click)
+
+    def _click(self, _g, _n, x, y):
+        w = self.pick(x, y, Gtk.PickFlags.DEFAULT)
+        while w is not None and w is not self:
+            if isinstance(w, Gtk.Scale) or getattr(w, "_opt", None) is not None:
+                self.win.select_row(self, pane=True)
+                return  # the scale / option chip handles its own click
+            w = w.get_parent()
+        self.win.select_row(self, pane=True)
+        self.win.activate_row(self)
+
+    def set_meta(self, text):
+        self.meta.set_label(text)
+        self.meta.set_visible(bool(text))
+
+    def set_tail(self, *widgets):
+        clear(self.tail)
+        for w in widgets:
+            self.tail.append(w)
+
+
+class SliderRow(Row):
+    def __init__(self, win, key, glyph, name, setter, lo=0, hi=100, step=5, activate=None):
+        super().__init__(win, key, glyph, name, activate=activate)
+        self.body.set_hexpand(False)
+        self.body.set_size_request(150, -1)
+        self.adj = Gtk.Adjustment(lower=lo, upper=hi, step_increment=step, page_increment=step * 4)
+        self.scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.adj,
+                               draw_value=False, hexpand=True, valign=Gtk.Align.CENTER)
+        self.scale.set_focusable(False)
+        self.val = lbl("--", "val", xalign=1)
+        self.remove(self.tail)
+        self.append(self.scale)
+        self.append(self.val)
+        self.append(self.tail)
+        self.setter = setter
+        self.step = step
+        self.guard = False
+        self.touched = 0.0
+        self.pending = None
+        self.on_adjust = self._adjust
+        self.adj.connect("value-changed", self._changed)
+
+    def _adjust(self, d, big=False):
+        self.adj.set_value(self.adj.get_value() + d * self.step * (4 if big else 1))
+
+    def _changed(self, adj):
+        self.val.set_label("%d%%" % round(adj.get_value()))
+        if self.guard:
+            return
+        self.touched = time.monotonic()
+        if self.pending is None:
+            self.pending = GLib.timeout_add(40, self._flush)
+
+    def _flush(self):
+        self.pending = None
+        self.setter(int(round(self.adj.get_value())))
+        return False
+
+    def set_value(self, v):
+        if time.monotonic() - self.touched < 0.8:
+            return  # the user is dragging: don't fight them with stale readings
+        self.guard = True
+        self.adj.set_value(v)
+        self.guard = False
+        self.val.set_label("%d%%" % round(v))
+
+    def set_muted(self, muted):
+        (self.add_css_class if muted else self.remove_css_class)("muted")
+        self.val.set_label("MUTE" if muted else "%d%%" % round(self.adj.get_value()))
+
+
+class ChoiceRow(Row):
+    """One of a few options. h/l steps and applies; Enter steps forward; chips are clickable."""
+
+    def __init__(self, win, key, glyph, name, options, apply, meta=""):
+        super().__init__(win, key, glyph, name, meta=meta)
+        self.options = options  # [(value, label)]
+        self.apply = apply
+        self.current = None
+        self.chips = {}
+        for value, text in options:
+            c = lbl(text, "opt")
+            c._opt = value
+            g = Gtk.GestureClick()
+            g.connect("released", lambda *_a, v=value: self.choose(v))
+            c.add_controller(g)
+            self.chips[value] = c
+            self.tail.append(c)
+        self.on_adjust = self._adjust
+        self.on_activate = lambda: self._adjust(1, wrap=True)
+
+    def set_current(self, value):
+        self.current = value
+        for v, c in self.chips.items():
+            (c.add_css_class if v == value else c.remove_css_class)("on")
+
+    def _adjust(self, d, big=False, wrap=False):
+        vals = [v for v, _ in self.options]
+        i = vals.index(self.current) if self.current in vals else 0
+        j = i + d
+        if wrap:
+            j %= len(vals)
+        j = max(0, min(len(vals) - 1, j))
+        if j != i or self.current not in vals:
+            self.choose(vals[j])
+
+    def choose(self, value):
+        self.set_current(value)
+        self.apply(value)
+
+
+class Page:
+    def __init__(self, win, key):
+        self.win = win
+        self.key = key
+        self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.box.add_css_class("page")
+        self.scroller = Gtk.ScrolledWindow(hscrollbar_policy=Gtk.PolicyType.NEVER, vexpand=True)
+        self.scroller.set_focusable(False)
+        self.scroller.set_child(self.box)
+        self.rows = []
+        self.sel = 0
+        self.sel_key = None
+
+    def section(self, text, parent=None):
+        b = Gtk.Box(spacing=8)
+        b.add_css_class("section")
+        b.append(lbl(text, "lbl"))
+        cnt = lbl("", "cnt")
+        b.append(cnt)
+        rule = Gtk.Box(hexpand=True, valign=Gtk.Align.CENTER)
+        rule.add_css_class("rule")
+        b.append(rule)
+        (parent or self.box).append(b)
+        return cnt
+
+    def kv(self, key, parent=None):
+        b = Gtk.Box(spacing=8)
+        b.add_css_class("kv")
+        b.append(lbl(key, "k"))
+        v = lbl("--", "v", hexpand=True, ellipsize=True)
+        b.append(v)
+        (parent or self.box).append(b)
+        return v
+
+    def add(self, w, parent=None):
+        (parent or self.box).append(w)
+        return w
+
+    def group(self):
+        g = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.box.append(g)
+        return g
+
+    def reindex(self):
+        out = []
+
+        def walk(w):
+            c = w.get_first_child()
+            while c is not None:
+                if isinstance(c, Row):
+                    if c.get_visible():
+                        out.append(c)
+                elif c.get_visible():
+                    walk(c)
+                c = c.get_next_sibling()
+        walk(self.box)
+        self.rows = out
+        idx = next((i for i, r in enumerate(out) if r.key == self.sel_key), None)
+        self.sel = idx if idx is not None else max(0, min(self.sel, len(out) - 1))
+        self.paint()
+
+    def paint(self):
+        for i, r in enumerate(self.rows):
+            (r.add_css_class if i == self.sel else r.remove_css_class)("sel")
+        if self.rows:
+            self.sel_key = self.rows[self.sel].key
+
+    def current(self):
+        return self.rows[self.sel] if self.rows and self.sel < len(self.rows) else None
+
+
+# ----------------------------------------------------------------- window
+
+class Magi(Gtk.ApplicationWindow):
+    def __init__(self, app, css, start, pane=False):
+        super().__init__(application=app, title="MAGI · CONTROL")
+        self.css = css
+        self.add_css_class("magi")
+        self.set_default_size(880, 600)
+        self.set_decorated(False)
+        # centred overlay; falls back to the Hyprland window rule without layer shell
+        self.layer = eva_layer and eva_layer.attach(self, APP_ID, on_outside=self.hide_panel)
+        self.focus_pane = False
+        self.armed = None
+        self.arm_timer = None
+        self.was_active = False
+        self.status_timer = None
+        self.sound = {"sinks": [], "sources": [], "cards": {}, "dsink": "", "dsource": ""}
+        self.sound_timer = None
+        self.net_ok = None
+        self.thumbs_started = False
+        self.closing = False
+
+        root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.set_child(root)
+
+        head = Gtk.Box(spacing=8)
+        head.add_css_class("header")
+        head.append(lbl("MAGI · CONTROL CENTRE", "title", hexpand=True))
+        self.lbl_clock = lbl("", "aux", xalign=1)
+        head.append(self.lbl_clock)
+        root.append(head)
+        haz = Gtk.Box()
+        haz.add_css_class("hazard")
+        root.append(haz)
+
+        votes = Gtk.Box(spacing=8, homogeneous=True)
+        votes.add_css_class("votes")
+        self.votes = {}
+        for key, who in (("mel", "MELCHIOR-1"), ("bal", "BALTHASAR-2"), ("cas", "CASPER-3")):
+            v = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+            v.add_css_class("vote")
+            top = Gtk.Box(spacing=6)
+            top.append(lbl(who, "who", hexpand=True))
+            verdict = lbl("……", "verdict", xalign=1)
+            top.append(verdict)
+            v.append(top)
+            what = lbl("--", "what", ellipsize=True)
+            v.append(what)
+            votes.append(v)
+            self.votes[key] = (v, what, verdict)
+        root.append(votes)
+
+        body = Gtk.Box(vexpand=True)
+        root.append(body)
+        self.side = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.side.add_css_class("side")
+        self.side.set_size_request(196, -1)
+        body.append(self.side)
+        self.tabs = []
+        self.tab_tags = {}
+        for i, (key, name, glyph) in enumerate(SECTIONS):
+            t = Gtk.Box(spacing=6)
+            t.add_css_class("tab")
+            t.append(lbl("%02d" % (i + 1), "num"))
+            t.append(lbl(glyph, "glyph"))
+            col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, valign=Gtk.Align.CENTER, hexpand=True)
+            col.append(lbl(name, "name"))
+            tag = lbl("", "tag", ellipsize=True)
+            tag.set_max_width_chars(16)
+            col.append(tag)
+            t.append(col)
+            g = Gtk.GestureClick()
+            g.connect("released", lambda *_a, n=i: self.goto(n, pane=False))
+            t.add_controller(g)
+            self.side.append(t)
+            self.tabs.append(t)
+            self.tab_tags[key] = tag
+
+        self.pane = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, hexpand=True)
+        self.pane.add_css_class("pane")
+        body.append(self.pane)
+        self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.NONE, vexpand=True)
+        self.pane.append(self.stack)
+
+        foot = Gtk.Box(spacing=8)
+        foot.add_css_class("footer")
+        self.lbl_status = lbl("", "status", hexpand=True, ellipsize=True)
+        foot.append(self.lbl_status)
+        for k, h in (("↑↓", "MOVE"), ("←→", "ADJUST"), ("↵", "SELECT"), ("TAB", "PANE"), ("1-7", "JUMP"), ("ESC", "BACK")):
+            foot.append(lbl(k, "key"))
+            foot.append(lbl(h, "hint"))
+        root.append(foot)
+
+        self.pages = {}
+        self.order = []
+        for key, _name, _g in SECTIONS:
+            p = Page(self, key)
+            self.pages[key] = p
+            self.order.append(key)
+            getattr(self, "build_" + key)(p)
+            p.reindex()
+            self.stack.add_named(p.scroller, key)
+
+        self.idx = self.order.index(start) if start in self.order else 2
+        self.goto(self.idx, pane=pane)
+
+        keys = Gtk.EventControllerKey()
+        keys.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+        keys.connect("key-pressed", self.on_key)
+        self.add_controller(keys)
+        self.connect("notify::is-active", self.on_active)
+        if TIMING:
+            self.connect("map", lambda *_: print("magi: mapped %.0f ms after start" % ((time.monotonic() - self.t_show) * 1000)))
+        self.connect("close-request", lambda *_: self.hide_panel() or True)
+        self.tick_id = None
+        self.t_show = T0
+
+    # ------------------------------------------------------------- resident show / hide
+
+    def show_panel(self, section=None, pane=None):
+        if section in self.order:
+            self.goto(self.order.index(section), pane=True if pane is None else pane)
+        elif pane is not None:
+            self.set_pane(pane)
+        if self.get_visible():
+            self.present()
+            return
+        self.t_show = time.monotonic()
+        self.closing = False
+        self.was_active = False
+        self.css.load_from_string(CSS)  # the theme may have changed while hidden
+        self.tick()
+        self.tick_id = GLib.timeout_add_seconds(3, self.tick)
+        self.pa_start()
+        GLib.idle_add(self.load_all)
+        self.present()
+
+    def hide_panel(self):
+        if not self.get_visible():
+            return
+        self.disarm()
+        if self.tick_id:
+            GLib.source_remove(self.tick_id)
+            self.tick_id = None
+        self.pa_stop()
+        self.set_visible(False)
+
+    def toggle(self, section=None):
+        if self.get_visible() and (section is None or section == self.order[self.idx]):
+            self.hide_panel()
+        else:
+            self.show_panel(section, pane=True if section else None)
+
+    # ------------------------------------------------------------- focus, status
+
+    def on_active(self, *_):
+        if self.is_active():
+            self.was_active = True
+        elif self.was_active and not self.closing and not STICKY:
+            self.hide_panel()  # a panel: clicking elsewhere dismisses it
+
+    def status(self, text, kind="info", sticky=False):
+        self.lbl_status.set_label(text)
+        for k in ("err", "ok", "warn"):
+            self.lbl_status.remove_css_class(k)
+        if kind != "info":
+            self.lbl_status.add_css_class(kind)
+        if self.status_timer:
+            GLib.source_remove(self.status_timer)
+            self.status_timer = None
+        if text and not sticky:
+            self.status_timer = GLib.timeout_add_seconds(4, self._clear_status)
+
+    def _clear_status(self):
+        self.status_timer = None
+        self.lbl_status.set_label("")
+        return False
+
+    def report(self, what):
+        """Callback for run_async that reports failures in the footer."""
+        def cb(ok, _out, err):
+            if not ok:
+                self.status("%s FAILED · %s" % (what, (err.strip().splitlines() or ["?"])[-1][:60]), "err")
+        return cb
+
+    def launch(self, argv, close=True):
+        spawn(argv)
+        if close:
+            self.closing = True
+            GLib.timeout_add(60, lambda: self.hide_panel() or False)
+
+    # ------------------------------------------------------------- navigation
+
+    def page(self):
+        return self.pages[self.order[self.idx]]
+
+    def goto(self, i, pane=None):
+        self.disarm()
+        self.idx = max(0, min(len(self.order) - 1, i))
+        for n, t in enumerate(self.tabs):
+            (t.add_css_class if n == self.idx else t.remove_css_class)("cur")
+        key = self.order[self.idx]
+        self.stack.set_visible_child_name(key)
+        write_state("section", key)
+        if pane is not None:
+            self.set_pane(pane)
+        if key == "theme" and not self.thumbs_started:
+            self.load_thumbs()
+
+    def set_pane(self, on):
+        if on and not self.page().rows:
+            on = False
+        self.focus_pane = on
+        (self.pane.add_css_class if on else self.pane.remove_css_class)("focus")
+        (self.side.remove_css_class if on else self.side.add_css_class)("focus")
+        if on:
+            self.scroll_to(self.page(), self.page().current())
+
+    def select_row(self, row, pane=True):
+        p = self.page()
+        if row in p.rows:
+            if p.rows[p.sel] is not row:
+                self.disarm()
+            p.sel = p.rows.index(row)
+            p.paint()
+            if pane and not self.focus_pane:
+                self.set_pane(True)
+            self.scroll_to(p, row)
+
+    def move(self, d):
+        p = self.page()
+        if not p.rows:
+            return
+        self.disarm()
+        i = p.sel
+        r = p.rows[i]
+        if r.grid:
+            cols, gi, n = r.grid
+            if d > 0:
+                if gi + cols < n:
+                    i += cols
+                elif gi // cols < (n - 1) // cols:
+                    i += (n - 1 - gi)
+                else:
+                    i += (n - gi)
+            else:
+                i = i - cols if gi - cols >= 0 else i - gi - 1
+        else:
+            i += d
+        if 0 <= i < len(p.rows):
+            p.sel = i
+            p.paint()
+            self.scroll_to(p, p.rows[i])
+
+    def side_step(self, d, big=False):
+        p = self.page()
+        r = p.current()
+        if r is None:
+            return False
+        if r.on_adjust:
+            r.on_adjust(d, big)
+            return True
+        if r.grid:
+            cols, gi, n = r.grid
+            if (d < 0 and gi % cols > 0) or (d > 0 and gi % cols < cols - 1 and gi + 1 < n):
+                self.disarm()
+                p.sel += d
+                p.paint()
+                self.scroll_to(p, p.current())
+                return True
+        return False
+
+    def scroll_to(self, p, row):
+        if row is None:
+            return
+
+        def do():
+            ok, rect = row.compute_bounds(p.box)
+            if not ok:
+                return False
+            adj = p.scroller.get_vadjustment()
+            y, h = rect.origin.y, rect.size.height
+            top = adj.get_value()
+            if p.rows and row is p.rows[0]:
+                adj.set_value(0)
+            elif y - 34 < top:
+                adj.set_value(max(0, y - 34))
+            elif y + h + 8 > top + adj.get_page_size():
+                adj.set_value(y + h + 8 - adj.get_page_size())
+            return False
+        GLib.idle_add(do)
+
+    def activate_row(self, row):
+        if row.confirm:
+            if self.armed is row:
+                self.disarm()
+                row.on_activate()
+            else:
+                self.arm(row)
+            return
+        self.disarm()
+        if row.on_activate:
+            row.on_activate()
+
+    def arm(self, row):
+        self.disarm()
+        self.armed = row
+        row._meta_saved = row.meta.get_label()
+        row.add_css_class("armed")
+        row.set_meta("CONFIRM %s · ENTER EXECUTES · ESC ABORTS" % row.confirm)
+        self.status("⚠ %s ARMED · AWAITING CONFIRMATION" % row.confirm, "warn", sticky=True)
+        self.arm_timer = GLib.timeout_add_seconds(5, lambda: self.disarm() or False)
+
+    def disarm(self):
+        if self.arm_timer:
+            GLib.source_remove(self.arm_timer)
+            self.arm_timer = None
+        if self.armed is not None:
+            r = self.armed
+            self.armed = None
+            r.remove_css_class("armed")
+            r.set_meta(getattr(r, "_meta_saved", ""))
+            self.status("ABORTED", "info")
+            return True
+        return False
+
+    def on_key(self, _ctl, keyval, _code, state):
+        name = Gdk.keyval_name(keyval) or ""
+        shift = bool(state & Gdk.ModifierType.SHIFT_MASK)
+        ctrl = bool(state & Gdk.ModifierType.CONTROL_MASK)
+        if ctrl and name in ("q", "w"):
+            self.hide_panel()
+            return True
+        if name == "Escape":
+            if self.disarm():
+                return True
+            if self.focus_pane:
+                self.set_pane(False)
+            else:
+                self.hide_panel()
+            return True
+        if name == "q":
+            self.hide_panel()
+            return True
+        if name in [str(n) for n in range(1, len(SECTIONS) + 1)]:
+            self.goto(int(name) - 1, pane=self.focus_pane)
+            return True
+        if name in ("Tab", "ISO_Left_Tab"):
+            self.set_pane(not self.focus_pane)
+            return True
+        if name == "r":
+            self.load_all()
+            self.status("RESYNC", "info")
+            return True
+        if name == "m":
+            self.sink_mute()
+            return True
+        down = name in ("Down", "j", "J")
+        up = name in ("Up", "k", "K")
+        left = name in ("Left", "h", "H")
+        right = name in ("Right", "l", "L")
+        enter = name in ("Return", "KP_Enter", "space")
+        if not self.focus_pane:
+            if down or up:
+                self.goto(self.idx + (1 if down else -1))
+            elif right or enter:
+                self.set_pane(True)
+            elif name == "Home":
+                self.goto(0)
+            elif name == "End":
+                self.goto(len(SECTIONS) - 1)
+            else:
+                return False
+            return True
+        if down or up:
+            self.move(1 if down else -1)
+        elif name in ("Page_Down", "Page_Up"):
+            for _ in range(5):
+                self.move(1 if name == "Page_Down" else -1)
+        elif name == "Home":
+            p = self.page()
+            p.sel = 0
+            p.paint()
+            self.scroll_to(p, p.current())
+        elif left or right:
+            if not self.side_step(1 if right else -1, big=shift) and left:
+                self.disarm()
+                self.set_pane(False)
+        elif enter:
+            r = self.page().current()
+            if r is not None:
+                self.activate_row(r)
+        else:
+            return False
+        return True
+
+    # ------------------------------------------------------------- header
+
+    def tick(self):
+        self.lbl_clock.set_label(time.strftime("%a %d %b · %H:%M").upper() + " · " + os.uname().nodename.split(".")[0].upper())
+        mem = 0
+        for line in read("/proc/meminfo").splitlines():
+            if line.startswith("MemAvailable"):
+                mem = int(line.split()[1]) // 1024
+        load = read("/proc/loadavg", "0").split()[0]
+        self.vote("mel", mem >= 2000, "MEM %.1fG FREE · LOAD %s" % (mem / 1024, load))
+        cap, st = battery()
+        if cap is None:
+            self.vote("cas", True, "AC POWER · NO BATTERY")
+        else:
+            self.vote("cas", not (cap < 20 and st != "Charging"), "BATTERY %d%% · %s" % (cap, st.upper()))
+            self.tab_tags["power"].set_label("%d%% %s" % (cap, "CHARGING" if st == "Charging" else st.upper()))
+        run_async(["nmcli", "-t", "-f", "STATE,CONNECTIVITY", "general"], self._net_vote)
+        return True
+
+    def _net_vote(self, ok, out, _err):
+        parts = out.strip().split(":")
+        state = parts[0] if parts else ""
+        conn = parts[1] if len(parts) > 1 else ""
+        good = ok and state.startswith("connected")
+        self.vote("bal", good, "NETWORK %s · %s" % ((state or "unknown").upper(), (conn or "?").upper()))
+
+    def vote(self, key, ok, text):
+        box, what, verdict = self.votes[key]
+        what.set_label(text)
+        verdict.set_label("承認 APPROVED" if ok else "否決 REJECTED")
+        box.remove_css_class("ok" if not ok else "no")
+        box.add_css_class("ok" if ok else "no")
+
+    def load_all(self):
+        self.load_network()
+        self.load_bluetooth()
+        self.load_sound()
+        self.load_display()
+        self.load_power()
+        self.mark_theme()
+        return False
+
+    # ------------------------------------------------------------- NETWORK
+
+    def build_network(self, p):
+        p.section("LINK")
+        self.net = {k: p.kv(k) for k in ("STATE", "SSID", "SIGNAL", "IPV4", "GATEWAY", "DEVICE")}
+        p.section("CONTROL")
+        p.add(Row(self, "wifi", "󰖩", "OPEN NETWORK LINK", "eva-wifi · scan, join, forget networks",
+                  activate=lambda: self.launch(["eva-wifi"]), glyph_class="ctl"))
+        p.add(Row(self, "nm-editor", "󰒓", "CONNECTION EDITOR", "nm-connection-editor · VPN, wired, proxies, DNS",
+                  activate=lambda: self.launch(["nm-connection-editor"])))
+        p.add(Row(self, "net-settings", "󰛳", "NETWORK SETTINGS", "GNOME Settings · network panel",
+                  activate=lambda: self.launch(SETTINGS + ["wifi"])))
+
+    def load_network(self):
+        def devs(ok, out, _e):
+            dev = None
+            for line in out.splitlines():
+                f = line.split(":")
+                if len(f) >= 4 and f[2] == "connected" and f[1] in ("wifi", "ethernet"):
+                    dev = dev or (f[0], f[1], f[3])
+            if not dev:
+                self.net["STATE"].set_label("OFFLINE")
+                self.set_cls(self.net["STATE"], "bad")
+                self.tab_tags["network"].set_label("OFFLINE")
+                self.tab_tags["network"].add_css_class("no")
+                for k in ("SSID", "SIGNAL", "IPV4", "GATEWAY", "DEVICE"):
+                    self.net[k].set_label("--")
+                return
+            name, kind, conn = dev
+            self.tab_tags["network"].remove_css_class("no")
+            self.net["STATE"].set_label("CONNECTED · " + kind.upper())
+            self.set_cls(self.net["STATE"], "good")
+            self.net["DEVICE"].set_label(name)
+            self.net["SSID"].set_label(conn)
+            self.tab_tags["network"].set_label(conn if kind == "wifi" else "WIRED")
+            run_async(["nmcli", "-g", "IP4.ADDRESS,IP4.GATEWAY", "device", "show", name], ips)
+            if kind == "wifi":
+                run_async(["nmcli", "-t", "-f", "IN-USE,SSID,SIGNAL,SECURITY,FREQ", "device", "wifi", "list", "--rescan", "no"], wifi)
+            else:
+                self.net["SIGNAL"].set_label("--")
+
+        def ips(ok, out, _e):
+            lines = out.splitlines()
+            self.net["IPV4"].set_label((lines[0].split("|")[0].strip() if lines else "") or "--")
+            self.net["GATEWAY"].set_label((lines[1].strip() if len(lines) > 1 else "") or "--")
+
+        def wifi(ok, out, _e):
+            for line in out.splitlines():
+                if line.startswith("*"):
+                    f = line.replace("\\:", "\x00").split(":")
+                    f = [x.replace("\x00", ":") for x in f]
+                    if len(f) >= 5:
+                        sig = int(f[2]) if f[2].isdigit() else 0
+                        self.net["SIGNAL"].set_label("%d%% · %s · %s" % (sig, f[4], f[3] or "OPEN"))
+                        self.set_cls(self.net["SIGNAL"], "good" if sig >= 60 else ("warn" if sig >= 35 else "bad"))
+                    break
+        run_async(["nmcli", "-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "device"], devs)
+
+    def set_cls(self, w, cls):
+        for c in ("good", "warn", "bad"):
+            w.remove_css_class(c)
+        if cls:
+            w.add_css_class(cls)
+
+    # ------------------------------------------------------------- BLUETOOTH
+
+    def build_bluetooth(self, p):
+        p.section("CONTROLLER")
+        self.bt = {k: p.kv(k) for k in ("POWER", "ADAPTER")}
+        self.bt_cnt = p.section("LINKED")
+        self.bt_group = p.group()
+        p.section("CONTROL")
+        p.add(Row(self, "bt", "󰂯", "OPEN BLUETOOTH", "eva-bluetooth · pair, connect, power",
+                  activate=lambda: self.launch(["eva-bluetooth"]), glyph_class="ctl"))
+        p.add(Row(self, "blueman", "󰒓", "BLUEMAN MANAGER", "blueman-manager · trust, rename, file transfer",
+                  activate=lambda: self.launch(["blueman-manager"])))
+
+    def load_bluetooth(self):
+        def show(ok, out, _e):
+            powered = "Powered: yes" in out
+            alias = next((l.split(":", 1)[1].strip() for l in out.splitlines() if l.strip().startswith("Alias:")), "--")
+            if not ok or not out.strip():
+                self.bt["POWER"].set_label("NO CONTROLLER")
+                self.set_cls(self.bt["POWER"], "bad")
+                return
+            self.bt["POWER"].set_label("ON" if powered else "OFF")
+            self.set_cls(self.bt["POWER"], "good" if powered else "bad")
+            self.bt["ADAPTER"].set_label(alias)
+            if not powered:
+                self.tab_tags["bluetooth"].set_label("OFF")
+
+        def connected(ok, out, _e):
+            devs = []
+            for line in out.splitlines():
+                f = line.split(" ", 2)
+                if len(f) == 3 and f[0] == "Device":
+                    devs.append((f[1], f[2]))
+            clear(self.bt_group)
+            self.bt_cnt.set_label("%02d" % len(devs))
+            self.tab_tags["bluetooth"].set_label("%d LINKED" % len(devs) if devs else "NO DEVICES")
+            if not devs:
+                self.bt_group.append(lbl("NO DEVICES CONNECTED", "note"))
+            for mac, name in devs:
+                r = Row(self, "btdev:" + mac, "󰂱", name, mac, activate=lambda: self.launch(["eva-bluetooth"]))
+                r.glyph.add_css_class("live")
+                self.bt_group.append(r)
+                run_async(["bluetoothctl", "info", mac], lambda ok, o, e, r=r, mac=mac: info(r, mac, o))
+            self.pages["bluetooth"].reindex()
+
+        def info(r, mac, out):
+            icon, batt = "", ""
+            for l in out.splitlines():
+                l = l.strip()
+                if l.startswith("Icon:"):
+                    icon = l.split(":", 1)[1].strip()
+                elif l.startswith("Battery Percentage:") and "(" in l:
+                    batt = l.rsplit("(", 1)[1].rstrip(")")
+            glyph = {"audio-headset": "󰋋", "audio-headphones": "󰋋", "audio-card": "󰓃", "input-mouse": "󰍽",
+                     "input-keyboard": "󰌌", "phone": "󰏲", "input-gaming": "󰊴"}.get(icon, "󰂱")
+            r.glyph.set_label(glyph)
+            r.set_meta("%s · %s" % ((icon or "device").replace("-", " ").upper(), mac))
+            if batt:
+                r.set_tail(chip("BAT %s%%" % batt, "on" if int(batt) > 25 else "off"))
+        run_async(["bluetoothctl", "show"], show)
+        run_async(["bluetoothctl", "devices", "Connected"], connected)
+
+    # ------------------------------------------------------------- SOUND
+
+    def build_sound(self, p):
+        self.out_cnt = p.section("OUTPUT")
+        self.vol = p.add(SliderRow(self, "vol", "󰕾", "VOLUME", self.set_volume, activate=self.sink_mute))
+        self.mute_row = p.add(Row(self, "mute", "󰝟", "MUTE OUTPUT", "m from anywhere in the panel", activate=self.sink_mute))
+        self.out_group = p.group()
+        self.in_cnt = p.section("INPUT")
+        self.mic = p.add(SliderRow(self, "mic", "󰍬", "MIC GAIN", self.set_mic, activate=self.source_mute))
+        self.micmute_row = p.add(Row(self, "micmute", "󰍭", "MUTE MICROPHONE", "", activate=self.source_mute))
+        self.in_group = p.group()
+        self.bt_note = p.add(lbl("", "note"))
+        self.bt_note.set_wrap(True)
+        self.bt_note.set_visible(False)
+        p.section("MORE")
+        p.add(Row(self, "snd-settings", "󰒓", "SOUND SETTINGS", "GNOME Settings · alerts, per-app levels",
+                  activate=lambda: self.launch(SETTINGS + ["sound"])))
+        self.pa_sub = None
+
+    def pa_start(self):
+        """Live sound updates while the panel is visible."""
+        if self.pa_sub is not None:
+            return
+        try:
+            self.pa_sub = Gio.Subprocess.new(["pactl", "subscribe"], Gio.SubprocessFlags.STDOUT_PIPE)
+        except GLib.Error:
+            return
+        stream = Gio.DataInputStream.new(self.pa_sub.get_stdout_pipe())
+        proc = self.pa_sub
+        stream.read_line_async(GLib.PRIORITY_DEFAULT, None, lambda st, res: self._pa_event(st, res, proc))
+
+    def pa_stop(self):
+        if self.pa_sub is not None:
+            self.pa_sub.force_exit()
+            self.pa_sub = None
+
+    def _pa_event(self, stream, res, proc):
+        try:
+            line, _ = stream.read_line_finish_utf8(res)
+        except GLib.Error:
+            return
+        if line is None or proc is not self.pa_sub:
+            return
+        if any(w in line for w in ("sink", "source", "server", "card")) and "-input" not in line and "-output" not in line:
+            if self.sound_timer is None:
+                self.sound_timer = GLib.timeout_add(150, self._sound_refresh)
+        stream.read_line_async(GLib.PRIORITY_DEFAULT, None, lambda st, r: self._pa_event(st, r, proc))
+
+    def _sound_refresh(self):
+        self.sound_timer = None
+        self.load_sound()
+        return False
+
+    def load_sound(self):
+        got = {}
+
+        def part(key):
+            def cb(ok, out, _e):
+                got[key] = out if ok else ""
+                if len(got) == 5:
+                    self.render_sound(got)
+            return cb
+        run_async(["pactl", "-f", "json", "list", "sinks"], part("sinks"))
+        run_async(["pactl", "-f", "json", "list", "sources"], part("sources"))
+        run_async(["pactl", "-f", "json", "list", "cards"], part("cards"))
+        run_async(["pactl", "get-default-sink"], part("dsink"))
+        run_async(["pactl", "get-default-source"], part("dsource"))
+
+    @staticmethod
+    def _pct(dev):
+        vols = list((dev.get("volume") or {}).values())
+        if not vols:
+            return 0
+        return round(sum(int(str(v.get("value_percent", "0")).rstrip("%") or 0) for v in vols) / len(vols))
+
+    def render_sound(self, got):
+        def js(s):
+            try:
+                return json.loads(s) if s.strip() else []
+            except ValueError:
+                return []
+        sinks = js(got["sinks"])
+        sources = [s for s in js(got["sources"]) if not s.get("name", "").endswith(".monitor")]
+        cards = {c.get("name"): c for c in js(got["cards"])}
+        dsink, dsource = got["dsink"].strip(), got["dsource"].strip()
+        self.sound = {"sinks": sinks, "sources": sources, "cards": cards, "dsink": dsink, "dsource": dsource}
+
+        sink = next((s for s in sinks if s.get("name") == dsink), None)
+        if sink:
+            v, m = self._pct(sink), bool(sink.get("mute"))
+            self.vol.set_value(min(v, 100))
+            self.vol.set_muted(m)
+            self.mute_row.set_tail(chip("MUTED", "off") if m else chip("LIVE", "on"))
+            self.tab_tags["sound"].set_label("MUTED" if m else "%d%% · %s" % (v, self.short(sink)))
+        src = next((s for s in sources if s.get("name") == dsource), None)
+        if src:
+            v, m = self._pct(src), bool(src.get("mute"))
+            self.mic.set_value(min(v, 100))
+            self.mic.set_muted(m)
+            self.micmute_row.set_tail(chip("MUTED", "off") if m else chip("LIVE", "on"))
+            self.micmute_row.set_meta(src.get("description", ""))
+
+        clear(self.out_group)
+        self.out_cnt.set_label("%02d DEVICES" % len(sinks))
+        for s in sinks:
+            self.out_group.append(self.device_row(s, s.get("name") == dsink, "sink", cards))
+        clear(self.in_group)
+        self.in_cnt.set_label("%02d DEVICES" % len(sources))
+        for s in sources:
+            self.in_group.append(self.device_row(s, s.get("name") == dsource, "source", cards))
+        bt_cards = [c for n, c in cards.items() if (n or "").startswith("bluez_card")]
+        if bt_cards:
+            self.bt_note.set_label("BLUETOOTH HEADPHONES STAY ON A2DP HI-FI · THEIR MIC WOULD FORCE MONO CALL "
+                                   "MODE, SO THE LAPTOP MIC STAYS ON INPUT (51-bt-stay-hifi.conf)")
+        self.bt_note.set_visible(bool(bt_cards))
+        self.pages["sound"].reindex()
+
+    @staticmethod
+    def short(dev):
+        d = dev.get("description", dev.get("name", "?"))
+        return d.replace("Built-in Audio ", "").replace("Analog Stereo", "SPEAKERS").upper()[:18]
+
+    def device_row(self, dev, active, kind, cards):
+        props = dev.get("properties", {}) or {}
+        bt = props.get("device.api") == "bluez5"
+        card = cards.get(props.get("device.name", ""), {})
+        prof = card.get("active_profile", "") or ""
+        if kind == "sink":
+            glyph = "󰋋" if bt else ("󰡁" if "hdmi" in dev.get("name", "") else "󰓃")
+        else:
+            glyph = "󰋎" if bt else "󰍬"
+        port = dev.get("active_port") or ""
+        port_desc = next((p.get("description", "") for p in dev.get("ports", []) if p.get("name") == port), port)
+        meta = []
+        hfp = bt and (prof.startswith("headset") or "hfp" in prof or "hsp" in prof)
+        if bt:
+            meta.append("BLUETOOTH · " + ("HFP MONO · ENTER SWITCHES TO A2DP" if hfp else (prof.upper() or "A2DP")))
+        elif port_desc:
+            meta.append(port_desc.upper())
+        meta.append(dev.get("name", "")[:48])
+        r = Row(self, "%s:%s" % (kind, dev.get("name")), glyph, dev.get("description", dev.get("name")),
+                " · ".join(meta), activate=lambda: self.pick_device(kind, dev, bt, props.get("device.name", "")))
+        if active:
+            r.add_css_class("cur")
+            r.glyph.add_css_class("live")
+            r.set_tail(chip("ACTIVE", "acc"))
+        if hfp:
+            r.tail.append(chip("HFP", "warn"))
+        return r
+
+    def best_a2dp(self, card):
+        profs = card.get("profiles", {}) or {}
+        cands = [(v.get("priority", 0), n) for n, v in profs.items() if n.startswith("a2dp") and v.get("available", True)]
+        return max(cands)[1] if cands else None
+
+    def pick_device(self, kind, dev, bt, card_name):
+        name = dev.get("name")
+        if kind == "sink" and bt:
+            card = self.sound["cards"].get(card_name, {})
+            prof = card.get("active_profile", "")
+            want = self.best_a2dp(card)
+            if want and not prof.startswith("a2dp"):
+                self.status("SWITCHING %s TO %s" % (dev.get("description", "")[:20].upper(), want.upper()), "warn")
+
+                def after(ok, _o, err):
+                    if not ok:
+                        self.status("A2DP SWITCH FAILED · " + err.strip()[:50], "err")
+                        return
+                    GLib.timeout_add(700, lambda: self._default_for_card(card_name) or False)
+                run_async(["pactl", "set-card-profile", card_name, want], after)
+                return
+        self.set_default(kind, name, dev.get("description", name))
+
+    def _default_for_card(self, card_name):
+        def cb(ok, out, _e):
+            try:
+                sinks = json.loads(out)
+            except ValueError:
+                return
+            s = next((s for s in sinks if (s.get("properties") or {}).get("device.name") == card_name), None)
+            if s:
+                self.set_default("sink", s["name"], s.get("description", ""))
+        run_async(["pactl", "-f", "json", "list", "sinks"], cb)
+
+    def set_default(self, kind, name, desc):
+        streams = "sink-inputs" if kind == "sink" else "source-outputs"
+        mover = "move-sink-input" if kind == "sink" else "move-source-output"
+        script = ('pactl set-default-%s "$1" && for i in $(pactl list short %s | cut -f1); '
+                  'do pactl %s "$i" "$1" 2>/dev/null; done; true') % (kind, streams, mover)
+        self.status("%s → %s" % ("OUTPUT" if kind == "sink" else "INPUT", desc.upper()[:40]), "ok")
+        run_async(["sh", "-c", script, "_", name], self.report("SWITCH"))
+
+    def set_volume(self, v):
+        run_async(["wpctl", "set-volume", "-l", "1.0", "@DEFAULT_AUDIO_SINK@", "%d%%" % v], self.report("VOLUME"))
+
+    def set_mic(self, v):
+        run_async(["wpctl", "set-volume", "-l", "1.0", "@DEFAULT_AUDIO_SOURCE@", "%d%%" % v], self.report("MIC GAIN"))
+
+    def sink_mute(self):
+        run_async(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"], self.report("MUTE"))
+
+    def source_mute(self):
+        run_async(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"], self.report("MIC MUTE"))
+
+    # ------------------------------------------------------------- DISPLAY
+
+    def build_display(self, p):
+        p.section("PANEL")
+        self.disp = {k: p.kv(k) for k in ("OUTPUT", "MODE")}
+        self.bright = p.add(SliderRow(self, "bright", "󰃠", "BRIGHTNESS", self.set_brightness, lo=1, step=5))
+        p.section("NIGHT LIGHT")
+        self.nl_row = p.add(Row(self, "nl", "󰖔", "NIGHT LIGHT", "hyprsunset · warm the panel after dark",
+                                activate=self.toggle_night))
+        temps = [(t, "%dK" % t) for t in (2500, 3000, 3500, 4000, 4500, 5000, 5500)]
+        self.nl_temp = p.add(ChoiceRow(self, "nltemp", "󰔄", "TEMPERATURE", temps, self.set_temp))
+        t = read(os.path.join(STATE_DIR, "nightlight"), "4000")
+        self.nl_temp.set_current(int(t) if t.isdigit() else 4000)
+        self.night_on = False
+        p.section("MORE")
+        p.add(Row(self, "disp-settings", "󰍹", "DISPLAY SETTINGS", "GNOME Settings · displays (most of it is hyprland.lua)",
+                  activate=lambda: self.launch(SETTINGS + ["display"])))
+
+    def load_display(self):
+        def bright(ok, out, _e):
+            f = out.strip().split(",")
+            if ok and len(f) >= 4:
+                self.bright.set_value(int(f[3].rstrip("%")))
+                self.tab_tags["display"].set_label("%s · %s" % (f[3], "NIGHT" if self.night_on else "DAY"))
+
+        def mons(ok, out, _e):
+            try:
+                ms = json.loads(out)
+            except ValueError:
+                return
+            if ms:
+                m = next((m for m in ms if m.get("focused")), ms[0])
+                self.disp["OUTPUT"].set_label("%s · %s" % (m.get("name", "?"), (m.get("description") or "").split("(")[0].strip()[:40]))
+                self.disp["MODE"].set_label("%dx%d @ %.0f HZ · SCALE %g%s" % (
+                    m.get("width", 0), m.get("height", 0), m.get("refreshRate", 0), m.get("scale", 1),
+                    " · +%d MORE" % (len(ms) - 1) if len(ms) > 1 else ""))
+
+        def night(ok, _o, _e):
+            self.night_on = ok
+            t = self.tab_tags["display"]
+            t.set_label(t.get_label().replace("· DAY", "· NIGHT") if ok else t.get_label().replace("· NIGHT", "· DAY"))
+            self.nl_row.set_tail(chip("ON", "on") if ok else chip("OFF"))
+            self.nl_row.glyph.remove_css_class("live")
+            if ok:
+                self.nl_row.glyph.add_css_class("live")
+        run_async(["brightnessctl", "-m"], bright)
+        run_async(["hyprctl", "monitors", "-j"], mons)
+        run_async(["pgrep", "-x", "hyprsunset"], night)
+
+    def set_brightness(self, v):
+        run_async(["brightnessctl", "-q", "set", "%d%%" % max(1, v)], self.report("BRIGHTNESS"))
+
+    def toggle_night(self):
+        if self.night_on:
+            run_async(["pkill", "-x", "hyprsunset"], lambda *_: GLib.timeout_add(200, lambda: self.load_display() or False))
+            self.status("NIGHT LIGHT OFF", "ok")
+        else:
+            spawn(["hyprsunset", "-t", str(self.nl_temp.current or 4000)])
+            self.status("NIGHT LIGHT %dK" % (self.nl_temp.current or 4000), "ok")
+            GLib.timeout_add(400, lambda: self.load_display() or False)
+
+    def set_temp(self, t):
+        write_state("nightlight", t)
+        if not self.night_on:
+            self.status("TEMPERATURE %dK · ENTER ON NIGHT LIGHT TO START" % t, "info")
+            return
+
+        def cb(ok, out, _e):
+            if not ok or "error" in out.lower() or "couldn" in out.lower():
+                # older hyprsunset without IPC: restart it at the new temperature
+                run_async(["sh", "-c", "pkill -x hyprsunset; sleep 0.2; setsid -f hyprsunset -t %d >/dev/null 2>&1" % t])
+            self.status("NIGHT LIGHT %dK" % t, "ok")
+        run_async(["hyprctl", "hyprsunset", "temperature", str(t)], cb)
+
+    # ------------------------------------------------------------- POWER
+
+    def build_power(self, p):
+        p.section("BATTERY")
+        cells = Gtk.Box(spacing=3)
+        cells.add_css_class("cells")
+        self.cells = []
+        for _ in range(20):
+            c = Gtk.Box()
+            c.add_css_class("cell")
+            cells.append(c)
+            self.cells.append(c)
+        p.add(cells)
+        self.pw = {k: p.kv(k) for k in ("CHARGE", "STATE", "ESTIMATE", "DRAW")}
+        self.prof_sec = p.section("PROFILE")
+        self.prof = p.add(ChoiceRow(self, "profile", "󰓅", "POWER PROFILE",
+                                    [("power-saver", "SAVER"), ("balanced", "BALANCED"), ("performance", "PERF")],
+                                    self.set_profile, meta="tuned-ppd · h/l to change"))
+        p.section("SESSION")
+        p.add(Row(self, "lock", "󰌾", "LOCK", "hyprlock · SUPER+Esc", activate=self.do_lock, glyph_class="ctl"))
+        p.add(Row(self, "suspend", "󰤄", "SUSPEND", "sleep · locks first", glyph_class="danger",
+                  activate=lambda: self.do_power("SUSPEND", ["systemctl", "suspend"]), confirm="SUSPEND"))
+        p.add(Row(self, "logout", "󰍃", "LOG OUT", "end the Hyprland session · tmux keeps running",
+                  glyph_class="danger", confirm="LOG OUT",
+                  activate=lambda: self.do_power("LOG OUT", ["hyprctl", "dispatch", "hl.dsp.exit()"])))
+        p.add(Row(self, "reboot", "󰜉", "REBOOT", "restart the machine", glyph_class="danger", confirm="REBOOT",
+                  activate=lambda: self.do_power("REBOOT", ["systemctl", "reboot"])))
+        p.add(Row(self, "poweroff", "󰐥", "SHUT DOWN", "power off", glyph_class="danger", confirm="SHUT DOWN",
+                  activate=lambda: self.do_power("SHUT DOWN", ["systemctl", "poweroff"])))
+
+    def load_power(self):
+        cap, st = battery()
+        for i, c in enumerate(self.cells):
+            for k in ("lit", "warn", "bad", "chg"):
+                c.remove_css_class(k)
+            if cap is not None and i < round(cap / 5):
+                c.add_css_class("lit")
+                if st == "Charging":
+                    c.add_css_class("chg")
+                elif cap < 15:
+                    c.add_css_class("bad")
+                elif cap < 30:
+                    c.add_css_class("warn")
+        if cap is not None:
+            self.pw["CHARGE"].set_label("%d%%" % cap)
+            self.set_cls(self.pw["CHARGE"], "good" if cap >= 30 or st == "Charging" else ("warn" if cap >= 15 else "bad"))
+            self.pw["STATE"].set_label(st.upper())
+
+        def up(ok, out, _e):
+            est, rate = "--", "--"
+            for l in out.splitlines():
+                l = l.strip()
+                if l.startswith("time to"):
+                    k, v = l.split(":", 1)
+                    est = "%s %s" % (v.strip().upper(), "TO FULL" if "full" in k else "LEFT")
+                elif l.startswith("energy-rate"):
+                    rate = l.split(":", 1)[1].strip().upper()
+            self.pw["ESTIMATE"].set_label(est)
+            self.pw["DRAW"].set_label(rate)
+        run_async(["sh", "-c", "upower -i \"$(upower -e | grep -m1 BAT)\""], up)
+
+        def prof(ok, out, _e):
+            # busctl prints: s "balanced"
+            if ok and '"' in out:
+                self.prof.set_current(out.split('"')[1])
+                self.prof.set_visible(True)
+            else:
+                self.prof.set_visible(False)
+                self.prof_sec.set_label("UNAVAILABLE")
+            self.pages["power"].reindex()
+        run_async(["busctl", "--system", "get-property", "net.hadess.PowerProfiles", "/net/hadess/PowerProfiles",
+                   "net.hadess.PowerProfiles", "ActiveProfile"], prof)
+
+    def set_profile(self, value):
+        def cb(ok, _o, err):
+            if ok:
+                self.status("POWER PROFILE · %s" % value.upper(), "ok")
+            else:
+                self.status("PROFILE FAILED · " + err.strip()[:60], "err")
+                GLib.timeout_add(200, lambda: self.load_power() or False)
+        run_async(["busctl", "--system", "set-property", "net.hadess.PowerProfiles", "/net/hadess/PowerProfiles",
+                   "net.hadess.PowerProfiles", "ActiveProfile", "s", value], cb)
+
+    def do_lock(self):
+        argv = ["sh", "-c", "pidof hyprlock || hyprlock"]
+        if DRY_RUN:
+            print("magi: dry run:", argv)
+            self.status("DRY RUN · LOCK", "warn")
+            return
+        self.launch(argv)
+
+    def do_power(self, what, argv):
+        if DRY_RUN:
+            print("magi: dry run:", what, argv)
+            self.status("DRY RUN · %s · %s" % (what, " ".join(argv)), "warn")
+            return
+        self.launch(argv)
+
+    # ------------------------------------------------------------- TOOLS
+
+    def build_tools(self, p):
+        p.section("WINDOWS")
+        p.add(Row(self, "overview", "󰕰", "OVERVIEW", "magi-overview · every window by workspace · SUPER+O",
+                  activate=lambda: self.launch(["magi-overview"]), glyph_class="ctl"))
+        p.add(Row(self, "winmode", "󰆾", "WINDOW MODE", "SUPER+A · h j k l focus, H J K L move, arrows resize, Esc leaves",
+                  activate=lambda: self.launch(["hyprctl", "dispatch", 'hl.dsp.submap("window")'])))
+        p.section("FILES")
+        p.add(Row(self, "files", "󰉋", "FILES", "Nautilus · SUPER+E", glyph_class="ctl",
+                  activate=lambda: self.launch(["nautilus", "--new-window"])))
+        self.tfm = next((t for t in ("yazi", "lf", "ranger", "nnn") if GLib.find_program_in_path(t)), None)
+        if self.tfm:
+            p.add(Row(self, "tfm", "󰙅", "TERMINAL FILES", "%s in Alacritty · SUPER+R" % self.tfm,
+                      activate=lambda: self.launch(["alacritty", "--class", "eva-files", "-e", self.tfm])))
+        else:
+            p.add(lbl("TERMINAL FILE MANAGER NOT INSTALLED · sudo dnf install yazi", "note"))
+        p.add(Row(self, "downloads", "󰉍", "DOWNLOADS", "~/Downloads in Nautilus",
+                  activate=lambda: self.launch(["nautilus", "--new-window", HOME + "/Downloads"])))
+        p.section("CAPTURE")
+        p.add(Row(self, "clip", "󰅌", "CLIPBOARD HISTORY", "cliphist · SUPER+SHIFT+V",
+                  activate=lambda: self.launch(["sh", "-c", "cliphist list | wofi --dmenu | cliphist decode | wl-copy"])))
+        p.add(Row(self, "shot-region", "󰹑", "SCREENSHOT REGION", "grim + slurp → clipboard · Print",
+                  activate=lambda: self.launch(["sh", "-c", 'sleep 0.3; grim -g "$(slurp)" - | wl-copy'])))
+        p.add(Row(self, "shot-full", "󰍹", "SCREENSHOT SCREEN", "→ ~/Pictures/screenshot-….png · Shift+Print",
+                  activate=lambda: self.launch(["sh", "-c", "sleep 0.4; grim ~/Pictures/screenshot-$(date +%F-%H%M%S).png"])))
+
+    # ------------------------------------------------------------- THEME
+
+    def build_theme(self, p):
+        p.section("THEME")
+        sw_css = []
+        self.theme_rows = {}
+        for key, name, meta in (("nerv", "NERV", "red · orange · black · command centre"),
+                                ("unit01", "EVA UNIT-01", "purple · green · test type"),
+                                ("blue", "BLUE", "blue · mauve · slate · the original")):
+            r = p.add(Row(self, "theme:" + key, "󰏘", name, meta, activate=lambda k=key: self.set_theme(k)))
+            pal = palette(key)
+            for slot in ("accent", "accent2", "surface", "text"):
+                if slot in pal:
+                    cls = "sw-%s-%s" % (key, slot)
+                    sw_css.append(".%s { background: %s; }" % (cls, pal[slot]))
+                    s = Gtk.Box(valign=Gtk.Align.CENTER)
+                    s.add_css_class("sw")
+                    s.add_css_class(cls)
+                    r.tail.append(s)
+            r.tail.append(lbl("", "chip"))
+            self.theme_rows[key] = r
+        # swatches show the *other* theme too, so they come from each theme's palette file
+        sw = Gtk.CssProvider()
+        sw.load_from_string("\n".join(sw_css))
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), sw, Gtk.STYLE_PROVIDER_PRIORITY_USER + 1)
+        self.wall_cnt = p.section("WALLPAPER")
+        self.next_row = p.add(Row(self, "wall-next", "󰸉", "NEXT WALLPAPER", "SUPER+W", activate=self.next_wall,
+                                  glyph_class="ctl"))
+        self.walls = sorted(os.path.join(WALL_DIR, f) for f in (os.listdir(WALL_DIR) if os.path.isdir(WALL_DIR) else [])
+                            if f.lower().endswith((".png", ".jpg", ".jpeg", ".webp")))
+        self.wall_cnt.set_label("%02d" % len(self.walls))
+        grid = Gtk.Grid(column_spacing=8, row_spacing=8)
+        grid.add_css_class("grid")
+        p.add(grid)
+        cols = 4
+        self.thumb_rows = {}
+        for i, path in enumerate(self.walls):
+            r = Row(self, "wall:" + path, None, "", activate=lambda path=path: self.set_wall(path))
+            r.add_css_class("thumb")
+            r.remove(r.body)
+            r.remove(r.tail)
+            ov = Gtk.Overlay()
+            pic = Gtk.Picture(content_fit=Gtk.ContentFit.COVER, can_shrink=True)
+            pic.set_size_request(146, 82)
+            ov.set_child(pic)
+            tag = lbl("LIVE", "thumbtag", xalign=0.5)
+            tag.set_halign(Gtk.Align.START)
+            tag.set_valign(Gtk.Align.START)
+            tag.set_visible(False)
+            ov.add_overlay(tag)
+            r.append(ov)
+            r.pic, r.tag = pic, tag
+            r.set_tooltip_text(os.path.basename(path))
+            r.grid = (cols, i, len(self.walls))
+            grid.attach(r, i % cols, i // cols, 1, 1)
+            self.thumb_rows[path] = r
+        self.mark_theme()
+
+    def mark_theme(self):
+        cur = current_theme()
+        for key, r in self.theme_rows.items():
+            on = key == cur
+            (r.add_css_class if on else r.remove_css_class)("cur")
+            c = r.tail.get_last_child()
+            c.set_label("LIVE" if on else "")
+            c.set_visible(on)
+            for k in ("acc",):
+                (c.add_css_class if on else c.remove_css_class)(k)
+        self.tab_tags["theme"].set_label({"nerv": "NERV", "unit01": "UNIT-01"}.get(cur, "BLUE"))
+        wall = read(WALL_STATE)
+        for path, r in self.thumb_rows.items():
+            on = path == wall
+            (r.add_css_class if on else r.remove_css_class)("cur")
+            r.tag.set_visible(on)
+        self.next_row.set_meta("SUPER+W · now " + (os.path.basename(wall) if wall else "--"))
+
+    def set_theme(self, key):
+        if key == current_theme():
+            self.status("ALREADY ON %s" % key.upper(), "info")
+            return
+        self.status("SWITCHING TO %s…" % key.upper(), "warn", sticky=True)
+
+        def done(ok, _o, err):
+            self.css.load_from_string(CSS)  # @import re-reads themes/current
+            GLib.timeout_add(600, lambda: self.mark_theme() or False)
+            self.status("THEME · %s" % key.upper() if ok else "THEME FAILED · " + err.strip()[:50], "ok" if ok else "err")
+        run_async(["eva-theme", key], done)
+
+    def next_wall(self):
+        run_async(["wall-next"], lambda *_: GLib.timeout_add(150, lambda: self.mark_theme() or False))
+
+    def set_wall(self, path):
+        self.status("WALLPAPER · " + os.path.basename(path), "ok")
+        run_async(["wall-next", path], lambda *_: GLib.timeout_add(150, lambda: self.mark_theme() or False))
+
+    def load_thumbs(self):
+        """Scale wallpapers to small cached PNGs in a thread; set them as they arrive."""
+        self.thumbs_started = True
+        jobs = list(self.thumb_rows.items())
+
+        def work():
+            from gi.repository import GdkPixbuf
+            os.makedirs(THUMB_DIR, exist_ok=True)
+            for path, row in jobs:
+                try:
+                    st = os.stat(path)
+                    h = hashlib.sha1(("%s:%d:%d" % (path, st.st_mtime_ns, st.st_size)).encode()).hexdigest()
+                    out = os.path.join(THUMB_DIR, h + ".png")
+                    if not os.path.exists(out):
+                        pb = GdkPixbuf.Pixbuf.new_from_file_at_scale(path, 320, 180, True)
+                        pb.savev(out + ".tmp", "png", [], [])
+                        os.replace(out + ".tmp", out)
+                    GLib.idle_add(self._set_thumb, row, out)
+                except (GLib.Error, OSError):
+                    pass
+        threading.Thread(target=work, daemon=True).start()
+
+    def _set_thumb(self, row, out):
+        try:
+            row.pic.set_paintable(Gdk.Texture.new_from_filename(out))
+        except GLib.Error:
+            pass
+        return False
+
+
+# ----------------------------------------------------------------- main
+
+def main():
+    args = [a.lower() for a in sys.argv[1:]]
+    if "--help" in args or "-h" in args:
+        print(__doc__)
+        return 0
+    if "--quit" in args:
+        return 0  # nothing resident (the fast path above would have reached it)
+    daemon = "--daemon" in args
+    args = [a.lstrip("-") for a in args if a != "--daemon"]
+    arg = args[0] if args else ""
+    start = ALIASES.get(arg, arg) or None
+    if start is not None and start not in [s[0] for s in SECTIONS]:
+        print("magi: unknown section %r (network bluetooth sound display power theme)" % arg, file=sys.stderr)
+        return 2
+    last = read(os.path.join(STATE_DIR, "section"))
+    start_sel = start or (last if last in [s[0] for s in SECTIONS] else "sound")
+
+    # become the resident: claim the socket (a stale one from a crash is replaced)
+    try:
+        os.unlink(SOCK)
+    except OSError:
+        pass
+
+    GLib.set_prgname(APP_ID)
+    GLib.set_application_name("MAGI · CONTROL")
+    app = Gtk.Application(flags=Gio.ApplicationFlags.NON_UNIQUE)
+    state = {}
+
+    def incoming(_svc, conn, _src):
+        try:
+            data = conn.get_input_stream().read_bytes(512, None).get_data().decode(errors="replace").split()
+        except GLib.Error:
+            return False
+        w = state.get("win")
+        if not data or w is None:
+            return False
+        if data[0] == "quit":
+            app.quit()
+        elif data[0] == "key" and len(data) > 1 and w.get_visible():
+            # test hook: inject a key into this process only (never into other windows)
+            mods = Gdk.ModifierType.SHIFT_MASK if data[1].startswith("S-") else 0
+            w.on_key(None, Gdk.keyval_from_name(data[1][2:] if mods else data[1]), 0, mods)
+        elif data[0] == "toggle":
+            rest = [a.lstrip("-") for a in data[1:]]
+            if "quit" in rest:
+                app.quit()
+                return False
+            sec = ALIASES.get(rest[0], rest[0]) if rest else None
+            w.toggle(sec if sec in [s[0] for s in SECTIONS] else None)
+        return False
+
+    def activate(a):
+        prov = Gtk.CssProvider()
+        prov.load_from_string(CSS)
+        Gtk.StyleContext.add_provider_for_display(Gdk.Display.get_default(), prov, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+        t1 = time.monotonic()
+        w = Magi(a, prov, start_sel, pane=start is not None)
+        state["win"] = w
+        a.hold()
+        svc = Gio.SocketService()
+        svc.add_address(Gio.UnixSocketAddress.new(SOCK), Gio.SocketType.STREAM, Gio.SocketProtocol.DEFAULT, None)
+        svc.connect("incoming", incoming)
+        svc.start()
+        state["svc"] = svc
+        if TIMING:
+            print("magi: imports %.0f ms, activate %.0f ms, window built %.0f ms" % (
+                (T_IMPORT - T0) * 1000, (t1 - T0) * 1000, (time.monotonic() - T0) * 1000))
+        if not daemon:
+            w.show_panel()
+
+    app.connect("activate", activate)
+    warnings.simplefilter("ignore", DeprecationWarning)
+    GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, lambda: app.quit() or False)
+    try:
+        return app.run([sys.argv[0]])
+    finally:
+        w = state.get("win")
+        if w is not None:
+            w.pa_stop()
+        try:
+            os.unlink(SOCK)
+        except OSError:
+            pass
+
+
+if __name__ == "__main__":
+    sys.exit(main())

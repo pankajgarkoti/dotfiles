@@ -1,0 +1,119 @@
+/* EVA overrides for libadwaita / GTK 4 apps (Settings, Files, Text Editor,
+   file chooser, Loupe...). Colours come from the active Hyprland theme so
+   `eva-theme nerv|unit01` restyles them; already-open apps pick it up on
+   their next launch.
+
+   Only libadwaita's CSS variables plus corner radii are set here: this file
+   loads at USER priority, so broad widget rules would also land on GTK 4
+   apps that bring their own look (the eva-* pickers). */
+@import url("../hypr/themes/current/colors.css");
+
+:root {
+  --accent-bg-color: @accent;
+  --accent-fg-color: @base;
+  --accent-color: @accent;
+
+  --window-bg-color: @base;
+  --window-fg-color: @text;
+  --view-bg-color: @base;
+  --view-fg-color: @text;
+
+  --headerbar-bg-color: @base;
+  --headerbar-fg-color: @text;
+  --headerbar-backdrop-color: @base;
+  --headerbar-shade-color: transparent;
+  --headerbar-darker-shade-color: @surface1;
+  --headerbar-border-color: @accent;
+
+  --sidebar-bg-color: mix(@base, black, 0.25);
+  --sidebar-fg-color: @text;
+  --sidebar-backdrop-color: mix(@base, black, 0.25);
+  --sidebar-shade-color: @surface1;
+  --sidebar-border-color: @surface1;
+  --secondary-sidebar-bg-color: @base;
+  --secondary-sidebar-fg-color: @text;
+  --secondary-sidebar-backdrop-color: @base;
+  --secondary-sidebar-shade-color: @surface1;
+  --secondary-sidebar-border-color: @surface1;
+
+  --card-bg-color: alpha(@surface0, 0.75);
+  --card-fg-color: @text;
+  --card-shade-color: @surface1;
+  --dialog-bg-color: @base;
+  --dialog-fg-color: @text;
+  --popover-bg-color: @base;
+  --popover-fg-color: @text;
+  --popover-shade-color: @accent;
+  --overview-bg-color: @base;
+  --overview-fg-color: @text;
+  --thumbnail-bg-color: @surface0;
+  --thumbnail-fg-color: @text;
+
+  --border-color: @surface1;
+  --shade-color: alpha(black, 0.5);
+  --scrollbar-outline-color: transparent;
+
+  --destructive-bg-color: @bad;
+  --destructive-fg-color: @base;
+  --destructive-color: @bad;
+  --success-bg-color: @good;
+  --success-fg-color: @base;
+  --success-color: @good;
+  --warning-bg-color: @warn;
+  --warning-fg-color: @base;
+  --warning-color: @warn;
+  --error-bg-color: @bad;
+  --error-fg-color: @base;
+  --error-color: @bad;
+
+  --window-radius: 0;
+}
+
+/* hard edges everywhere */
+* { border-radius: 0; }
+window, window.csd, window.background { border-radius: 0; }
+
+/* header bars: a single accent rule underneath, chrome in Iosevka.
+   (No letter-spacing on titles: GTK 4 doesn't count it when sizing and
+   ellipsizes them.) */
+headerbar, headerbar.flat, .top-bar headerbar {
+  box-shadow: inset 0 -1px @accent;
+}
+headerbar:backdrop, headerbar.flat:backdrop { box-shadow: inset 0 -1px @surface1; }
+headerbar .title, windowtitle .title, headerbar label.title {
+  font-family: "IosevkaTerm Nerd Font Mono";
+  font-weight: bold;
+  color: @accent;
+}
+windowtitle .subtitle { font-family: "IosevkaTerm Nerd Font Mono"; color: @dim; }
+
+/* section headings ("PERSONAL", preference group titles) */
+preferencesgroup > box > box > label.heading,
+.navigation-sidebar label.heading, list > row.heading label,
+label.heading.dim-label, stacksidebar row label.heading {
+  font-family: "IosevkaTerm Nerd Font Mono";
+  letter-spacing: 2px;
+  color: @accent;
+}
+
+/* thin outlines instead of soft cards */
+.card, list.boxed-list, .boxed-list, list.content, preferencesgroup list {
+  box-shadow: none;
+  border: 1px solid @surface1;
+}
+popover > contents, popover.menu > contents {
+  box-shadow: none;
+  border: 1px solid @accent;
+}
+
+/* selected rows: accent bar on the left */
+.navigation-sidebar > row:selected, .navigation-sidebar row:selected {
+  background-color: alpha(@accent, 0.22);
+  box-shadow: inset 3px 0 @accent;
+  color: @text;
+}
+
+/* the window corner buttons and the keyboard focus ring */
+windowcontrols button > image, windowcontrols button { border-radius: 0; }
+windowcontrols button:hover > image { background-color: @bad; color: @base; }
+*:focus-visible { outline-color: alpha(@accent, 0.7); }

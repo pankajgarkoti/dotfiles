@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# eva-power: battery + power-mode menu for the waybar battery module (click). Shows the laptop battery
+# (BAT0 only; the MX mouse has its own hidpp battery), charging state, time left, and lets you pick the
+# power mode through power-profiles (tuned-ppd here) over D-Bus; no password needed.
+set -u
+B=/sys/class/power_supply/BAT0
+cap=$(cat $B/capacity 2>/dev/null); st=$(cat $B/status 2>/dev/null)
+ac=$(cat /sys/class/power_supply/AC/online 2>/dev/null)
+eta=$(upower -i "$(upower -e | grep -m1 BAT)" 2>/dev/null | awk -F: '/time to (empty|full)/{gsub(/^ +/,"",$2); print $1": "$2; exit}' | sed 's/^ *//')
+dbus() { gdbus call --system --dest net.hadess.PowerProfiles --object-path /net/hadess/PowerProfiles --method org.freedesktop.DBus.Properties."$@"; }
+cur=$(dbus Get net.hadess.PowerProfiles ActiveProfile 2>/dev/null | grep -o "'[a-z-]*'" | tr -d "'")
+mapfile -t profs < <(dbus Get net.hadess.PowerProfiles Profiles 2>/dev/null | grep -o "'Profile': <'[a-z-]*'>" | grep -o "<'[a-z-]*'>" | tr -d "<>'")
+[ ${#profs[@]} -eq 0 ] && profs=(power-saver balanced performance)
+label() { case $1 in power-saver) echo "Power saver";; balanced) echo "Balanced";; performance) echo "Performance";; *) echo "$1";; esac; }
+menu="Battery ${cap}% · ${st}$([ "$ac" = 1 ] && echo ' · on charger')${eta:+ · $eta}"
+for p in "${profs[@]}"; do menu+=$'\n'"$([ "$p" = "$cur" ] && echo '● ' || echo '○ ')$(label "$p")"; done
+pick=$(printf '%s\n' "$menu" | wofi --dmenu --prompt "Power" --cache-file /dev/null --lines $(( ${#profs[@]} + 2 )) --width 360 2>/dev/null) || exit 0
+for p in "${profs[@]}"; do
+  if [[ "$pick" == *"$(label "$p")" ]]; then dbus Set net.hadess.PowerProfiles ActiveProfile "<'$p'>" >/dev/null && notify-send -a power "Power mode" "$(label "$p")"; fi
+done

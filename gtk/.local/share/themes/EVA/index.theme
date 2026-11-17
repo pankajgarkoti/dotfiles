@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=X-GNOME-Metatheme
+Name=EVA
+Comment=Evangelion/NERV: Adwaita dark, hard edges, colours from ~/.config/hypr/themes/current
+Encoding=UTF-8
+
+[X-GNOME-Metatheme]
+GtkTheme=EVA
+IconTheme=EVA
+CursorTheme=Adwaita

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Tap SUPER twice within 350 ms (on its own, not as part of a shortcut) to jump to the
+# previous workspace, like Alt+L in tmux. A single tap does nothing.
+f="${XDG_RUNTIME_DIR:-/tmp}/super-tap"
+now=$(date +%s%3N); last=$(cat "$f" 2>/dev/null || echo 0)
+if [ $((now - last)) -le 350 ]; then
+  rm -f "$f"
+  hyprctl dispatch 'hl.dsp.focus({ workspace = "previous" })' >/dev/null
+else
+  echo "$now" > "$f"
+fi
